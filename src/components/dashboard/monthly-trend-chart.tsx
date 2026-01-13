@@ -23,7 +23,7 @@ export function MonthlyTrendChart({ data, currency = 'USD' }: MonthlyTrendChartP
       <div className="flex h-[200px] flex-col items-center justify-center text-center">
         <div className="mb-2 text-4xl">📈</div>
         <p className="text-muted-foreground">No trend data yet</p>
-        <p className="text-sm text-muted-foreground">Add subscriptions to see trends</p>
+        <p className="text-muted-foreground text-sm">Add subscriptions to see trends</p>
       </div>
     )
   }
@@ -38,11 +38,7 @@ export function MonthlyTrendChart({ data, currency = 'USD' }: MonthlyTrendChartP
               <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0} />
             </linearGradient>
           </defs>
-          <CartesianGrid
-            strokeDasharray="3 3"
-            stroke="rgba(255,255,255,0.05)"
-            vertical={false}
-          />
+          <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
           <XAxis
             dataKey="monthLabel"
             axisLine={false}
@@ -61,11 +57,9 @@ export function MonthlyTrendChart({ data, currency = 'USD' }: MonthlyTrendChartP
               if (!active || !payload?.length) return null
               const amount = payload[0].value as number
               return (
-                <div className="rounded-lg border border-white/10 bg-card px-3 py-2 shadow-lg">
+                <div className="bg-card rounded-lg border border-white/10 px-3 py-2 shadow-lg">
                   <p className="font-medium">{label}</p>
-                  <p className="text-sm text-aurora-purple">
-                    {formatCurrency(amount, currency)}
-                  </p>
+                  <p className="text-aurora-purple text-sm">{formatCurrency(amount, currency)}</p>
                 </div>
               )
             }}

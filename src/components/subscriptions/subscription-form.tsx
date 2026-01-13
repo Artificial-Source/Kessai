@@ -110,11 +110,11 @@ export function SubscriptionForm({
           <Input
             id="name"
             placeholder="Netflix, Spotify, etc."
-            className="bg-white/5 border-white/10"
+            className="border-white/10 bg-white/5"
             {...form.register('name')}
           />
           {form.formState.errors.name && (
-            <p className="text-sm text-destructive">{form.formState.errors.name.message}</p>
+            <p className="text-destructive text-sm">{form.formState.errors.name.message}</p>
           )}
         </div>
 
@@ -127,11 +127,11 @@ export function SubscriptionForm({
               step="0.01"
               min="0"
               placeholder="9.99"
-              className="bg-white/5 border-white/10"
+              className="border-white/10 bg-white/5"
               {...form.register('amount', { valueAsNumber: true })}
             />
             {form.formState.errors.amount && (
-              <p className="text-sm text-destructive">{form.formState.errors.amount.message}</p>
+              <p className="text-destructive text-sm">{form.formState.errors.amount.message}</p>
             )}
           </div>
 
@@ -141,7 +141,7 @@ export function SubscriptionForm({
               value={form.watch('currency')}
               onValueChange={(value) => form.setValue('currency', value)}
             >
-              <SelectTrigger className="bg-white/5 border-white/10">
+              <SelectTrigger className="border-white/10 bg-white/5">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -162,7 +162,7 @@ export function SubscriptionForm({
               value={form.watch('billing_cycle')}
               onValueChange={(value) => form.setValue('billing_cycle', value as BillingCycle)}
             >
-              <SelectTrigger className="bg-white/5 border-white/10">
+              <SelectTrigger className="border-white/10 bg-white/5">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -180,11 +180,11 @@ export function SubscriptionForm({
             <Input
               id="next_payment_date"
               type="date"
-              className="bg-white/5 border-white/10"
+              className="border-white/10 bg-white/5"
               {...form.register('next_payment_date')}
             />
             {form.formState.errors.next_payment_date && (
-              <p className="text-sm text-destructive">
+              <p className="text-destructive text-sm">
                 {form.formState.errors.next_payment_date.message}
               </p>
             )}
@@ -197,7 +197,7 @@ export function SubscriptionForm({
             value={form.watch('category_id') || 'none'}
             onValueChange={(value) => form.setValue('category_id', value === 'none' ? null : value)}
           >
-            <SelectTrigger className="bg-white/5 border-white/10">
+            <SelectTrigger className="border-white/10 bg-white/5">
               <SelectValue placeholder="Select category" />
             </SelectTrigger>
             <SelectContent>
@@ -205,10 +205,7 @@ export function SubscriptionForm({
               {categories.map((cat) => (
                 <SelectItem key={cat.id} value={cat.id}>
                   <div className="flex items-center gap-2">
-                    <div
-                      className="h-3 w-3 rounded-full"
-                      style={{ backgroundColor: cat.color }}
-                    />
+                    <div className="h-3 w-3 rounded-full" style={{ backgroundColor: cat.color }} />
                     {cat.name}
                   </div>
                 </SelectItem>
@@ -228,7 +225,7 @@ export function SubscriptionForm({
                 className={cn(
                   'h-8 w-8 rounded-lg transition-all',
                   selectedColor === color
-                    ? 'ring-2 ring-white ring-offset-2 ring-offset-background scale-110'
+                    ? 'ring-offset-background scale-110 ring-2 ring-white ring-offset-2'
                     : 'hover:scale-105'
                 )}
                 style={{ backgroundColor: color }}
@@ -245,7 +242,7 @@ export function SubscriptionForm({
                 <img
                   src={logoPreview}
                   alt="Logo preview"
-                  className="h-12 w-12 rounded-lg object-cover border border-white/10"
+                  className="h-12 w-12 rounded-lg border border-white/10 object-cover"
                 />
                 <button
                   type="button"
@@ -253,14 +250,14 @@ export function SubscriptionForm({
                     setLogoPreview(null)
                     form.setValue('logo_url', null)
                   }}
-                  className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-red-500 flex items-center justify-center"
+                  className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500"
                 >
                   <X className="h-3 w-3 text-white" />
                 </button>
               </div>
             ) : (
-              <div className="h-12 w-12 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center">
-                <Upload className="h-5 w-5 text-muted-foreground" />
+              <div className="flex h-12 w-12 items-center justify-center rounded-lg border border-white/10 bg-white/5">
+                <Upload className="text-muted-foreground h-5 w-5" />
               </div>
             )}
             <Button
@@ -294,7 +291,7 @@ export function SubscriptionForm({
               value={form.watch('card_id') || 'none'}
               onValueChange={(value) => form.setValue('card_id', value === 'none' ? null : value)}
             >
-              <SelectTrigger className="bg-white/5 border-white/10">
+              <SelectTrigger className="border-white/10 bg-white/5">
                 <SelectValue placeholder="Select card" />
               </SelectTrigger>
               <SelectContent>
@@ -304,7 +301,9 @@ export function SubscriptionForm({
                     <div className="flex items-center gap-2">
                       <CreditCard className="h-4 w-4" style={{ color: card.color }} />
                       {card.name}
-                      {card.last_four && <span className="text-muted-foreground">•••• {card.last_four}</span>}
+                      {card.last_four && (
+                        <span className="text-muted-foreground">•••• {card.last_four}</span>
+                      )}
                     </div>
                   </SelectItem>
                 ))}
@@ -318,7 +317,7 @@ export function SubscriptionForm({
           <Input
             id="notes"
             placeholder="Optional notes..."
-            className="bg-white/5 border-white/10"
+            className="border-white/10 bg-white/5"
             {...form.register('notes')}
           />
         </div>

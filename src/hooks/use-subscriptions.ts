@@ -5,16 +5,8 @@ import { calculateMonthlyAmount, calculateYearlyAmount } from '@/types/subscript
 import type { Subscription } from '@/types/subscription'
 
 export function useSubscriptions() {
-  const {
-    subscriptions,
-    isLoading,
-    error,
-    fetch,
-    add,
-    update,
-    remove,
-    toggleActive,
-  } = useSubscriptionStore()
+  const { subscriptions, isLoading, error, fetch, add, update, remove, toggleActive } =
+    useSubscriptionStore()
 
   const { categories, fetch: fetchCategories } = useCategoryStore()
 
@@ -35,8 +27,7 @@ export function useSubscriptions() {
     0
   )
 
-  const getCategory = (categoryId: string | null) =>
-    categories.find((c) => c.id === categoryId)
+  const getCategory = (categoryId: string | null) => categories.find((c) => c.id === categoryId)
 
   const getSubscriptionWithCategory = (sub: Subscription) => ({
     ...sub,

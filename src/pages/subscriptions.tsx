@@ -41,17 +41,21 @@ export function Subscriptions() {
     if (!sub.next_payment_date) return
     try {
       await markAsPaid(sub.id, sub.next_payment_date, sub.amount)
-      
+
       const currentPaymentDate = parseISO(sub.next_payment_date)
-      const nextDate = calculateNextPaymentDate(currentPaymentDate, sub.billing_cycle, sub.billing_day || undefined)
-      await useSubscriptionStore.getState().update(sub.id, { 
-        next_payment_date: nextDate.toISOString().split('T')[0] 
+      const nextDate = calculateNextPaymentDate(
+        currentPaymentDate,
+        sub.billing_cycle,
+        sub.billing_day || undefined
+      )
+      await useSubscriptionStore.getState().update(sub.id, {
+        next_payment_date: nextDate.toISOString().split('T')[0],
       })
-      
+
       toast.success('Payment recorded', {
         description: `${sub.name} marked as paid. Next payment: ${formatPaymentDate(nextDate)}`,
       })
-    } catch (error) {
+    } catch {
       toast.error('Error', {
         description: 'Failed to record payment.',
       })
@@ -73,7 +77,7 @@ export function Subscriptions() {
       toast.success('Subscription deleted', {
         description: `${deleteTarget.name} has been removed from your subscriptions.`,
       })
-    } catch (error) {
+    } catch {
       toast.error('Error', {
         description: 'Failed to delete subscription. Please try again.',
       })
@@ -89,7 +93,7 @@ export function Subscriptions() {
       toast.success(sub.is_active ? 'Subscription paused' : 'Subscription activated', {
         description: `${sub.name} has been ${sub.is_active ? 'paused' : 'activated'}.`,
       })
-    } catch (error) {
+    } catch {
       toast.error('Error', {
         description: 'Failed to update subscription status.',
       })
@@ -99,7 +103,7 @@ export function Subscriptions() {
   if (isLoading) {
     return (
       <div className="flex h-full items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-aurora-purple border-t-transparent" />
+        <div className="border-aurora-purple h-8 w-8 animate-spin rounded-full border-2 border-t-transparent" />
       </div>
     )
   }
@@ -121,10 +125,10 @@ export function Subscriptions() {
         {subscriptions.length === 0 ? (
           <div className="glass-card flex flex-col items-center justify-center py-16">
             <div className="mb-4 rounded-full bg-white/5 p-4">
-              <Plus className="h-8 w-8 text-muted-foreground" />
+              <Plus className="text-muted-foreground h-8 w-8" />
             </div>
             <h2 className="mb-2 text-xl font-semibold">No subscriptions yet</h2>
-            <p className="mb-6 text-center text-muted-foreground">
+            <p className="text-muted-foreground mb-6 text-center">
               Start tracking your recurring payments by adding your first subscription
             </p>
             <Button onClick={() => openSubscriptionDialog()}>Add your first subscription</Button>
@@ -152,7 +156,10 @@ export function Subscriptions() {
                         {category && (
                           <span
                             className="inline-block rounded-full px-2 py-0.5 text-xs"
-                            style={{ backgroundColor: `${category.color}20`, color: category.color }}
+                            style={{
+                              backgroundColor: `${category.color}20`,
+                              color: category.color,
+                            }}
                           >
                             {category.name}
                           </span>
@@ -190,13 +197,13 @@ export function Subscriptions() {
                       <span className="text-2xl font-bold">
                         {formatCurrency(sub.amount, currency)}
                       </span>
-                      <span className="text-sm text-muted-foreground">
+                      <span className="text-muted-foreground text-sm">
                         {BILLING_CYCLE_LABELS[sub.billing_cycle]}
                       </span>
                     </div>
                     {sub.next_payment_date && (
                       <div className="flex items-center justify-between">
-                        <p className="text-sm text-muted-foreground">
+                        <p className="text-muted-foreground text-sm">
                           Next: {formatPaymentDate(sub.next_payment_date)}
                         </p>
                         {canMarkAsPaid(sub) && (
@@ -204,7 +211,7 @@ export function Subscriptions() {
                             size="sm"
                             variant="outline"
                             onClick={() => handleMarkAsPaid(sub)}
-                            className="h-7 gap-1 text-xs bg-emerald-500/10 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20"
+                            className="h-7 gap-1 border-emerald-500/30 bg-emerald-500/10 text-xs text-emerald-400 hover:bg-emerald-500/20"
                           >
                             <Check className="h-3 w-3" />
                             Paid
@@ -213,7 +220,7 @@ export function Subscriptions() {
                       </div>
                     )}
                     {!sub.is_active && (
-                      <span className="inline-block rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
+                      <span className="bg-muted text-muted-foreground inline-block rounded-full px-2 py-0.5 text-xs">
                         Paused
                       </span>
                     )}

@@ -22,13 +22,13 @@ export function Sidebar() {
       )}
     >
       <div className={cn('flex items-center gap-3 p-4', sidebarCollapsed && 'justify-center')}>
-        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-aurora-purple to-aurora-blue">
+        <div className="from-aurora-purple to-aurora-blue flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br">
           <span className="text-lg font-bold text-white">S</span>
         </div>
         {!sidebarCollapsed && (
           <div>
             <h1 className="gradient-text text-xl font-bold">Subby</h1>
-            <p className="text-xs text-muted-foreground">Know where your money flows</p>
+            <p className="text-muted-foreground text-xs">Know where your money flows</p>
           </div>
         )}
       </div>
@@ -42,8 +42,8 @@ export function Sidebar() {
               cn(
                 'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
                 isActive
-                  ? 'bg-white/10 text-foreground'
-                  : 'text-muted-foreground hover:bg-white/5 hover:text-foreground',
+                  ? 'text-foreground bg-white/10'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-white/5',
                 sidebarCollapsed && 'justify-center px-2'
               )
             }
@@ -59,7 +59,7 @@ export function Sidebar() {
         variant="ghost"
         size="icon"
         onClick={toggleSidebar}
-        className="absolute -right-3 top-20 h-6 w-6 rounded-full border border-white/10 bg-background"
+        className="bg-background absolute top-20 -right-3 h-6 w-6 rounded-full border border-white/10"
       >
         <ChevronLeft
           className={cn('h-4 w-4 transition-transform', sidebarCollapsed && 'rotate-180')}

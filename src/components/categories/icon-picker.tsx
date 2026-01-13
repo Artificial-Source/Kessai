@@ -9,25 +9,25 @@ type IconPickerProps = {
 
 const iconComponents: Record<string, LucideIcons.LucideIcon> = {
   'play-circle': LucideIcons.PlayCircle,
-  'code': LucideIcons.Code,
+  code: LucideIcons.Code,
   'gamepad-2': LucideIcons.Gamepad2,
-  'music': LucideIcons.Music,
-  'cloud': LucideIcons.Cloud,
-  'briefcase': LucideIcons.Briefcase,
+  music: LucideIcons.Music,
+  cloud: LucideIcons.Cloud,
+  briefcase: LucideIcons.Briefcase,
   'heart-pulse': LucideIcons.HeartPulse,
-  'newspaper': LucideIcons.Newspaper,
-  'box': LucideIcons.Box,
-  'tv': LucideIcons.Tv,
-  'film': LucideIcons.Film,
+  newspaper: LucideIcons.Newspaper,
+  box: LucideIcons.Box,
+  tv: LucideIcons.Tv,
+  film: LucideIcons.Film,
   'book-open': LucideIcons.BookOpen,
   'shopping-cart': LucideIcons.ShoppingCart,
-  'car': LucideIcons.Car,
-  'home': LucideIcons.Home,
-  'globe': LucideIcons.Globe,
-  'phone': LucideIcons.Phone,
-  'wifi': LucideIcons.Wifi,
+  car: LucideIcons.Car,
+  home: LucideIcons.Home,
+  globe: LucideIcons.Globe,
+  phone: LucideIcons.Phone,
+  wifi: LucideIcons.Wifi,
   'credit-card': LucideIcons.CreditCard,
-  'gift': LucideIcons.Gift,
+  gift: LucideIcons.Gift,
 }
 
 export function IconPicker({ value, onChange }: IconPickerProps) {
@@ -45,8 +45,8 @@ export function IconPicker({ value, onChange }: IconPickerProps) {
             className={cn(
               'flex h-10 w-10 items-center justify-center rounded-lg transition-all',
               value === iconName
-                ? 'bg-aurora-purple text-white ring-2 ring-aurora-purple ring-offset-2 ring-offset-background'
-                : 'bg-white/5 text-muted-foreground hover:bg-white/10 hover:text-foreground'
+                ? 'bg-aurora-purple ring-aurora-purple ring-offset-background text-white ring-2 ring-offset-2'
+                : 'text-muted-foreground hover:text-foreground bg-white/5 hover:bg-white/10'
             )}
           >
             <IconComponent className="h-5 w-5" />

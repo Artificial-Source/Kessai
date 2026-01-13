@@ -72,8 +72,11 @@ export function SubscriptionDialog() {
   }
 
   return (
-    <Sheet open={subscriptionDialogOpen} onOpenChange={(open) => !open && closeSubscriptionDialog()}>
-      <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
+    <Sheet
+      open={subscriptionDialogOpen}
+      onOpenChange={(open) => !open && closeSubscriptionDialog()}
+    >
+      <SheetContent className="w-full overflow-y-auto sm:max-w-lg">
         <SheetHeader className="mb-6">
           <SheetTitle className="text-xl">
             {isEditing ? 'Edit Subscription' : 'Add Subscription'}

@@ -58,7 +58,7 @@ export function CategoryDialog({ open, onOpenChange, category }: CategoryDialogP
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="w-full sm:max-w-md overflow-y-auto">
+      <SheetContent className="w-full overflow-y-auto sm:max-w-md">
         <SheetHeader className="mb-6">
           <SheetTitle className="text-xl">
             {isEditing ? 'Edit Category' : 'Add Category'}

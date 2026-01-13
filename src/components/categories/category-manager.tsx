@@ -10,7 +10,7 @@ import type { Category } from '@/types/category'
 
 export function CategoryManager() {
   const { categories, remove, isLoading } = useCategories()
-  
+
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editingCategory, setEditingCategory] = useState<Category | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<Category | null>(null)
@@ -34,7 +34,7 @@ export function CategoryManager() {
       toast.success('Category deleted', {
         description: `${deleteTarget.name} has been removed. Associated subscriptions are now uncategorized.`,
       })
-    } catch (error) {
+    } catch {
       toast.error('Error', {
         description: 'Failed to delete category. Please try again.',
       })
@@ -54,7 +54,7 @@ export function CategoryManager() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-8">
-        <div className="h-6 w-6 animate-spin rounded-full border-2 border-aurora-purple border-t-transparent" />
+        <div className="border-aurora-purple h-6 w-6 animate-spin rounded-full border-2 border-t-transparent" />
       </div>
     )
   }
@@ -68,7 +68,7 @@ export function CategoryManager() {
         <div className="flex items-center justify-between">
           <div>
             <h3 className="font-medium">Categories</h3>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-muted-foreground text-sm">
               Organize your subscriptions with categories
             </p>
           </div>
@@ -80,7 +80,7 @@ export function CategoryManager() {
 
         {customCategories.length > 0 && (
           <div className="space-y-2">
-            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+            <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
               Custom
             </p>
             <div className="space-y-1">
@@ -97,16 +97,12 @@ export function CategoryManager() {
         )}
 
         <div className="space-y-2">
-          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+          <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
             Default
           </p>
           <div className="space-y-1">
             {defaultCategories.map((category) => (
-              <CategoryItem
-                key={category.id}
-                category={category}
-                isDefault
-              />
+              <CategoryItem key={category.id} category={category} isDefault />
             ))}
           </div>
         </div>
@@ -150,24 +146,17 @@ function CategoryItem({ category, isDefault, onEdit, onDelete }: CategoryItemPro
           <CategoryIconDisplay icon={category.icon} className="h-4 w-4 text-white" />
         </div>
         <span className="font-medium">{category.name}</span>
-        {isDefault && (
-          <Lock className="h-3 w-3 text-muted-foreground" />
-        )}
+        {isDefault && <Lock className="text-muted-foreground h-3 w-3" />}
       </div>
       {!isDefault && (
         <div className="flex gap-1">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-7 w-7"
-            onClick={onEdit}
-          >
+          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onEdit}>
             <Pencil className="h-3.5 w-3.5" />
           </Button>
           <Button
             variant="ghost"
             size="icon"
-            className="h-7 w-7 text-destructive hover:text-destructive"
+            className="text-destructive hover:text-destructive h-7 w-7"
             onClick={onDelete}
           >
             <Trash2 className="h-3.5 w-3.5" />

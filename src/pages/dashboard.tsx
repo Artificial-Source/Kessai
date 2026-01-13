@@ -16,13 +16,8 @@ export function Dashboard() {
   const { subscriptions, isLoading, fetch: fetchSubscriptions } = useSubscriptionStore()
   const { fetch: fetchCategories } = useCategoryStore()
   const { settings, fetch: fetchSettings } = useSettingsStore()
-  const {
-    categorySpending,
-    monthlySpending,
-    totalMonthly,
-    totalYearly,
-    activeCount,
-  } = useDashboardStats()
+  const { categorySpending, monthlySpending, totalMonthly, totalYearly, activeCount } =
+    useDashboardStats()
 
   const currency = (settings?.currency || 'USD') as CurrencyCode
   const upcomingPayments = getUpcomingPayments(subscriptions, 7)
@@ -36,7 +31,7 @@ export function Dashboard() {
   if (isLoading) {
     return (
       <div className="flex h-full items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-aurora-purple border-t-transparent" />
+        <div className="border-aurora-purple h-8 w-8 animate-spin rounded-full border-2 border-t-transparent" />
       </div>
     )
   }
@@ -113,14 +108,14 @@ export function Dashboard() {
                     />
                     <div>
                       <p className="font-medium">{sub.name}</p>
-                      <p className="text-sm text-muted-foreground">
+                      <p className="text-muted-foreground text-sm">
                         {sub.next_payment_date && formatShortDate(sub.next_payment_date)}
                       </p>
                     </div>
                   </div>
                   <div className="text-right">
                     <p className="font-medium">{formatCurrency(sub.amount, currency)}</p>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-muted-foreground text-sm">
                       {sub.next_payment_date && `in ${getDaysUntil(sub.next_payment_date)} days`}
                     </p>
                   </div>
@@ -155,9 +150,7 @@ export function Dashboard() {
             </div>
             <div className="flex items-center justify-between">
               <span className="text-muted-foreground">Daily average</span>
-              <span className="font-medium">
-                {formatCurrency(totalMonthly / 30, currency)}
-              </span>
+              <span className="font-medium">{formatCurrency(totalMonthly / 30, currency)}</span>
             </div>
           </div>
         </div>

@@ -35,7 +35,7 @@ export function SettingsPage() {
   if (isLoading || !settings) {
     return (
       <div className="flex h-full items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-aurora-purple border-t-transparent" />
+        <div className="border-aurora-purple h-8 w-8 animate-spin rounded-full border-2 border-t-transparent" />
       </div>
     )
   }
@@ -59,7 +59,7 @@ export function SettingsPage() {
         <div className="glass-card space-y-6 p-6">
           <div>
             <h2 className="text-lg font-semibold">Appearance</h2>
-            <p className="text-sm text-muted-foreground">Customize how Subby looks</p>
+            <p className="text-muted-foreground text-sm">Customize how Subby looks</p>
           </div>
 
           <div className="space-y-3">
@@ -83,15 +83,12 @@ export function SettingsPage() {
         <div className="glass-card space-y-6 p-6">
           <div>
             <h2 className="text-lg font-semibold">Preferences</h2>
-            <p className="text-sm text-muted-foreground">Set your default options</p>
+            <p className="text-muted-foreground text-sm">Set your default options</p>
           </div>
 
           <div className="space-y-3">
             <Label htmlFor="currency">Default Currency</Label>
-            <Select
-              value={settings.currency}
-              onValueChange={(value) => setCurrency(value)}
-            >
+            <Select value={settings.currency} onValueChange={(value) => setCurrency(value)}>
               <SelectTrigger id="currency">
                 <SelectValue />
               </SelectTrigger>
@@ -109,7 +106,7 @@ export function SettingsPage() {
         <div className="glass-card space-y-6 p-6">
           <div>
             <h2 className="text-lg font-semibold">Notifications</h2>
-            <p className="text-sm text-muted-foreground">Configure payment reminders</p>
+            <p className="text-muted-foreground text-sm">Configure payment reminders</p>
           </div>
 
           <NotificationSettings settings={settings} onUpdate={update} />
@@ -118,7 +115,7 @@ export function SettingsPage() {
         <div className="glass-card space-y-6 p-6">
           <div>
             <h2 className="text-lg font-semibold">Data Management</h2>
-            <p className="text-sm text-muted-foreground">Export and import your data</p>
+            <p className="text-muted-foreground text-sm">Export and import your data</p>
           </div>
 
           <DataManagement onDataChanged={handleDataChanged} />
@@ -127,7 +124,7 @@ export function SettingsPage() {
         <div className="glass-card space-y-6 p-6">
           <div>
             <h2 className="text-lg font-semibold">About</h2>
-            <p className="text-sm text-muted-foreground">Application information</p>
+            <p className="text-muted-foreground text-sm">Application information</p>
           </div>
 
           <div className="space-y-4">
@@ -149,7 +146,7 @@ export function SettingsPage() {
         <div className="glass-card space-y-6 p-6">
           <div>
             <h2 className="text-lg font-semibold">Payment Cards</h2>
-            <p className="text-sm text-muted-foreground">Manage your payment methods</p>
+            <p className="text-muted-foreground text-sm">Manage your payment methods</p>
           </div>
 
           <CardManager currency={settings.currency as CurrencyCode} />

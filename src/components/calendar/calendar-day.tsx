@@ -1,24 +1,24 @@
-import { cn } from '@/lib/utils';
-import { motion } from 'framer-motion';
-import { SubscriptionLogo } from '@/components/ui/subscription-logo';
-import type { Subscription } from '@/types/subscription';
+import { cn } from '@/lib/utils'
+import { motion } from 'framer-motion'
+import { SubscriptionLogo } from '@/components/ui/subscription-logo'
+import type { Subscription } from '@/types/subscription'
 
 interface DayPayment {
-  subscription: Subscription;
-  amount: number;
-  isPaid: boolean;
-  isSkipped: boolean;
-  dueDate: string;
+  subscription: Subscription
+  amount: number
+  isPaid: boolean
+  isSkipped: boolean
+  dueDate: string
 }
 
 interface CalendarDayProps {
-  dayOfMonth: number;
-  isCurrentMonth: boolean;
-  isToday: boolean;
-  isSelected: boolean;
-  payments: DayPayment[];
-  totalAmount: number;
-  onClick: () => void;
+  dayOfMonth: number
+  isCurrentMonth: boolean
+  isToday: boolean
+  isSelected: boolean
+  payments: DayPayment[]
+  totalAmount: number
+  onClick: () => void
 }
 
 export function CalendarDay({
@@ -29,10 +29,10 @@ export function CalendarDay({
   payments,
   onClick,
 }: CalendarDayProps) {
-  const hasPayments = payments.length > 0;
-  const maxLogos = 3;
-  const visiblePayments = payments.slice(0, maxLogos);
-  const remainingCount = payments.length - maxLogos;
+  const hasPayments = payments.length > 0
+  const maxLogos = 3
+  const visiblePayments = payments.slice(0, maxLogos)
+  const remainingCount = payments.length - maxLogos
 
   return (
     <motion.button
@@ -41,13 +41,13 @@ export function CalendarDay({
       onClick={onClick}
       className={cn(
         'relative h-20 w-full rounded-lg transition-all duration-200',
-        'flex flex-col items-center justify-start pt-1 gap-1',
-        'backdrop-blur-sm border',
+        'flex flex-col items-center justify-start gap-1 pt-1',
+        'border backdrop-blur-sm',
         isCurrentMonth
-          ? 'bg-white/5 border-white/10 hover:bg-white/10 hover:border-white/20'
-          : 'bg-transparent border-transparent text-muted-foreground/50',
-        isToday && 'ring-2 ring-violet-500/50 bg-violet-500/10 border-violet-500/30',
-        isSelected && 'bg-violet-500/20 border-violet-500/50',
+          ? 'border-white/10 bg-white/5 hover:border-white/20 hover:bg-white/10'
+          : 'text-muted-foreground/50 border-transparent bg-transparent',
+        isToday && 'border-violet-500/30 bg-violet-500/10 ring-2 ring-violet-500/50',
+        isSelected && 'border-violet-500/50 bg-violet-500/20',
         hasPayments && !isSelected && 'bg-white/8'
       )}
     >
@@ -74,7 +74,7 @@ export function CalendarDay({
             />
           ))}
           {remainingCount > 0 && (
-            <span className="text-[10px] text-muted-foreground">+{remainingCount}</span>
+            <span className="text-muted-foreground text-[10px]">+{remainingCount}</span>
           )}
         </div>
       )}
@@ -82,12 +82,12 @@ export function CalendarDay({
       {isToday && (
         <motion.div
           layoutId="today-glow"
-          className="absolute inset-0 rounded-lg bg-violet-500/20 -z-10"
+          className="absolute inset-0 -z-10 rounded-lg bg-violet-500/20"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.3 }}
         />
       )}
     </motion.button>
-  );
+  )
 }

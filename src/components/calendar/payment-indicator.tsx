@@ -1,74 +1,63 @@
-import { cn } from '@/lib/utils';
-import { Check, X } from 'lucide-react';
+import { cn } from '@/lib/utils'
+import { Check, X } from 'lucide-react'
 
 interface PaymentIndicatorProps {
-  color: string;
-  isPaid?: boolean;
-  isSkipped?: boolean;
-  size?: 'sm' | 'md';
+  color: string
+  isPaid?: boolean
+  isSkipped?: boolean
+  size?: 'sm' | 'md'
 }
 
-export function PaymentIndicator({
-  color,
-  isPaid,
-  isSkipped,
-  size = 'sm',
-}: PaymentIndicatorProps) {
+export function PaymentIndicator({ color, isPaid, isSkipped, size = 'sm' }: PaymentIndicatorProps) {
   const sizeClasses = {
     sm: 'h-2 w-2',
     md: 'h-3 w-3',
-  };
+  }
 
   if (isPaid) {
     return (
       <div
         className={cn(
-          'rounded-full flex items-center justify-center',
+          'flex items-center justify-center rounded-full',
           size === 'sm' ? 'h-3 w-3' : 'h-4 w-4'
         )}
         style={{ backgroundColor: color }}
       >
         <Check className="h-2 w-2 text-white" />
       </div>
-    );
+    )
   }
 
   if (isSkipped) {
     return (
       <div
         className={cn(
-          'rounded-full flex items-center justify-center bg-muted',
+          'bg-muted flex items-center justify-center rounded-full',
           size === 'sm' ? 'h-3 w-3' : 'h-4 w-4'
         )}
       >
-        <X className="h-2 w-2 text-muted-foreground" />
+        <X className="text-muted-foreground h-2 w-2" />
       </div>
-    );
+    )
   }
 
   return (
-    <div
-      className={cn('rounded-full', sizeClasses[size])}
-      style={{ backgroundColor: color }}
-    />
-  );
+    <div className={cn('rounded-full', sizeClasses[size])} style={{ backgroundColor: color }} />
+  )
 }
 
 interface PaymentIndicatorStackProps {
   payments: Array<{
-    color: string;
-    isPaid?: boolean;
-    isSkipped?: boolean;
-  }>;
-  maxVisible?: number;
+    color: string
+    isPaid?: boolean
+    isSkipped?: boolean
+  }>
+  maxVisible?: number
 }
 
-export function PaymentIndicatorStack({
-  payments,
-  maxVisible = 3,
-}: PaymentIndicatorStackProps) {
-  const visiblePayments = payments.slice(0, maxVisible);
-  const remainingCount = payments.length - maxVisible;
+export function PaymentIndicatorStack({ payments, maxVisible = 3 }: PaymentIndicatorStackProps) {
+  const visiblePayments = payments.slice(0, maxVisible)
+  const remainingCount = payments.length - maxVisible
 
   return (
     <div className="flex items-center gap-0.5">
@@ -82,10 +71,8 @@ export function PaymentIndicatorStack({
         />
       ))}
       {remainingCount > 0 && (
-        <span className="text-[10px] text-muted-foreground ml-0.5">
-          +{remainingCount}
-        </span>
+        <span className="text-muted-foreground ml-0.5 text-[10px]">+{remainingCount}</span>
       )}
     </div>
-  );
+  )
 }

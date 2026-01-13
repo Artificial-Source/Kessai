@@ -1,12 +1,12 @@
-import { useEffect } from 'react';
-import { usePaymentStore } from '@/stores/payment-store';
+import { useEffect } from 'react'
+import { usePaymentStore } from '@/stores/payment-store'
 
 export function usePayments() {
-  const store = usePaymentStore();
+  const store = usePaymentStore()
 
   useEffect(() => {
-    store.fetchPayments();
-  }, []);
+    store.fetchPayments()
+  }, [store])
 
   return {
     payments: store.payments,
@@ -22,5 +22,5 @@ export function usePayments() {
     fetchPaymentsBySubscription: store.fetchPaymentsBySubscription,
     fetchPaymentsWithDetails: store.fetchPaymentsWithDetails,
     refetch: store.fetchPayments,
-  };
+  }
 }

@@ -66,11 +66,11 @@ export function CategoryForm({
           <Input
             id="name"
             placeholder="Category name"
-            className="bg-white/5 border-white/10"
+            className="border-white/10 bg-white/5"
             {...form.register('name')}
           />
           {form.formState.errors.name && (
-            <p className="text-sm text-destructive">{form.formState.errors.name.message}</p>
+            <p className="text-destructive text-sm">{form.formState.errors.name.message}</p>
           )}
         </div>
 
@@ -85,7 +85,7 @@ export function CategoryForm({
                 className={cn(
                   'h-8 w-8 rounded-lg transition-all',
                   selectedColor === color
-                    ? 'ring-2 ring-white ring-offset-2 ring-offset-background scale-110'
+                    ? 'ring-offset-background scale-110 ring-2 ring-white ring-offset-2'
                     : 'hover:scale-105'
                 )}
                 style={{ backgroundColor: color }}
@@ -93,18 +93,15 @@ export function CategoryForm({
             ))}
           </div>
           {form.formState.errors.color && (
-            <p className="text-sm text-destructive">{form.formState.errors.color.message}</p>
+            <p className="text-destructive text-sm">{form.formState.errors.color.message}</p>
           )}
         </div>
 
         <div className="space-y-2">
           <Label>Icon *</Label>
-          <IconPicker
-            value={selectedIcon}
-            onChange={(icon) => form.setValue('icon', icon)}
-          />
+          <IconPicker value={selectedIcon} onChange={(icon) => form.setValue('icon', icon)} />
           {form.formState.errors.icon && (
-            <p className="text-sm text-destructive">{form.formState.errors.icon.message}</p>
+            <p className="text-destructive text-sm">{form.formState.errors.icon.message}</p>
           )}
         </div>
       </div>

@@ -1,39 +1,39 @@
-import { useState, useEffect } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { toast } from 'sonner';
-import { CreditCard, Plus, Pencil, Trash2, X } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { useState, useEffect } from 'react'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { toast } from 'sonner'
+import { CreditCard, Plus, Pencil, Trash2, X } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { ConfirmDialog } from '@/components/ui/confirm-dialog';
-import { usePaymentCardStore } from '@/stores/payment-card-store';
-import { paymentCardFormSchema, CARD_COLORS } from '@/types/payment-card';
-import { formatCurrency } from '@/lib/currency';
-import { cn } from '@/lib/utils';
-import type { PaymentCard, PaymentCardFormData } from '@/types/payment-card';
-import type { CurrencyCode } from '@/lib/currency';
+} from '@/components/ui/select'
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
+import { usePaymentCardStore } from '@/stores/payment-card-store'
+import { paymentCardFormSchema, CARD_COLORS } from '@/types/payment-card'
+import { formatCurrency } from '@/lib/currency'
+import { cn } from '@/lib/utils'
+import type { PaymentCard, PaymentCardFormData } from '@/types/payment-card'
+import type { CurrencyCode } from '@/lib/currency'
 
 interface CardManagerProps {
-  currency: CurrencyCode;
+  currency: CurrencyCode
 }
 
 export function CardManager({ currency }: CardManagerProps) {
-  const { cards, fetch, add, update, remove } = usePaymentCardStore();
-  const [isAdding, setIsAdding] = useState(false);
-  const [editingCard, setEditingCard] = useState<PaymentCard | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<PaymentCard | null>(null);
+  const { cards, fetch, add, update, remove } = usePaymentCardStore()
+  const [isAdding, setIsAdding] = useState(false)
+  const [editingCard, setEditingCard] = useState<PaymentCard | null>(null)
+  const [deleteTarget, setDeleteTarget] = useState<PaymentCard | null>(null)
 
   useEffect(() => {
-    fetch();
-  }, [fetch]);
+    fetch()
+  }, [fetch])
 
   const form = useForm<PaymentCardFormData>({
     resolver: zodResolver(paymentCardFormSchema),
@@ -44,71 +44,70 @@ export function CardManager({ currency }: CardManagerProps) {
       color: CARD_COLORS[0],
       credit_limit: undefined,
     },
-  });
+  })
 
   const handleSubmit = async (data: PaymentCardFormData) => {
     try {
       if (editingCard) {
-        await update(editingCard.id, data);
-        toast.success('Card updated');
+        await update(editingCard.id, data)
+        toast.success('Card updated')
       } else {
-        await add(data);
-        toast.success('Card added');
+        await add(data)
+        toast.success('Card added')
       }
-      form.reset();
-      setIsAdding(false);
-      setEditingCard(null);
+      form.reset()
+      setIsAdding(false)
+      setEditingCard(null)
     } catch {
-      toast.error('Failed to save card');
+      toast.error('Failed to save card')
     }
-  };
+  }
 
   const handleEdit = (card: PaymentCard) => {
-    setEditingCard(card);
-    setIsAdding(true);
+    setEditingCard(card)
+    setIsAdding(true)
     form.reset({
       name: card.name,
       card_type: card.card_type,
       last_four: card.last_four || '',
       color: card.color,
       credit_limit: card.credit_limit || undefined,
-    });
-  };
+    })
+  }
 
   const handleDelete = async () => {
-    if (!deleteTarget) return;
+    if (!deleteTarget) return
     try {
-      await remove(deleteTarget.id);
-      toast.success('Card deleted');
+      await remove(deleteTarget.id)
+      toast.success('Card deleted')
     } catch {
-      toast.error('Failed to delete card');
+      toast.error('Failed to delete card')
     }
-    setDeleteTarget(null);
-  };
+    setDeleteTarget(null)
+  }
 
   const handleCancel = () => {
-    setIsAdding(false);
-    setEditingCard(null);
-    form.reset();
-  };
+    setIsAdding(false)
+    setEditingCard(null)
+    form.reset()
+  }
 
-  const cardType = form.watch('card_type');
+  const cardType = form.watch('card_type')
 
   return (
     <div className="space-y-4">
       {!isAdding && (
-        <Button
-          variant="outline"
-          onClick={() => setIsAdding(true)}
-          className="w-full gap-2"
-        >
+        <Button variant="outline" onClick={() => setIsAdding(true)} className="w-full gap-2">
           <Plus className="h-4 w-4" />
           Add Payment Card
         </Button>
       )}
 
       {isAdding && (
-        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4 p-4 rounded-lg bg-white/5 border border-white/10">
+        <form
+          onSubmit={form.handleSubmit(handleSubmit)}
+          className="space-y-4 rounded-lg border border-white/10 bg-white/5 p-4"
+        >
           <div className="flex items-center justify-between">
             <h3 className="font-medium">{editingCard ? 'Edit Card' : 'Add Card'}</h3>
             <Button type="button" variant="ghost" size="sm" onClick={handleCancel}>
@@ -122,7 +121,7 @@ export function CardManager({ currency }: CardManagerProps) {
               <Input
                 id="card-name"
                 placeholder="My Visa Card"
-                className="bg-white/5 border-white/10"
+                className="border-white/10 bg-white/5"
                 {...form.register('name')}
               />
             </div>
@@ -133,7 +132,7 @@ export function CardManager({ currency }: CardManagerProps) {
                 value={form.watch('card_type')}
                 onValueChange={(value) => form.setValue('card_type', value as 'credit' | 'debit')}
               >
-                <SelectTrigger className="bg-white/5 border-white/10">
+                <SelectTrigger className="border-white/10 bg-white/5">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -151,7 +150,7 @@ export function CardManager({ currency }: CardManagerProps) {
                 id="last-four"
                 placeholder="1234"
                 maxLength={4}
-                className="bg-white/5 border-white/10"
+                className="border-white/10 bg-white/5"
                 {...form.register('last_four')}
               />
             </div>
@@ -163,7 +162,7 @@ export function CardManager({ currency }: CardManagerProps) {
                   id="credit-limit"
                   type="number"
                   placeholder="5000"
-                  className="bg-white/5 border-white/10"
+                  className="border-white/10 bg-white/5"
                   {...form.register('credit_limit', { valueAsNumber: true })}
                 />
               </div>
@@ -180,7 +179,8 @@ export function CardManager({ currency }: CardManagerProps) {
                   onClick={() => form.setValue('color', color)}
                   className={cn(
                     'h-8 w-8 rounded-full transition-all',
-                    form.watch('color') === color && 'ring-2 ring-white ring-offset-2 ring-offset-background'
+                    form.watch('color') === color &&
+                      'ring-offset-background ring-2 ring-white ring-offset-2'
                   )}
                   style={{ backgroundColor: color }}
                 />
@@ -204,18 +204,18 @@ export function CardManager({ currency }: CardManagerProps) {
           {cards.map((card) => (
             <div
               key={card.id}
-              className="flex items-center justify-between p-3 rounded-lg bg-white/5 border border-white/10"
+              className="flex items-center justify-between rounded-lg border border-white/10 bg-white/5 p-3"
             >
               <div className="flex items-center gap-3">
                 <div
-                  className="h-10 w-10 rounded-lg flex items-center justify-center"
+                  className="flex h-10 w-10 items-center justify-center rounded-lg"
                   style={{ backgroundColor: card.color }}
                 >
                   <CreditCard className="h-5 w-5 text-white" />
                 </div>
                 <div>
                   <p className="font-medium">{card.name}</p>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-muted-foreground text-sm">
                     {card.card_type === 'credit' ? 'Credit' : 'Debit'}
                     {card.last_four && ` •••• ${card.last_four}`}
                   </p>
@@ -223,7 +223,7 @@ export function CardManager({ currency }: CardManagerProps) {
               </div>
               <div className="flex items-center gap-2">
                 {card.card_type === 'credit' && card.credit_limit && (
-                  <span className="text-sm text-muted-foreground mr-2">
+                  <span className="text-muted-foreground mr-2 text-sm">
                     Limit: {formatCurrency(card.credit_limit, currency)}
                   </span>
                 )}
@@ -245,9 +245,7 @@ export function CardManager({ currency }: CardManagerProps) {
       )}
 
       {cards.length === 0 && !isAdding && (
-        <p className="text-sm text-muted-foreground text-center py-4">
-          No payment cards added yet
-        </p>
+        <p className="text-muted-foreground py-4 text-center text-sm">No payment cards added yet</p>
       )}
 
       <ConfirmDialog
@@ -259,5 +257,5 @@ export function CardManager({ currency }: CardManagerProps) {
         onConfirm={handleDelete}
       />
     </div>
-  );
+  )
 }

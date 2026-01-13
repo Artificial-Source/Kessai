@@ -1,7 +1,7 @@
-import { z } from 'zod';
+import { z } from 'zod'
 
-export const cardTypeSchema = z.enum(['credit', 'debit']);
-export type CardType = z.infer<typeof cardTypeSchema>;
+export const cardTypeSchema = z.enum(['credit', 'debit'])
+export type CardType = z.infer<typeof cardTypeSchema>
 
 export const paymentCardSchema = z.object({
   id: z.string(),
@@ -11,9 +11,9 @@ export const paymentCardSchema = z.object({
   color: z.string(),
   credit_limit: z.number().nullable().optional(),
   created_at: z.string().optional(),
-});
+})
 
-export type PaymentCard = z.infer<typeof paymentCardSchema>;
+export type PaymentCard = z.infer<typeof paymentCardSchema>
 
 export const paymentCardFormSchema = z.object({
   name: z.string().min(1, 'Card name is required'),
@@ -21,9 +21,9 @@ export const paymentCardFormSchema = z.object({
   last_four: z.string().max(4).optional(),
   color: z.string(),
   credit_limit: z.number().positive().optional(),
-});
+})
 
-export type PaymentCardFormData = z.infer<typeof paymentCardFormSchema>;
+export type PaymentCardFormData = z.infer<typeof paymentCardFormSchema>
 
 export const CARD_COLORS = [
   '#6b7280',
@@ -34,4 +34,4 @@ export const CARD_COLORS = [
   '#10b981',
   '#06b6d4',
   '#f97316',
-];
+]

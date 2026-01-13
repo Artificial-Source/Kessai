@@ -38,8 +38,6 @@ export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
     const id = crypto.randomUUID()
     const now = new Date().toISOString()
 
-    console.log('Adding subscription:', { id, ...sub })
-    
     try {
       await execute(
         `INSERT INTO subscriptions 

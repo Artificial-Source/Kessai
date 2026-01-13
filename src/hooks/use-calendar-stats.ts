@@ -1,6 +1,6 @@
-import { useMemo, useEffect, useState } from 'react';
-import { useSubscriptions } from './use-subscriptions';
-import { usePaymentStore } from '@/stores/payment-store';
+import { useMemo, useEffect, useState } from 'react'
+import { useSubscriptions } from './use-subscriptions'
+import { usePaymentStore } from '@/stores/payment-store'
 import {
   startOfMonth,
   endOfMonth,
@@ -9,96 +9,96 @@ import {
   parseISO,
   isSameMonth,
   getDate,
-  subMonths,
-} from 'date-fns';
-import type { Subscription } from '@/types/subscription';
-import type { Payment } from '@/types/payment';
+} from 'date-fns'
+import type { Subscription } from '@/types/subscription'
+import type { Payment } from '@/types/payment'
 
 interface DayPayment {
-  subscription: Subscription;
-  amount: number;
-  isPaid: boolean;
-  isSkipped: boolean;
-  dueDate: string;
+  subscription: Subscription
+  amount: number
+  isPaid: boolean
+  isSkipped: boolean
+  dueDate: string
 }
 
 interface CalendarDay {
-  date: Date;
-  dayOfMonth: number;
-  isCurrentMonth: boolean;
-  isToday: boolean;
-  payments: DayPayment[];
-  totalAmount: number;
+  date: Date
+  dayOfMonth: number
+  isCurrentMonth: boolean
+  isToday: boolean
+  payments: DayPayment[]
+  totalAmount: number
 }
 
 interface MonthStats {
-  totalAmount: number;
-  paidAmount: number;
-  upcomingAmount: number;
-  paymentCount: number;
-  paidCount: number;
-  comparisonToPrevMonth: number;
+  totalAmount: number
+  paidAmount: number
+  upcomingAmount: number
+  paymentCount: number
+  paidCount: number
+  comparisonToPrevMonth: number
 }
 
 export function useCalendarStats(currentDate: Date) {
-  const { subscriptions } = useSubscriptions();
-  const fetchPaymentsByMonth = usePaymentStore((s) => s.fetchPaymentsByMonth);
-  const [payments, setPayments] = useState<Payment[]>([]);
-  const [prevMonthPayments, setPrevMonthPayments] = useState<Payment[]>([]);
+  const { subscriptions } = useSubscriptions()
+  const fetchPaymentsByMonth = usePaymentStore((s) => s.fetchPaymentsByMonth)
+  const [payments, setPayments] = useState<Payment[]>([])
+  const [prevMonthPayments, setPrevMonthPayments] = useState<Payment[]>([])
 
-  const year = currentDate.getFullYear();
-  const month = currentDate.getMonth() + 1;
+  const year = currentDate.getFullYear()
+  const month = currentDate.getMonth() + 1
 
   useEffect(() => {
-    fetchPaymentsByMonth(year, month).then(setPayments);
-    const prevDate = subMonths(currentDate, 1);
-    fetchPaymentsByMonth(prevDate.getFullYear(), prevDate.getMonth() + 1).then(setPrevMonthPayments);
-  }, [year, month, fetchPaymentsByMonth]);
+    fetchPaymentsByMonth(year, month).then(setPayments)
+    const prevYear = month === 1 ? year - 1 : year
+    const prevMonth = month === 1 ? 12 : month - 1
+    fetchPaymentsByMonth(prevYear, prevMonth).then(setPrevMonthPayments)
+  }, [year, month, fetchPaymentsByMonth])
 
   const subscriptionsForMonth = useMemo(() => {
-    const activeSubscriptions = subscriptions.filter((s) => s.is_active);
-    
+    const activeSubscriptions = subscriptions.filter((s) => s.is_active)
+
     return activeSubscriptions.filter((sub) => {
       if (sub.billing_cycle === 'yearly' && sub.next_payment_date) {
-        const nextPayment = parseISO(sub.next_payment_date);
-        return isSameMonth(nextPayment, currentDate);
+        const nextPayment = parseISO(sub.next_payment_date)
+        return isSameMonth(nextPayment, currentDate)
       }
-      return true;
-    });
-  }, [subscriptions, currentDate]);
+      return true
+    })
+  }, [subscriptions, currentDate])
 
   const getPaymentsForDay = useMemo(() => {
     return (dayOfMonth: number): DayPayment[] => {
-      const dateStr = format(
-        new Date(year, month - 1, dayOfMonth),
-        'yyyy-MM-dd'
-      );
+      const dateStr = format(new Date(year, month - 1, dayOfMonth), 'yyyy-MM-dd')
 
       return subscriptionsForMonth
         .filter((sub) => {
           if (sub.next_payment_date) {
-            const nextPayment = parseISO(sub.next_payment_date);
+            const nextPayment = parseISO(sub.next_payment_date)
             if (isSameMonth(nextPayment, currentDate)) {
-              return getDate(nextPayment) === dayOfMonth;
+              return getDate(nextPayment) === dayOfMonth
             }
           }
-          
-          if (sub.billing_day && (sub.billing_cycle === 'monthly' || sub.billing_cycle === 'quarterly')) {
-            return sub.billing_day === dayOfMonth;
-          }
-          
-          if (sub.billing_cycle === 'weekly' && sub.next_payment_date) {
-            const nextPayment = parseISO(sub.next_payment_date);
-            const checkDate = new Date(year, month - 1, dayOfMonth);
-            return nextPayment.getDay() === checkDate.getDay();
+
+          if (
+            sub.billing_day &&
+            (sub.billing_cycle === 'monthly' || sub.billing_cycle === 'quarterly')
+          ) {
+            return sub.billing_day === dayOfMonth
           }
 
-          return false;
+          if (sub.billing_cycle === 'weekly' && sub.next_payment_date) {
+            const nextPayment = parseISO(sub.next_payment_date)
+            const checkDate = new Date(year, month - 1, dayOfMonth)
+            return nextPayment.getDay() === checkDate.getDay()
+          }
+
+          return false
         })
         .map((sub) => {
           const payment = payments.find(
             (p) => p.subscription_id === sub.id && p.due_date === dateStr
-          );
+          )
 
           return {
             subscription: sub,
@@ -106,19 +106,19 @@ export function useCalendarStats(currentDate: Date) {
             isPaid: payment?.status === 'paid',
             isSkipped: payment?.status === 'skipped',
             dueDate: dateStr,
-          };
-        });
-    };
-  }, [subscriptionsForMonth, payments, year, month, currentDate]);
+          }
+        })
+    }
+  }, [subscriptionsForMonth, payments, year, month, currentDate])
 
   const calendarDays = useMemo((): CalendarDay[] => {
-    const monthStart = startOfMonth(currentDate);
-    const monthEnd = endOfMonth(currentDate);
-    const today = new Date();
+    const monthStart = startOfMonth(currentDate)
+    const monthEnd = endOfMonth(currentDate)
+    const today = new Date()
 
     return eachDayOfInterval({ start: monthStart, end: monthEnd }).map((date) => {
-      const dayOfMonth = getDate(date);
-      const dayPayments = getPaymentsForDay(dayOfMonth);
+      const dayOfMonth = getDate(date)
+      const dayPayments = getPaymentsForDay(dayOfMonth)
 
       return {
         date,
@@ -127,25 +127,24 @@ export function useCalendarStats(currentDate: Date) {
         isToday: format(date, 'yyyy-MM-dd') === format(today, 'yyyy-MM-dd'),
         payments: dayPayments,
         totalAmount: dayPayments.reduce((sum, p) => sum + p.amount, 0),
-      };
-    });
-  }, [currentDate, getPaymentsForDay]);
+      }
+    })
+  }, [currentDate, getPaymentsForDay])
 
   const monthStats = useMemo((): MonthStats => {
-    const allPaymentsThisMonth = calendarDays.flatMap((day) => day.payments);
-    
-    const totalAmount = allPaymentsThisMonth.reduce((sum, p) => sum + p.amount, 0);
+    const allPaymentsThisMonth = calendarDays.flatMap((day) => day.payments)
+
+    const totalAmount = allPaymentsThisMonth.reduce((sum, p) => sum + p.amount, 0)
     const paidAmount = allPaymentsThisMonth
       .filter((p) => p.isPaid)
-      .reduce((sum, p) => sum + p.amount, 0);
+      .reduce((sum, p) => sum + p.amount, 0)
     const upcomingAmount = allPaymentsThisMonth
       .filter((p) => !p.isPaid && !p.isSkipped)
-      .reduce((sum, p) => sum + p.amount, 0);
+      .reduce((sum, p) => sum + p.amount, 0)
 
-    const prevMonthTotal = prevMonthPayments.reduce((sum, p) => sum + p.amount, 0);
-    const comparisonToPrevMonth = prevMonthTotal > 0
-      ? ((totalAmount - prevMonthTotal) / prevMonthTotal) * 100
-      : 0;
+    const prevMonthTotal = prevMonthPayments.reduce((sum, p) => sum + p.amount, 0)
+    const comparisonToPrevMonth =
+      prevMonthTotal > 0 ? ((totalAmount - prevMonthTotal) / prevMonthTotal) * 100 : 0
 
     return {
       totalAmount,
@@ -154,15 +153,15 @@ export function useCalendarStats(currentDate: Date) {
       paymentCount: allPaymentsThisMonth.length,
       paidCount: allPaymentsThisMonth.filter((p) => p.isPaid).length,
       comparisonToPrevMonth,
-    };
-  }, [calendarDays, prevMonthPayments]);
+    }
+  }, [calendarDays, prevMonthPayments])
 
   const getPaymentsForDate = (date: Date): DayPayment[] => {
     const day = calendarDays.find(
       (d) => format(d.date, 'yyyy-MM-dd') === format(date, 'yyyy-MM-dd')
-    );
-    return day?.payments || [];
-  };
+    )
+    return day?.payments || []
+  }
 
   return {
     calendarDays,
@@ -170,5 +169,5 @@ export function useCalendarStats(currentDate: Date) {
     getPaymentsForDate,
     getPaymentsForDay,
     refetchPayments: () => fetchPaymentsByMonth(year, month).then(setPayments),
-  };
+  }
 }
