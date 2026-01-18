@@ -138,8 +138,8 @@ export function Dashboard() {
             <div className="relative min-h-[180px] w-full flex-1 px-2 pb-4">
               <AreaChart data={monthlySpending} />
               <div className="text-muted-foreground absolute bottom-0 flex w-full justify-between px-1 pb-1 text-[10px] font-medium">
-                {monthlySpending.slice(-6).map((item, i) => (
-                  <span key={i}>{item.monthLabel}</span>
+                {monthlySpending.slice(-6).map((item) => (
+                  <span key={item.month}>{item.monthLabel}</span>
                 ))}
               </div>
             </div>
