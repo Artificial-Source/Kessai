@@ -1,7 +1,6 @@
 import { EmbedBuilder, Colors } from 'discord.js'
-import dayjs from 'dayjs'
 import type { UpcomingPayment } from './reminder-service.js'
-import type { Subscription, Category, BackupData } from './backup-reader.js'
+import type { Subscription, Category } from './backup-reader.js'
 
 const CURRENCY_SYMBOLS: Record<string, string> = {
   USD: '$',
@@ -18,21 +17,11 @@ function formatCurrency(amount: number, currency: string): string {
   return `${symbol}${amount.toFixed(2)}`
 }
 
-function hexToDecimal(hex: string): number {
-  return parseInt(hex.replace('#', ''), 16)
-}
-
 export function buildUpcomingEmbed(
   payments: UpcomingPayment[],
   currency: string,
-  categories: Category[]
+  _categories: Category[]
 ): EmbedBuilder {
-  const getCategoryColor = (categoryId: string | null): number => {
-    if (!categoryId) return Colors.Purple
-    const cat = categories.find((c) => c.id === categoryId)
-    return cat?.color ? hexToDecimal(cat.color) : Colors.Purple
-  }
-
   const total = payments.reduce((sum, p) => sum + p.subscription.amount, 0)
 
   const embed = new EmbedBuilder()
@@ -65,7 +54,7 @@ export function buildUpcomingEmbed(
 export function buildReminderEmbed(
   payments: UpcomingPayment[],
   currency: string,
-  categories: Category[]
+  _categories: Category[]
 ): EmbedBuilder {
   const embed = new EmbedBuilder()
     .setTitle('🔔 Subscription Reminder')

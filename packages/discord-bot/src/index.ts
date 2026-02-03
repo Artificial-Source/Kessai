@@ -54,14 +54,10 @@ async function registerCommands(): Promise<void> {
   ]
 
   try {
-    console.log('Registering slash commands...')
-
     // Register globally (takes up to 1 hour to propagate)
     await rest.put(Routes.applicationCommands(client.user!.id), {
       body: commandData,
     })
-
-    console.log('Slash commands registered successfully!')
   } catch (error) {
     console.error('Failed to register slash commands:', error)
   }
@@ -91,8 +87,6 @@ client.on('interactionCreate', async (interaction) => {
 
 // Daily reminder function
 async function sendDailyReminder(): Promise<void> {
-  console.log('Checking for subscription reminders...')
-
   try {
     const data = await reminderService.getBackupData()
     if (!data) {
@@ -103,7 +97,6 @@ async function sendDailyReminder(): Promise<void> {
     const payments = await reminderService.getPaymentsForReminder()
 
     if (payments.length === 0) {
-      console.log('No payments due for reminder days')
       return
     }
 
@@ -114,13 +107,11 @@ async function sendDailyReminder(): Promise<void> {
       const channel = await client.channels.fetch(config.DISCORD_CHANNEL_ID)
       if (channel?.isTextBased() && 'send' in channel) {
         await channel.send({ embeds: [embed] })
-        console.log(`Sent reminder to channel ${config.DISCORD_CHANNEL_ID}`)
       }
     } else {
       // Send DM
       const user = await client.users.fetch(config.DISCORD_USER_ID)
       await user.send({ embeds: [embed] })
-      console.log(`Sent reminder DM to user ${config.DISCORD_USER_ID}`)
     }
   } catch (error) {
     console.error('Failed to send daily reminder:', error)
@@ -129,8 +120,6 @@ async function sendDailyReminder(): Promise<void> {
 
 // Client ready
 client.once('ready', async () => {
-  console.log(`Logged in as ${client.user?.tag}!`)
-
   // Register commands
   await registerCommands()
 
@@ -141,9 +130,6 @@ client.once('ready', async () => {
   cron.schedule(cronExpression, sendDailyReminder, {
     timezone: config.TIMEZONE,
   })
-
-  console.log(`Daily reminders scheduled for ${config.REMINDER_TIME} (${config.TIMEZONE})`)
-  console.log('Bot is ready!')
 })
 
 // Start the bot

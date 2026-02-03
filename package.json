@@ -28,6 +28,7 @@
     "bot": "pnpm --filter @subby/discord-bot",
     "bot:dev": "pnpm --filter @subby/discord-bot dev",
     "bot:build": "pnpm --filter @subby/discord-bot build",
+    "bot:build:exe": "pnpm --filter @subby/discord-bot build:exe",
     "bot:start": "pnpm --filter @subby/discord-bot start",
     "release": "release-it",
     "release:dry": "release-it --dry-run",

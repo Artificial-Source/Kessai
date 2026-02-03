@@ -104,10 +104,82 @@ When you add or modify subscriptions in Subby, re-export your data to update the
 
 The bot automatically reloads the data periodically.
 
-## Hosting
+## Linux Binary Installation
+
+The bot can be compiled into a standalone Linux executable that doesn't require Node.js.
+
+### Build the Binary
+
+```bash
+# From the monorepo root
+cd packages/discord-bot
+pnpm install
+pnpm build:exe
+```
+
+This creates `dist/subby-bot-linux` - a single executable file.
+
+### Manual Installation
+
+```bash
+# Copy binary to system
+sudo cp dist/subby-bot-linux /usr/local/bin/subby-bot
+sudo chmod +x /usr/local/bin/subby-bot
+
+# Create config directory
+sudo mkdir -p /etc/subby-bot
+
+# Create environment file
+sudo tee /etc/subby-bot/env << 'EOF'
+DISCORD_TOKEN=your_bot_token_here
+DISCORD_USER_ID=your_user_id_here
+SUBBY_BACKUP_PATH=/home/youruser/.local/share/subby/subby-backup.json
+REMINDER_TIME=09:00
+TIMEZONE=America/New_York
+EOF
+
+sudo chmod 600 /etc/subby-bot/env
+```
+
+### Run as SystemD Service (Recommended)
+
+For 24/7 operation as a background daemon:
+
+```bash
+# Copy service file
+sudo cp subby-bot.service /etc/systemd/system/subby-bot@.service
+
+# Enable and start (replace 'youruser' with your username)
+sudo systemctl daemon-reload
+sudo systemctl enable subby-bot@youruser
+sudo systemctl start subby-bot@youruser
+
+# Check status
+sudo systemctl status subby-bot@youruser
+
+# View logs
+journalctl -u subby-bot@youruser -f
+```
+
+### Run Directly
+
+If you prefer to run without systemd:
+
+```bash
+# Set environment variables
+export DISCORD_TOKEN=your_token
+export DISCORD_USER_ID=your_id
+export SUBBY_BACKUP_PATH=~/.local/share/subby/subby-backup.json
+
+# Run the binary
+./dist/subby-bot-linux
+```
+
+## Hosting Options
 
 For 24/7 uptime, deploy the bot to:
 
+- **Linux desktop/server**: Use the binary + SystemD service (see above)
 - A VPS (DigitalOcean, Linode, etc.)
 - Railway, Fly.io, or Render
 - A Raspberry Pi at home

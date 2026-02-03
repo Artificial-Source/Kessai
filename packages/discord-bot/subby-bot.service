@@ -1,0 +1,39 @@
+[Unit]
+Description=Subby Discord Bot - Subscription reminder notifications
+Documentation=https://github.com/yourusername/subby
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=%i
+Environment=NODE_ENV=production
+
+# Option 1: Use the compiled binary (recommended)
+ExecStart=/usr/local/bin/subby-bot
+
+# Option 2: Use Node.js directly (uncomment if not using binary)
+# ExecStart=/usr/bin/node /opt/subby-bot/dist/index.js
+
+# Environment file for secrets
+EnvironmentFile=/etc/subby-bot/env
+
+# Restart policy
+Restart=always
+RestartSec=10
+
+# Security hardening
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=read-only
+PrivateTmp=true
+ReadOnlyPaths=/
+ReadWritePaths=/var/log
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=subby-bot
+
+[Install]
+WantedBy=multi-user.target
