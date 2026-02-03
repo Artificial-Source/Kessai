@@ -104,9 +104,30 @@ When you add or modify subscriptions in Subby, re-export your data to update the
 
 The bot automatically reloads the data periodically.
 
-## Linux Binary Installation
+## Linux Installation (Recommended)
 
-The bot can be compiled into a standalone Linux executable that doesn't require Node.js.
+The easiest way to install on Linux - one command does everything:
+
+```bash
+# From the monorepo root
+cd packages/discord-bot
+./install.sh
+```
+
+The installer will:
+
+1. Build the standalone binary (if needed)
+2. Install it to `/usr/local/bin/subby-bot`
+3. Prompt you for Discord credentials
+4. Set up a SystemD service for 24/7 operation
+
+To uninstall later: `./uninstall.sh`
+
+---
+
+## Manual Installation
+
+If you prefer to install manually, follow these steps.
 
 ### Build the Binary
 
