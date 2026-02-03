@@ -16,6 +16,7 @@ lerna-debug.log*
 # IDE
 .vscode/*
 !.vscode/extensions.json
+!.vscode/settings.json
 .idea/
 *.suo
 *.ntvs*
@@ -26,6 +27,8 @@ lerna-debug.log*
 # OS
 .DS_Store
 Thumbs.db
+*.bak
+*~
 
 # Database (dev)
 *.db
@@ -36,11 +39,30 @@ Thumbs.db
 # Environment
 .env
 .env.local
+.env.*.local
 *.local
 
 # Testing
 coverage/
+playwright-report/
+test-results/
 
 # Misc
 *.tgz
 .cache/
+.turbo/
+.vercel/
+.netlify/
+
+# AI tools
+.delta9/
+.cursor/
+.aider*
+.continue/
+
+# Package manager
+.pnpm-store/
+.pnpm-buildinfo.json
+
+# Tauri
+src-tauri/gen/
