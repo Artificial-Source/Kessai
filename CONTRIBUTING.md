@@ -4,7 +4,7 @@ Thank you for your interest in contributing to Subby! This document provides gui
 
 ## Reporting Bugs
 
-1. Check existing [Issues](https://github.com/newstella/subby/issues) to avoid duplicates
+1. Check existing [Issues](https://github.com/g0dxn4/subby/issues) to avoid duplicates
 2. Use the "bug" label
 3. Include:
    - OS and version
@@ -23,7 +23,7 @@ Thank you for your interest in contributing to Subby! This document provides gui
 ### Setup
 
 ```bash
-git clone https://github.com/newstella/subby.git
+git clone https://github.com/g0dxn4/subby.git
 cd subby
 pnpm install
 pnpm tauri dev

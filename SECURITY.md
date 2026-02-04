@@ -29,7 +29,7 @@ If you discover a security vulnerability, please report it responsibly:
 
 1. **Do NOT open a public issue** for security vulnerabilities
 2. Email security concerns to the maintainer directly, or
-3. Open a [private security advisory](https://github.com/newstella/subby/security/advisories/new) on GitHub
+3. Open a [private security advisory](https://github.com/g0dxn4/subby/security/advisories/new) on GitHub
 
 ### What to Include
 

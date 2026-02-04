@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Documentation
+    url: https://github.com/g0dxn4/subby/tree/master/docs
+    about: Check the docs before opening an issue
+  - name: Troubleshooting Guide
+    url: https://github.com/g0dxn4/subby/blob/master/docs/troubleshooting.md
+    about: Common issues and solutions
