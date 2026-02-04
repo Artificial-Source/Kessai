@@ -24,6 +24,7 @@
     "test:coverage": "vitest run --coverage",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
+    "test:installer": "bash scripts/test-installer.sh",
     "prepare": "husky",
     "bot": "pnpm --filter @subby/discord-bot",
     "bot:dev": "pnpm --filter @subby/discord-bot dev",

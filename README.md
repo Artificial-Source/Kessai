@@ -96,6 +96,8 @@ cd subby
 ./install.sh
 ```
 
+> **Tip:** Run `./install.sh --help` to see all options, or `./install.sh --dry-run` to preview what will happen without making changes.
+
 **Step 3:** Choose what to install
 
 ```
@@ -107,6 +109,29 @@ What would you like to install?
 
 Choose [1-3]: 1
 ```
+
+**Non-interactive install** (for scripts/automation):
+
+```bash
+./install.sh --app      # Install desktop app only
+./install.sh --bot      # Install Discord bot only
+./install.sh --all      # Install everything
+```
+
+<details>
+<summary><strong>Why does the installer need sudo?</strong></summary>
+
+The installer uses `sudo` for:
+
+- **apt install**: To install Tauri build dependencies (libwebkit2gtk, etc.)
+- **dpkg -i / rpm -i**: To install the .deb/.rpm package system-wide to `/usr`
+- **systemctl**: To set up the Discord bot as a background service
+
+If you're on a distro that uses AppImage (not .deb/.rpm), **no sudo is needed** for the app itself.
+
+You can always run `./install.sh --dry-run` first to see exactly what commands will be executed.
+
+</details>
 
 **Step 4:** Launch Subby!
 
