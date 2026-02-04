@@ -68,9 +68,27 @@ Most subscription trackers are cloud-based, require accounts, and monetize your 
 
 ## Installation
 
-### Linux (Recommended)
+### Quick Install (Linux)
 
-One command does everything:
+**Step 1:** Install the prerequisites
+
+```bash
+# Install Node.js (if you don't have it)
+curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
+sudo apt install -y nodejs
+
+# Install pnpm
+npm install -g pnpm
+
+# Install Rust
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+source ~/.cargo/env
+
+# Install Tauri dependencies (Ubuntu/Debian)
+sudo apt install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+```
+
+**Step 2:** Clone and install
 
 ```bash
 git clone https://github.com/g0dxn4/subby.git
@@ -78,26 +96,53 @@ cd subby
 ./install.sh
 ```
 
-The installer will:
+**Step 3:** Choose what to install
 
-- Check and install dependencies
-- Build the app
-- Install system-wide (.deb, .rpm, or AppImage)
-- Optionally set up the Discord reminder bot
+```
+What would you like to install?
 
-To uninstall: `./uninstall.sh`
+  1) Subby desktop app only
+  2) Subby desktop app + Discord bot
+  3) Discord bot only
 
-### macOS & Windows
+Choose [1-3]: 1
+```
 
-Download the latest release from [GitHub Releases](https://github.com/g0dxn4/subby/releases).
+**Step 4:** Launch Subby!
 
-| Platform | File                                                    |
-| -------- | ------------------------------------------------------- |
-| macOS    | `Subby_x.x.x_aarch64.dmg` or `Subby_x.x.x_x64.dmg`      |
-| Windows  | `Subby_x.x.x_x64-setup.exe`                             |
-| Linux    | `subby_x.x.x_amd64.deb` or `subby_x.x.x_amd64.AppImage` |
+Find "Subby" in your application menu, or run `subby` from the terminal.
 
-> **Note**: Unsigned builds may show OS security warnings. See [Troubleshooting](docs/troubleshooting.md).
+---
+
+### Download Pre-built Binaries
+
+If you don't want to build from source, download from [GitHub Releases](https://github.com/g0dxn4/subby/releases):
+
+| Platform                  | File                         | How to Install                        |
+| ------------------------- | ---------------------------- | ------------------------------------- |
+| **Ubuntu/Debian**         | `subby_x.x.x_amd64.deb`      | `sudo dpkg -i subby_*.deb`            |
+| **Fedora/RHEL**           | `subby_x.x.x_amd64.rpm`      | `sudo rpm -i subby_*.rpm`             |
+| **Any Linux**             | `subby_x.x.x_amd64.AppImage` | `chmod +x *.AppImage && ./*.AppImage` |
+| **macOS (Apple Silicon)** | `Subby_x.x.x_aarch64.dmg`    | Double-click, drag to Applications    |
+| **macOS (Intel)**         | `Subby_x.x.x_x64.dmg`        | Double-click, drag to Applications    |
+| **Windows**               | `Subby_x.x.x_x64-setup.exe`  | Double-click, follow installer        |
+
+> **Note**: Unsigned builds may show OS security warnings. Click "More info" → "Run anyway" (Windows) or right-click → "Open" (macOS). See [Troubleshooting](docs/troubleshooting.md).
+
+---
+
+### Uninstall
+
+```bash
+# If installed via install.sh
+./uninstall.sh
+
+# If installed via .deb
+sudo dpkg -r subby
+
+# If installed via .rpm
+sudo rpm -e subby
+```
 
 ## Discord Bot
 
