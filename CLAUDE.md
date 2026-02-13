@@ -53,10 +53,11 @@
 
 ## Database Tables
 
-- `subscriptions` - User subscriptions
 - `categories` - Default + custom categories
+- `subscriptions` - User subscriptions
 - `payments` - Payment history (paid/skipped)
 - `settings` - User preferences (theme, currency, notifications)
+- `payment_cards` - Payment card tracking
 
 ## Design Principles
 
@@ -90,6 +91,30 @@ pnpm format           # Run Prettier
 - Don't use date-fns (use dayjs instead - smaller bundle)
 - Don't use array index as React keys (use stable IDs)
 - Don't forget useMemo for expensive calculations in hooks
+
+## Key Patterns
+
+### Database Operations
+
+```typescript
+import { db } from '@/lib/database'
+const results = await db.select<T[]>('SELECT * FROM table')
+await db.execute('INSERT INTO table VALUES (?)', [value])
+```
+
+### Zustand Stores
+
+```typescript
+const { subscriptions, addSubscription } = useSubscriptionStore()
+```
+
+### Forms (React Hook Form + Zod)
+
+```typescript
+const form = useForm<SubscriptionFormData>({
+  resolver: zodResolver(subscriptionFormSchema),
+})
+```
 
 ## Data Storage
 

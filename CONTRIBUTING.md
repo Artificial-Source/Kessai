@@ -29,7 +29,7 @@ pnpm install
 pnpm tauri dev
 ```
 
-See `docs/getting-started/setup.md` for detailed prerequisites.
+See the [Development section](README.md#development) in the README for prerequisites.
 
 ### Development Workflow
 

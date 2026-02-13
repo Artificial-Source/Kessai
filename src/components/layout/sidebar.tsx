@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { NavLink } from 'react-router-dom'
 import { LayoutDashboard, CreditCard, Calendar, Settings, ChevronLeft } from 'lucide-react'
-import { useTheme } from '@/components/theme-provider'
 import { cn } from '@/lib/utils'
 
 const navItems = [
@@ -13,8 +12,6 @@ const navItems = [
 
 export function Sidebar() {
   const [collapsed, setCollapsed] = useState(false)
-  const { theme } = useTheme()
-  const logoSrc = theme === 'light' ? '/SubbyLogo.png' : '/SubbyLogoWhite.png'
 
   return (
     <aside
@@ -24,7 +21,7 @@ export function Sidebar() {
       )}
     >
       <div className="flex items-center gap-3 overflow-hidden p-6">
-        <img src={logoSrc} alt="Subby" className="h-8 w-8 shrink-0 object-contain" />
+        <img src="/icon.png" alt="Subby" className="h-8 w-8 shrink-0 object-contain" />
         <h1
           className={cn(
             'text-foreground text-xl font-bold tracking-tight whitespace-nowrap transition-[opacity,transform] duration-200',

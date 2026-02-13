@@ -4,24 +4,18 @@ set -euo pipefail
 # ============================================================================
 # Subby Installer
 # ============================================================================
-# This script builds and installs Subby on your Linux system.
+# Installs Subby locally to your home directory. No sudo needed for the app
+# itself — only for installing system build dependencies (one-time).
 #
-# WHAT IT DOES:
-#   1. Checks for required build tools (pnpm, rust, tauri dependencies)
-#   2. Builds Subby from source
-#   3. Installs the app system-wide (.deb, .rpm, or AppImage)
-#   4. Optionally installs the Discord reminder bot
+# Files installed:
+#   ~/.local/bin/subby                              (binary)
+#   ~/.local/share/applications/subby.desktop       (desktop entry)
+#   ~/.local/share/icons/hicolor/128x128/apps/subby.png  (icon)
 #
-# WHY SUDO IS NEEDED:
-#   - Installing .deb/.rpm packages requires root (writes to /usr)
-#   - Installing Tauri build dependencies requires apt/dnf
-#   - The Discord bot service file goes in /etc/systemd/system
-#   - AppImage install does NOT need sudo (installs to ~/.local/bin)
-#
-# You can run with --dry-run to see what would happen without making changes.
+# To uninstall: ./uninstall.sh
 # ============================================================================
 
-VERSION="1.0.0"
+VERSION="1.1.0"
 
 # Colors
 RED='\033[0;31m'
@@ -38,6 +32,7 @@ print_success() { echo -e "${GREEN}✓${NC} $1"; }
 print_warning() { echo -e "${YELLOW}!${NC} $1"; }
 print_error() { echo -e "${RED}✗${NC} $1"; }
 print_dry() { echo -e "${DIM}[dry-run]${NC} $1"; }
+print_info() { echo -e "  ${DIM}$1${NC}"; }
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
@@ -72,31 +67,26 @@ ${BOLD}EXAMPLES:${NC}
 
 ${BOLD}WHAT THIS SCRIPT DOES:${NC}
     1. Checks for build tools (pnpm, cargo/rust)
-    2. Installs missing Tauri dependencies (requires sudo for apt)
-    3. Runs 'pnpm install' to get Node.js dependencies
+    2. Installs missing Tauri build dependencies (one-time, needs sudo)
+    3. Runs 'pnpm install' for Node.js dependencies
     4. Runs 'pnpm tauri build' to compile the app
-    5. Installs the built package:
-       - Ubuntu/Debian: sudo dpkg -i (installs to /usr)
-       - Fedora/RHEL: sudo rpm -i (installs to /usr)
-       - Other: copies AppImage to ~/.local/bin (no sudo)
-    6. Creates desktop menu entry if needed
+    5. Copies the binary to ~/.local/bin/subby (no sudo)
+    6. Creates desktop menu entry + icon in ~/.local/share (no sudo)
 
-${BOLD}WHY SUDO IS NEEDED:${NC}
-    - ${YELLOW}apt install${NC}: To install Tauri build dependencies
-    - ${YELLOW}dpkg -i / rpm -i${NC}: To install the .deb/.rpm package system-wide
-    - ${YELLOW}systemctl${NC}: To set up the Discord bot as a service
-
-    ${DIM}Note: If you choose AppImage, no sudo is required for the app itself.${NC}
+${BOLD}WHEN IS SUDO NEEDED?${NC}
+    Only if system build libraries are missing (libwebkit2gtk, etc).
+    This is a one-time apt install. The app itself installs entirely
+    in your home directory — no sudo required.
 
 ${BOLD}FILES CREATED:${NC}
-    Desktop app:
-      /usr/bin/subby (or ~/.local/bin/subby for AppImage)
-      /usr/share/applications/subby.desktop
+    Desktop app (all in \$HOME, no sudo):
+      ~/.local/bin/subby
+      ~/.local/share/applications/subby.desktop
+      ~/.local/share/icons/hicolor/128x128/apps/subby.png
 
-    Discord bot (optional):
+    Discord bot (optional, requires sudo):
       /usr/local/bin/subby-bot
       /etc/systemd/system/subby-bot@.service
-      /etc/subby-bot/env (your config)
 
 ${BOLD}TO UNINSTALL:${NC}
     ./uninstall.sh
@@ -202,33 +192,48 @@ if [[ ${#MISSING_DEPS[@]} -gt 0 ]]; then
     exit 1
 fi
 
-# Check for Tauri Linux dependencies
+# Check for Tauri Linux build dependencies
+NEEDS_SUDO=false
 if [[ "$DISTRO" == "ubuntu" || "$DISTRO" == "debian" || "$DISTRO" == "pop" || "$DISTRO" == "linuxmint" ]]; then
-    TAURI_DEPS="libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf"
+    # Determine the right appindicator package.
+    # Modern Ubuntu ships libayatana-appindicator3 which conflicts with the old
+    # libappindicator3. Pick whichever is already on the system, or prefer ayatana.
+    if dpkg -s libayatana-appindicator3-dev &>/dev/null; then
+        APPINDICATOR_PKG=""  # already installed
+    elif dpkg -s libappindicator3-dev &>/dev/null; then
+        APPINDICATOR_PKG=""  # already installed
+    elif dpkg -s libayatana-appindicator3-1 &>/dev/null; then
+        # Runtime is installed, install matching dev package
+        APPINDICATOR_PKG="libayatana-appindicator3-dev"
+    else
+        APPINDICATOR_PKG="libayatana-appindicator3-dev"
+    fi
+    TAURI_DEPS="libwebkit2gtk-4.1-dev librsvg2-dev patchelf"
+    [[ -n "$APPINDICATOR_PKG" ]] && TAURI_DEPS="$TAURI_DEPS $APPINDICATOR_PKG"
     MISSING_TAURI_DEPS=()
     for dep in $TAURI_DEPS; do
-        if ! dpkg -l 2>/dev/null | grep -q "^ii  $dep"; then
+        if ! dpkg -s "$dep" &>/dev/null; then
             MISSING_TAURI_DEPS+=("$dep")
         fi
     done
     if [[ ${#MISSING_TAURI_DEPS[@]} -gt 0 ]]; then
-        print_warning "Missing Tauri build dependencies: ${MISSING_TAURI_DEPS[*]}"
+        NEEDS_SUDO=true
         echo ""
-        echo -e "${DIM}These are libraries needed to compile Tauri apps.${NC}"
-        echo -e "${DIM}Installing requires sudo to run: apt install ...${NC}"
+        print_warning "Missing Tauri build libraries: ${MISSING_TAURI_DEPS[*]}"
+        print_info "These are system libraries needed to compile Tauri apps."
+        print_info "This is the ONLY step that needs sudo (one-time install)."
+        print_info "The app itself installs entirely in your home directory."
         echo ""
         if [[ "$DRY_RUN" == "true" ]]; then
             print_dry "Would run: sudo apt update && sudo apt install -y ${MISSING_TAURI_DEPS[*]}"
         else
-            read -p "Install them now? [Y/n] " -n 1 -r
-            echo
-            if [[ ! $REPLY =~ ^[Nn]$ ]]; then
-                sudo apt update && sudo apt install -y "${MISSING_TAURI_DEPS[@]}"
-            else
-                print_error "Cannot continue without Tauri dependencies"
-                exit 1
-            fi
+            print_step "Requesting sudo to install build libraries..."
+            sudo -v || { print_error "sudo is required to install build dependencies"; exit 1; }
+            # Keep sudo alive through the install
+            sudo apt update && sudo apt install -y "${MISSING_TAURI_DEPS[@]}"
+            print_success "Build libraries installed"
         fi
+        echo ""
     fi
 fi
 
@@ -282,73 +287,63 @@ if [[ "$INSTALL_APP" == "true" ]]; then
         pnpm tauri build 2>&1 | tail -20
     fi
 
-    # Find the built package
-    BUNDLE_DIR="$SCRIPT_DIR/src-tauri/target/release/bundle"
+    # Install locally — no sudo needed
+    RELEASE_DIR="$SCRIPT_DIR/src-tauri/target/release"
+    ICON_SRC="$SCRIPT_DIR/src-tauri/icons/128x128.png"
 
-    if [[ "$DISTRO" == "ubuntu" || "$DISTRO" == "debian" || "$DISTRO" == "pop" || "$DISTRO" == "linuxmint" ]]; then
-        if [[ "$DRY_RUN" == "true" ]]; then
-            print_dry "Would install .deb package with: sudo dpkg -i $BUNDLE_DIR/deb/*.deb"
-            echo ""
-            echo -e "${DIM}This installs Subby to /usr/bin/subby and creates a desktop entry.${NC}"
-        else
-            DEB_FILE=$(find "$BUNDLE_DIR/deb" -name "*.deb" 2>/dev/null | head -1)
-            if [[ -n "$DEB_FILE" ]]; then
-                echo ""
-                echo -e "${DIM}Installing .deb package requires sudo to write to /usr${NC}"
-                print_step "Installing .deb package..."
-                sudo dpkg -i "$DEB_FILE"
-                print_success "Subby installed via .deb"
-            fi
-        fi
-    elif [[ "$DISTRO" == "fedora" || "$DISTRO" == "rhel" || "$DISTRO" == "centos" ]]; then
-        if [[ "$DRY_RUN" == "true" ]]; then
-            print_dry "Would install .rpm package with: sudo rpm -i $BUNDLE_DIR/rpm/*.rpm"
-        else
-            RPM_FILE=$(find "$BUNDLE_DIR/rpm" -name "*.rpm" 2>/dev/null | head -1)
-            if [[ -n "$RPM_FILE" ]]; then
-                echo ""
-                echo -e "${DIM}Installing .rpm package requires sudo to write to /usr${NC}"
-                print_step "Installing .rpm package..."
-                sudo rpm -i "$RPM_FILE"
-                print_success "Subby installed via .rpm"
-            fi
-        fi
+    echo ""
+    print_step "Installing to ~/.local (no sudo needed)..."
+    print_info "Binary:  ~/.local/bin/subby"
+    print_info "Desktop: ~/.local/share/applications/subby.desktop"
+    print_info "Icon:    ~/.local/share/icons/hicolor/128x128/apps/subby.png"
+    echo ""
+
+    if [[ "$DRY_RUN" == "true" ]]; then
+        print_dry "Would copy binary to ~/.local/bin/subby"
+        print_dry "Would create desktop entry"
+        print_dry "Would install icon"
     else
-        # Fallback to AppImage (no sudo needed!)
-        if [[ "$DRY_RUN" == "true" ]]; then
-            print_dry "Would copy AppImage to ~/.local/bin/subby (no sudo needed)"
-        else
-            APPIMAGE_FILE=$(find "$BUNDLE_DIR/appimage" -name "*.AppImage" 2>/dev/null | head -1)
-            if [[ -n "$APPIMAGE_FILE" ]]; then
-                print_step "Installing AppImage (no sudo needed)..."
-                mkdir -p "$HOME/.local/bin"
-                cp "$APPIMAGE_FILE" "$HOME/.local/bin/subby"
-                chmod +x "$HOME/.local/bin/subby"
-                print_success "Subby installed to ~/.local/bin/subby"
-                print_warning "Make sure ~/.local/bin is in your PATH"
-            fi
-        fi
-    fi
+        # Binary
+        mkdir -p "$HOME/.local/bin"
+        cp "$RELEASE_DIR/subby" "$HOME/.local/bin/subby"
+        chmod +x "$HOME/.local/bin/subby"
+        print_success "Binary installed"
 
-    # Create desktop entry if not created by package
-    if [[ "$DRY_RUN" == "false" ]]; then
-        if [[ ! -f "/usr/share/applications/subby.desktop" && ! -f "$HOME/.local/share/applications/subby.desktop" ]]; then
-            print_step "Creating desktop entry..."
-            mkdir -p "$HOME/.local/share/applications"
-            cat > "$HOME/.local/share/applications/subby.desktop" << EOF
+        # Icon
+        ICON_DIR="$HOME/.local/share/icons/hicolor/128x128/apps"
+        mkdir -p "$ICON_DIR"
+        cp "$ICON_SRC" "$ICON_DIR/subby.png"
+        print_success "Icon installed"
+
+        # Desktop entry
+        mkdir -p "$HOME/.local/share/applications"
+        cat > "$HOME/.local/share/applications/subby.desktop" << EOF
 [Desktop Entry]
 Name=Subby
 Comment=Know where your money flows
-Exec=subby
+Exec=$HOME/.local/bin/subby
 Icon=subby
 Terminal=false
 Type=Application
 Categories=Finance;Office;
 EOF
-            print_success "Desktop entry created"
+        print_success "Desktop entry created"
+
+        # Update icon cache if available
+        if command -v gtk-update-icon-cache &>/dev/null; then
+            gtk-update-icon-cache -f -t "$HOME/.local/share/icons/hicolor" 2>/dev/null || true
+        fi
+
+        # Check PATH
+        if [[ ":$PATH:" != *":$HOME/.local/bin:"* ]]; then
+            echo ""
+            print_warning "~/.local/bin is not in your PATH"
+            print_info "Add this to your shell config (~/.bashrc or ~/.zshrc):"
+            print_info "  export PATH=\"\$HOME/.local/bin:\$PATH\""
         fi
     fi
 
+    echo ""
     print_success "Subby desktop app installed!"
 fi
 
@@ -362,11 +357,11 @@ if [[ "$INSTALL_BOT" == "true" ]]; then
     if [[ "$DRY_RUN" == "true" ]]; then
         print_dry "Would run: packages/discord-bot/install.sh"
         echo ""
-        echo -e "${DIM}The bot installer will:${NC}"
-        echo -e "${DIM}  - Build a standalone binary${NC}"
-        echo -e "${DIM}  - Copy it to /usr/local/bin/subby-bot (requires sudo)${NC}"
-        echo -e "${DIM}  - Ask for your Discord token and user ID${NC}"
-        echo -e "${DIM}  - Create a systemd service (requires sudo)${NC}"
+        print_info "The bot installer will:"
+        print_info "  - Build a standalone binary"
+        print_info "  - Copy it to /usr/local/bin/subby-bot (requires sudo)"
+        print_info "  - Ask for your Discord token and user ID"
+        print_info "  - Create a systemd service (requires sudo)"
     else
         cd "$SCRIPT_DIR/packages/discord-bot"
         ./install.sh

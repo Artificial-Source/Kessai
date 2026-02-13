@@ -97,17 +97,17 @@ interface Store {
 | `tauri-plugin-fs`           | File system operations |
 | `tauri-plugin-dialog`       | Native file dialogs    |
 | `tauri-plugin-notification` | Desktop notifications  |
+| `tauri-plugin-opener`       | URL/file opening       |
 
 ### Custom Commands
 
-The Rust backend exposes custom commands for image processing:
+The Rust backend exposes custom commands for logo management:
 
-```rust
-#[tauri::command]
-fn process_logo(image_data: Vec<u8>, filename: &str) -> Result<String, String>
-```
+- `save_logo` — Opens an image, resizes to 256x256, saves as WebP
+- `get_logo_base64` — Reads a logo file and returns it as a base64 data URL
+- `delete_logo` — Deletes a logo file by filename
 
-See `docs/backend-api.md` for full command documentation.
+See [Backend API](./backend-api.md) for full command documentation.
 
 ### Database Schema
 
@@ -115,10 +115,11 @@ SQLite with 4 main tables:
 
 ```sql
 -- Core data
-subscriptions   -- User subscriptions
-categories      -- Default + custom categories
-payments        -- Payment history (paid/skipped)
-settings        -- User preferences (singleton row)
+subscriptions    -- User subscriptions
+categories       -- Default + custom categories
+payments         -- Payment history (paid/skipped)
+settings         -- User preferences (singleton row)
+payment_cards    -- Payment card tracking
 ```
 
 ## Data Flow
@@ -185,8 +186,6 @@ SQLite persists preference
 
 ## Build & Release
 
-- **Dev**: `pnpm tauri dev` - Hot-reloading development
-- **Build**: `pnpm tauri build` - Production binaries
-- **Release**: GitHub Actions on `v*` tags
-
-See `.github/workflows/release.yml` for CI/CD details.
+- **Dev**: `pnpm tauri dev` — Hot-reloading development
+- **Build**: `pnpm tauri build` — Production binaries
+- **Release**: Tag with `v*` and build locally, or set up CI/CD as needed

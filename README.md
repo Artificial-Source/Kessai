@@ -15,17 +15,11 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/g0dxn4/subby/actions/workflows/ci.yml">
-    <img src="https://github.com/g0dxn4/subby/actions/workflows/ci.yml/badge.svg" alt="CI">
-  </a>
   <a href="https://opensource.org/licenses/MIT">
     <img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License: MIT">
   </a>
   <a href="https://github.com/g0dxn4/subby/releases">
     <img src="https://img.shields.io/badge/version-0.1.0-green.svg" alt="Version">
-  </a>
-  <a href="https://codecov.io/gh/g0dxn4/subby">
-    <img src="https://codecov.io/gh/g0dxn4/subby/branch/master/graph/badge.svg" alt="codecov">
   </a>
 </p>
 
@@ -57,7 +51,7 @@ Most subscription trackers are cloud-based, require accounts, and monetize your 
 | **Subscriptions**    | Add, edit, pause subscriptions with grid/list views                 |
 | **Calendar**         | Visual payment calendar, mark payments as paid or skipped           |
 | **Categories**       | 9 built-in categories + unlimited custom ones with colors           |
-| **Multi-Currency**   | USD, EUR, GBP, JPY, CAD, AUD, MXN support                           |
+| **Multi-Currency**   | 10 currencies (USD, EUR, GBP, JPY, CAD, AUD, MXN, CNY, INR, BRL)   |
 | **Themes**           | Dark, light, and system theme modes                                 |
 | **Data Portability** | Export/import JSON backups anytime                                  |
 | **Discord Bot**      | Optional reminder notifications in Discord                          |
