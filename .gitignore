@@ -44,6 +44,7 @@ Thumbs.db
 coverage/
 playwright-report/
 test-results/
+blob-report/
 
 # Misc
 *.tgz
@@ -57,6 +58,7 @@ test-results/
 .cursor/
 .aider*
 .continue/
+.claude/
 
 # Package manager
 .pnpm-store/
@@ -64,3 +66,4 @@ test-results/
 
 # Tauri
 src-tauri/gen/
+src-tauri/WixTools/
