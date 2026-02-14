@@ -59,6 +59,7 @@ blob-report/
 .aider*
 .continue/
 .claude/
+.worktrees/
 
 # Package manager
 .pnpm-store/
