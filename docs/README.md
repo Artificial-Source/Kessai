@@ -1,44 +1,42 @@
 # Subby Documentation
 
-Welcome to the Subby documentation. This guide will help you understand the codebase and contribute effectively.
-
-## Quick Links
-
-| Document                                | Description                                  |
-| --------------------------------------- | -------------------------------------------- |
-| [Architecture](./architecture.md)       | System design, data flow, and tech decisions |
-| [Backend API](./backend-api.md)         | Rust commands, database schema, SQL plugin   |
-| [Troubleshooting](./troubleshooting.md) | Common issues and solutions                  |
+This directory is organized by audience: onboarding, architecture, implementation guides, and reference.
 
 ## Getting Started
 
-### For Users
+- [Installation](./getting-started/installation.md)
+- [Building from Source](./getting-started/building-from-source.md)
+- [Quick Start](./getting-started/quick-start.md)
 
-1. Download from [GitHub Releases](https://github.com/g0dxn4/subby/releases) or build from source
-2. See [Troubleshooting](./troubleshooting.md) if you encounter issues
+## Architecture
 
-### For Developers
+- [Overview](./architecture/overview.md)
+- [Database Schema](./architecture/database-schema.md)
+- [State Management](./architecture/state-management.md)
+- [Security](./architecture/security.md)
 
-1. Read the [Architecture](./architecture.md) overview
-2. Set up your environment:
-   ```bash
-   pnpm install
-   pnpm tauri dev
-   ```
-3. Run tests before submitting PRs:
-   ```bash
-   pnpm test
-   pnpm lint
-   pnpm typecheck
-   ```
+## Guides
 
-## Project Status
+- [Release Process](./guides/release-process.md)
+- [Testing](./guides/testing.md)
+- [Adding Migrations](./guides/adding-migrations.md)
+- [Backup Format](./guides/backup-format.md)
+- [Troubleshooting](./troubleshooting.md)
 
-**Version**: 0.1.0 (MVP Complete)
+## Reference
 
-**Test Coverage**: 91%+ (136 tests)
+- [Tauri Commands](./reference/tauri-commands.md)
+- [Environment Variables](./reference/environment-variables.md)
+- [Commands Cheatsheet](./reference/commands-cheatsheet.md)
 
-## Additional Resources
+## Project Docs
 
-- [Discord Bot Setup](../packages/discord-bot/README.md)
-- [CLAUDE.md](../CLAUDE.md) — Context for AI assistants
+- [Main README](../README.md)
+- [Contributing](../CONTRIBUTING.md)
+- [Security Policy](../SECURITY.md)
+- [Changelog](../CHANGELOG.md)
+
+## Legacy Pages
+
+- [Legacy Architecture Page](./architecture.md)
+- [Legacy Backend API Page](./backend-api.md)

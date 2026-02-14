@@ -18,8 +18,8 @@
   <a href="https://opensource.org/licenses/MIT">
     <img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License: MIT">
   </a>
-  <a href="https://github.com/g0dxn4/subby/releases">
-    <img src="https://img.shields.io/badge/version-0.1.0-green.svg" alt="Version">
+  <a href="https://github.com/ASF/Subby/releases">
+    <img src="https://img.shields.io/github/v/release/ASF/Subby?display_name=tag" alt="Latest Release">
   </a>
 </p>
 
@@ -38,7 +38,7 @@
 
 Most subscription trackers are cloud-based, require accounts, and monetize your data. Subby is different:
 
-- **100% Offline** — Your data never leaves your device
+- **100% Offline Desktop App** — Your data never leaves your device
 - **No Account Required** — Just download and start tracking
 - **Open Source** — Audit the code, contribute, or fork it
 - **Cross-Platform** — Linux, macOS, and Windows
@@ -48,17 +48,18 @@ Most subscription trackers are cloud-based, require accounts, and monetize your 
 | Feature              | Description                                                         |
 | -------------------- | ------------------------------------------------------------------- |
 | **Dashboard**        | Monthly/yearly spending stats, category donut chart, trend analysis |
-| **Subscriptions**    | Add, edit, pause subscriptions with grid/list views                 |
+| **Subscriptions**    | Add, edit, pause subscriptions with list/grid/bento views           |
 | **Calendar**         | Visual payment calendar, mark payments as paid or skipped           |
 | **Categories**       | 9 built-in categories + unlimited custom ones with colors           |
 | **Multi-Currency**   | 10 currencies (USD, EUR, GBP, JPY, CAD, AUD, MXN, CNY, INR, BRL)   |
 | **Themes**           | Dark, light, and system theme modes                                 |
+| **Payment Cards**    | Manage cards and assign them to subscriptions                       |
 | **Data Portability** | Export/import JSON backups anytime                                  |
 | **Discord Bot**      | Optional reminder notifications in Discord                          |
 
 ## Screenshots
 
-> _Screenshots coming soon_
+See release assets and media in the GitHub Releases page.
 
 ## Installation
 
@@ -85,7 +86,7 @@ sudo apt install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patc
 **Step 2:** Clone and install
 
 ```bash
-git clone https://github.com/g0dxn4/subby.git
+git clone https://github.com/ASF/Subby.git
 cd subby
 ./install.sh
 ```
@@ -135,7 +136,7 @@ Find "Subby" in your application menu, or run `subby` from the terminal.
 
 ### Download Pre-built Binaries
 
-If you don't want to build from source, download from [GitHub Releases](https://github.com/g0dxn4/subby/releases):
+If you don't want to build from source, download from [GitHub Releases](https://github.com/ASF/Subby/releases):
 
 | Platform                  | File                         | How to Install                        |
 | ------------------------- | ---------------------------- | ------------------------------------- |
@@ -192,7 +193,7 @@ See the [Discord Bot README](packages/discord-bot/README.md) for detailed setup.
 | **State**    | [Zustand](https://zustand-demo.pmnd.rs/)                                         |
 | **Database** | SQLite via [tauri-plugin-sql](https://github.com/tauri-apps/plugins-workspace)   |
 | **Forms**    | [React Hook Form](https://react-hook-form.com/) + [Zod](https://zod.dev/)        |
-| **Testing**  | [Vitest](https://vitest.dev/) + [Playwright](https://playwright.dev/)            |
+| **Testing**  | [Vitest](https://vitest.dev/) + [Testing Library](https://testing-library.com/) + [Playwright](https://playwright.dev/) |
 
 ## Development
 
@@ -215,7 +216,7 @@ sudo apt install libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchel
 ### Run from Source
 
 ```bash
-git clone https://github.com/g0dxn4/subby.git
+git clone https://github.com/ASF/Subby.git
 cd subby
 pnpm install
 pnpm tauri dev
@@ -223,14 +224,20 @@ pnpm tauri dev
 
 ### Commands
 
-| Command            | Description               |
-| ------------------ | ------------------------- |
-| `pnpm tauri dev`   | Start development server  |
-| `pnpm tauri build` | Build production binaries |
-| `pnpm test`        | Run unit tests            |
-| `pnpm test:e2e`    | Run E2E tests             |
-| `pnpm lint`        | Run ESLint                |
-| `pnpm typecheck`   | Run TypeScript checks     |
+| Command             | Description                                  |
+| ------------------- | -------------------------------------------- |
+| `pnpm tauri dev`    | Start development app                        |
+| `pnpm tauri build`  | Build production binaries                    |
+| `pnpm test`         | Run tests in watch mode                      |
+| `pnpm test:run`     | Run tests once                               |
+| `pnpm test:coverage`| Run tests with coverage report               |
+| `pnpm test:e2e`     | Run E2E tests                                |
+| `pnpm lint`         | Run ESLint                                   |
+| `pnpm typecheck`    | Run TypeScript checks                        |
+| `pnpm format`       | Format frontend files                        |
+| `pnpm format:check` | Check formatting                             |
+| `pnpm check`        | Lint + typecheck + format check              |
+| `pnpm start`        | Alias for Tauri dev                          |
 
 ### Project Structure
 
@@ -244,8 +251,8 @@ subby/
 │   ├── types/              # TypeScript types
 │   └── lib/                # Utilities
 ├── src-tauri/              # Rust backend
-│   ├── src/                # Tauri commands
-│   └── migrations/         # SQLite migrations
+│   ├── src/                # Tauri commands and inline migrations
+│   └── tauri.conf.json     # App config and bundling
 ├── packages/
 │   └── discord-bot/        # Discord reminder bot
 └── docs/                   # Documentation
@@ -263,7 +270,7 @@ Your data stays on your device:
 
 ## Contributing
 
-Contributions are welcome! Please read the [Architecture](docs/architecture.md) doc to understand the codebase.
+Contributions are welcome! Please read the [Contributing](CONTRIBUTING.md) guide and docs index first.
 
 1. Fork the repository
 2. Create a feature branch (`git checkout -b feature/amazing-feature`)
@@ -273,8 +280,10 @@ Contributions are welcome! Please read the [Architecture](docs/architecture.md) 
 
 ## Documentation
 
-- [Architecture Overview](docs/architecture.md) — System design and data flow
-- [Backend API](docs/backend-api.md) — Rust commands and database schema
+- [Docs Index](docs/README.md) — Full documentation map
+- [Getting Started](docs/getting-started/installation.md) — Installation and setup
+- [Architecture Overview](docs/architecture/overview.md) — System design and data flow
+- [Release Process](docs/guides/release-process.md) — Versioning and release checklist
 - [Troubleshooting](docs/troubleshooting.md) — Common issues and solutions
 
 ## License
@@ -284,5 +293,5 @@ Contributions are welcome! Please read the [Architecture](docs/architecture.md) 
 ---
 
 <p align="center">
-  Made with ❤️ by <a href="https://github.com/g0dxn4">g0dxn4</a>
+  Maintained by <a href="https://github.com/ASF">ASF</a>
 </p>

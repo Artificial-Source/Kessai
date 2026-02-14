@@ -173,7 +173,7 @@ SELECT * FROM subscriptions;
 
 ## Getting Help
 
-1. **Search existing issues**: https://github.com/g0dxn4/subby/issues
+1. **Search existing issues**: https://github.com/ASF/Subby/issues
 2. **Create new issue** with:
    - OS and version
    - Steps to reproduce

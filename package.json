@@ -3,8 +3,23 @@
   "private": true,
   "version": "0.1.0",
   "description": "Know where your money flows - Personal subscription tracker",
-  "author": "g0dxn4",
+  "author": "ASF",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ASF/Subby.git"
+  },
+  "homepage": "https://github.com/ASF/Subby",
+  "bugs": {
+    "url": "https://github.com/ASF/Subby/issues"
+  },
+  "keywords": [
+    "tauri",
+    "desktop",
+    "subscription-tracker",
+    "react",
+    "sqlite"
+  ],
   "type": "module",
   "scripts": {
     "start": "tauri dev",

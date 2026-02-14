@@ -2,6 +2,23 @@
   "name": "@subby/discord-bot",
   "version": "0.1.0",
   "description": "Discord bot for Subby subscription reminders",
+  "author": "ASF",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ASF/Subby.git"
+  },
+  "homepage": "https://github.com/ASF/Subby/tree/main/packages/discord-bot",
+  "bugs": {
+    "url": "https://github.com/ASF/Subby/issues"
+  },
+  "keywords": [
+    "discord",
+    "bot",
+    "subby",
+    "reminders",
+    "subscriptions"
+  ],
   "type": "module",
   "main": "dist/index.js",
   "bin": {

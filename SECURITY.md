@@ -11,7 +11,7 @@
 Subby is a **local-first application** with the following security characteristics:
 
 - **All data stored locally** - SQLite database in your app data directory
-- **No network requests** - 100% offline, no telemetry, no analytics
+- **No network requests in desktop runtime** - 100% offline desktop app, no telemetry, no analytics
 - **No authentication** - No accounts, passwords, or login required
 - **No sensitive data transmission** - Your subscription data never leaves your device
 
@@ -28,8 +28,8 @@ Subby is a **local-first application** with the following security characteristi
 If you discover a security vulnerability, please report it responsibly:
 
 1. **Do NOT open a public issue** for security vulnerabilities
-2. Email security concerns to the maintainer directly, or
-3. Open a [private security advisory](https://github.com/g0dxn4/subby/security/advisories/new) on GitHub
+2. Email security concerns to the maintainer security contact listed in repository settings, or
+3. Open a [private security advisory](https://github.com/ASF/Subby/security/advisories/new) on GitHub
 
 ### What to Include
 

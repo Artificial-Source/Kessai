@@ -17,13 +17,13 @@
 - **Database**: SQLite via tauri-plugin-sql
 - **Forms**: React Hook Form + Zod
 - **Dates**: dayjs (with plugins: isSameOrBefore, isSameOrAfter, isToday, isTomorrow, weekOfYear, isBetween)
-- **Testing**: Vitest + Testing Library (136 tests)
+- **Testing**: Vitest + Testing Library + Playwright (E2E)
 
 ## Key Directories
 
 | Path                            | Purpose                                               |
 | ------------------------------- | ----------------------------------------------------- |
-| `src-tauri/`                    | Rust backend, Tauri config, database migrations       |
+| `src-tauri/`                    | Rust backend, Tauri config, inline database migrations |
 | `src/components/`               | React components                                      |
 | `src/components/ui/`            | shadcn/ui primitives                                  |
 | `src/components/calendar/`      | Calendar page components                              |
@@ -31,7 +31,7 @@
 | `src/components/categories/`    | Category management                                   |
 | `src/components/subscriptions/` | Subscription CRUD                                     |
 | `src/components/settings/`      | Settings components                                   |
-| `src/components/charts/`        | Donut and area chart components                       |
+| `src/pages/`                    | Route-level page components                           |
 | `src/hooks/`                    | Custom React hooks                                    |
 | `src/stores/`                   | Zustand state stores                                  |
 | `src/types/`                    | TypeScript type definitions with Zod                  |
@@ -74,6 +74,7 @@ pnpm tauri build      # Build for production
 pnpm test             # Run tests
 pnpm lint             # Run ESLint
 pnpm format           # Run Prettier
+pnpm check            # Lint + typecheck + format check
 ```
 
 ## Code Style

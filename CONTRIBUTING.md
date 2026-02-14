@@ -4,7 +4,7 @@ Thank you for your interest in contributing to Subby! This document provides gui
 
 ## Reporting Bugs
 
-1. Check existing [Issues](https://github.com/g0dxn4/subby/issues) to avoid duplicates
+1. Check existing [Issues](https://github.com/ASF/Subby/issues) to avoid duplicates
 2. Use the "bug" label
 3. Include:
    - OS and version
@@ -23,7 +23,7 @@ Thank you for your interest in contributing to Subby! This document provides gui
 ### Setup
 
 ```bash
-git clone https://github.com/g0dxn4/subby.git
+git clone https://github.com/ASF/Subby.git
 cd subby
 pnpm install
 pnpm tauri dev
@@ -38,10 +38,8 @@ See the [Development section](README.md#development) in the README for prerequis
 3. Make your changes
 4. Run checks:
    ```bash
-   pnpm typecheck    # TypeScript check
-   pnpm lint         # ESLint
-   pnpm test         # Run tests
-   pnpm format:check # Prettier check
+   pnpm check        # lint + typecheck + format check
+   pnpm test:run     # Run tests once
    ```
 5. Commit with conventional commits
 6. Push and open a PR
@@ -56,6 +54,7 @@ Use [Conventional Commits](https://www.conventionalcommits.org/):
 - `style:` - Code style (formatting, missing semicolons)
 - `refactor:` - Code refactoring
 - `test:` - Adding or updating tests
+- `perf:` - Performance improvements
 - `chore:` - Maintenance tasks
 
 Examples:
@@ -82,7 +81,7 @@ docs: update installation instructions
 
 ## Code Review
 
-PRs require at least one approval. Reviewers will check:
+PRs should include at least one review when possible. Reviewers will check:
 
 - Code quality and readability
 - Test coverage for new features
