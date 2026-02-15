@@ -52,7 +52,7 @@ export function SubscriptionLogo({
   const sizeClass = sizeClasses[size]
 
   if (isLoading) {
-    return <div className={cn(sizeClass, 'animate-pulse rounded-full bg-white/10', className)} />
+    return <div className={cn(sizeClass, 'bg-muted/70 animate-pulse rounded-full', className)} />
   }
 
   if (dataUrl) {
@@ -62,7 +62,7 @@ export function SubscriptionLogo({
         alt={name}
         loading="lazy"
         decoding="async"
-        className={cn(sizeClass, 'rounded-full border border-white/20 object-cover', className)}
+        className={cn(sizeClass, 'border-border rounded-full border object-cover', className)}
       />
     )
   }
@@ -74,7 +74,7 @@ export function SubscriptionLogo({
         'flex items-center justify-center rounded-full font-bold text-white',
         className
       )}
-      style={{ backgroundColor: color || '#8b5cf6' }}
+      style={{ backgroundColor: color || '#4f8dff' }}
     >
       {name.charAt(0).toUpperCase()}
     </div>

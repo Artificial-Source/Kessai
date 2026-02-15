@@ -45,8 +45,8 @@ export function IconPicker({ value, onChange }: IconPickerProps) {
             className={cn(
               'flex h-10 w-10 items-center justify-center rounded-lg transition-all',
               value === iconName
-                ? 'bg-aurora-purple ring-aurora-purple ring-offset-background text-white ring-2 ring-offset-2'
-                : 'text-muted-foreground hover:text-foreground bg-white/5 hover:bg-white/10'
+                ? 'bg-primary text-primary-foreground ring-ring ring-offset-background ring-2 ring-offset-2'
+                : 'bg-secondary text-muted-foreground hover:bg-accent hover:text-foreground'
             )}
           >
             <IconComponent className="h-5 w-5" />

@@ -11,20 +11,20 @@ interface SubscriptionBentoProps {
   onEdit: (subscription: Subscription) => void
 }
 
-// Vibrant color palette
+// Premium color palette
 const BENTO_COLORS = [
-  '#8b5cf6', // Violet
-  '#06b6d4', // Cyan
-  '#f97316', // Orange
-  '#10b981', // Emerald
-  '#ec4899', // Pink
-  '#3b82f6', // Blue
-  '#eab308', // Yellow
-  '#ef4444', // Red
-  '#14b8a6', // Teal
-  '#a855f7', // Purple
-  '#f43f5e', // Rose
-  '#22c55e', // Green
+  '#3b82f6',
+  '#4f46e5',
+  '#0ea5e9',
+  '#06b6d4',
+  '#2563eb',
+  '#0891b2',
+  '#6366f1',
+  '#0284c7',
+  '#1d4ed8',
+  '#0f766e',
+  '#1e40af',
+  '#334155',
 ]
 
 const GAP = 3 // Gap between tiles in pixels
@@ -203,7 +203,7 @@ const BentoTile = memo(function BentoTile({
   return (
     <button
       onClick={onClick}
-      className="group absolute inset-0 overflow-hidden text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
+      className="group focus-visible:ring-primary/60 absolute inset-0 overflow-hidden text-left focus:outline-none focus-visible:ring-2"
       style={{ backgroundColor: bgColor, borderRadius: '4px' }}
     >
       {/* Subtle gradient overlay */}
@@ -224,7 +224,7 @@ const BentoTile = memo(function BentoTile({
         <div className="flex items-start justify-between gap-1">
           <div className="min-w-0 flex-1">
             <h4
-              className={`leading-tight font-bold text-white ${
+              className={`leading-tight font-semibold text-white ${
                 isLarge ? 'text-base' : isMedium ? 'text-sm' : 'text-xs'
               }`}
               style={{
@@ -237,7 +237,7 @@ const BentoTile = memo(function BentoTile({
               {subscription.name}
             </h4>
             {isLarge && category && (
-              <p className="mt-0.5 truncate text-xs text-white/50">{category.name}</p>
+              <p className="mt-0.5 truncate text-xs text-white/72">{category.name}</p>
             )}
           </div>
 
@@ -245,7 +245,7 @@ const BentoTile = memo(function BentoTile({
             <img
               src={logoSrc}
               alt=""
-              className={`flex-shrink-0 bg-white/10 object-contain ${
+              className={`bg-primary-foreground/16 flex-shrink-0 object-contain ${
                 isLarge ? 'h-10 w-10 p-1.5' : isMedium ? 'h-7 w-7 p-1' : 'h-5 w-5 p-0.5'
               }`}
               style={{ borderRadius: '3px' }}
@@ -257,14 +257,14 @@ const BentoTile = memo(function BentoTile({
         {!isTiny && (
           <div className="flex items-end justify-between gap-1">
             <span
-              className={`font-bold text-white ${
+              className={`font-semibold text-white ${
                 isLarge ? 'text-xl' : isMedium ? 'text-base' : 'text-sm'
               }`}
             >
               {formatCurrency(monthlyAmount, currency)}
             </span>
             <span
-              className={`bg-black/25 font-semibold text-white/90 ${
+              className={`bg-white/20 font-semibold text-white ${
                 isLarge ? 'px-1.5 py-0.5 text-xs' : 'px-1 py-0.5 text-[10px]'
               }`}
               style={{ borderRadius: '3px' }}
@@ -277,7 +277,7 @@ const BentoTile = memo(function BentoTile({
         {/* For tiny tiles, just show percentage */}
         {isTiny && (
           <span
-            className="bg-black/25 px-1 py-0.5 text-[9px] font-semibold text-white/90"
+            className="bg-white/20 px-1 py-0.5 text-[9px] font-semibold text-white"
             style={{ borderRadius: '2px', alignSelf: 'flex-end' }}
           >
             {percentage.toFixed(0)}%
@@ -287,9 +287,9 @@ const BentoTile = memo(function BentoTile({
 
       {/* Inactive overlay */}
       {!subscription.is_active && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black/60">
+        <div className="bg-background/70 absolute inset-0 flex items-center justify-center">
           <span
-            className="bg-black/60 px-2 py-0.5 text-xs font-medium text-white"
+            className="bg-card/85 text-foreground px-2 py-0.5 text-xs font-medium"
             style={{ borderRadius: '3px' }}
           >
             Paused
@@ -383,7 +383,7 @@ export function SubscriptionBento({
   if (subscriptions.length === 0) {
     return (
       <div
-        className="flex h-[400px] items-center justify-center border border-dashed border-white/10"
+        className="border-border/70 flex h-[400px] items-center justify-center rounded-md border border-dashed"
         style={{ borderRadius: '4px' }}
       >
         <p className="text-muted-foreground">No subscriptions to display</p>
@@ -411,7 +411,7 @@ export function SubscriptionBento({
               key={rect.node.subscription.id}
               style={{
                 position: 'absolute',
-                transform: `translate3d(${rect.x + GAP / 2}px, ${rect.y + GAP / 2}px, 0)`,
+                transform: `translate(${rect.x + GAP / 2}px, ${rect.y + GAP / 2}px)`,
                 width: Math.max(0, width),
                 height: Math.max(0, height),
               }}

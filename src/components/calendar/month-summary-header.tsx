@@ -26,7 +26,7 @@ export function MonthSummaryHeader({
   const isDown = comparisonToPrevMonth < 0
 
   return (
-    <div className="glass-card group relative overflow-hidden p-0.5">
+    <div className="glass-card group relative overflow-hidden rounded-xl p-0.5">
       <div className="from-primary/5 to-primary/5 absolute inset-0 bg-gradient-to-r via-transparent opacity-0 group-hover:opacity-100" />
       <div className="relative z-10 flex flex-wrap items-center justify-between gap-8 p-5">
         <div className="divide-border flex flex-wrap items-center gap-8 md:gap-12 md:divide-x">
@@ -35,10 +35,7 @@ export function MonthSummaryHeader({
               Monthly Total
               {(isUp || isDown) && (
                 <span
-                  className={cn(
-                    'flex items-center gap-1',
-                    isUp ? 'text-rose-400' : 'text-emerald-400'
-                  )}
+                  className={cn('flex items-center gap-1', isUp ? 'text-danger' : 'text-success')}
                 >
                   {isUp ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
                   {Math.abs(comparisonToPrevMonth).toFixed(0)}%
@@ -51,10 +48,10 @@ export function MonthSummaryHeader({
           </div>
 
           <div className="flex flex-col md:pl-12">
-            <span className="mb-1 flex items-center gap-1.5 text-xs font-semibold tracking-wider text-emerald-500 uppercase">
+            <span className="text-success mb-1 flex items-center gap-1.5 text-xs font-semibold tracking-wider uppercase">
               <CheckCircle2 className="h-4 w-4" /> Paid ({paidCount})
             </span>
-            <span className="text-2xl font-bold tracking-tight text-emerald-500">
+            <span className="text-success text-2xl font-bold tracking-tight">
               {formatCurrency(paidAmount, currency)}
             </span>
           </div>

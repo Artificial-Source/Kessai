@@ -66,7 +66,7 @@ export function CategoryForm({
           <Input
             id="name"
             placeholder="Category name"
-            className="border-white/10 bg-white/5"
+            className="bg-input"
             {...form.register('name')}
           />
           {form.formState.errors.name && (
@@ -85,7 +85,7 @@ export function CategoryForm({
                 className={cn(
                   'h-8 w-8 rounded-lg transition-all',
                   selectedColor === color
-                    ? 'ring-offset-background scale-110 ring-2 ring-white ring-offset-2'
+                    ? 'ring-primary ring-offset-background scale-110 ring-2 ring-offset-2'
                     : 'hover:scale-105'
                 )}
                 style={{ backgroundColor: color }}

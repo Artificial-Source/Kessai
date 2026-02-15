@@ -54,7 +54,7 @@ export function CategoryManager() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-8">
-        <div className="border-aurora-purple h-6 w-6 animate-spin rounded-full border-2 border-t-transparent" />
+        <div className="border-primary h-6 w-6 animate-spin rounded-full border-2 border-t-transparent" />
       </div>
     )
   }
@@ -140,7 +140,7 @@ type CategoryItemProps = {
 
 function CategoryItem({ category, onEdit, onDelete }: CategoryItemProps) {
   return (
-    <div className="bg-muted flex items-center justify-between rounded-lg px-3 py-2">
+    <div className="bg-muted/70 flex items-center justify-between rounded-lg px-3 py-2">
       <div className="flex items-center gap-3">
         <div
           className="flex h-8 w-8 items-center justify-center rounded-lg"
@@ -160,7 +160,7 @@ function CategoryItem({ category, onEdit, onDelete }: CategoryItemProps) {
           <Button
             variant="ghost"
             size="icon"
-            className="text-destructive hover:text-destructive h-7 w-7"
+            className="text-destructive hover:bg-destructive/15 hover:text-destructive h-7 w-7"
             onClick={onDelete}
           >
             <Trash2 className="h-3.5 w-3.5" />

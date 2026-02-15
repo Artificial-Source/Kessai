@@ -35,7 +35,7 @@ export const SubscriptionsListView = memo(function SubscriptionsListView({
   onToggleActive,
 }: SubscriptionsListViewProps) {
   return (
-    <div className="glass-card flex flex-1 flex-col overflow-hidden">
+    <div className="glass-card flex flex-1 flex-col overflow-hidden rounded-xl">
       <div className="overflow-x-auto">
         <table className="w-full min-w-[600px]">
           <thead>
@@ -63,7 +63,7 @@ export const SubscriptionsListView = memo(function SubscriptionsListView({
               return (
                 <tr
                   key={sub.id}
-                  className={`group hover:bg-muted/30 ${!sub.is_active ? 'opacity-60' : ''}`}
+                  className={`group hover:bg-muted/35 transition-colors ${!sub.is_active ? 'opacity-60' : ''}`}
                 >
                   <td className="px-4 py-4">
                     <div className="flex items-center gap-3">
@@ -101,12 +101,12 @@ export const SubscriptionsListView = memo(function SubscriptionsListView({
                     <div className="flex items-center gap-2">
                       <span
                         className={`h-2 w-2 rounded-full ${
-                          sub.is_active ? 'bg-emerald-500' : 'bg-amber-500'
+                          sub.is_active ? 'bg-success' : 'bg-warning'
                         }`}
                       />
                       <span
                         className={`text-sm font-medium ${
-                          sub.is_active ? 'text-emerald-500' : 'text-amber-500'
+                          sub.is_active ? 'text-success' : 'text-warning'
                         }`}
                       >
                         {sub.is_active ? 'Active' : 'Paused'}
@@ -117,19 +117,19 @@ export const SubscriptionsListView = memo(function SubscriptionsListView({
                     <div className="flex items-center justify-end gap-1">
                       <button
                         onClick={() => onEdit(sub)}
-                        className="text-muted-foreground hover:bg-muted hover:text-foreground rounded-lg p-2 opacity-0 group-hover:opacity-100"
+                        className="text-muted-foreground hover:bg-accent hover:text-foreground rounded-lg p-2 opacity-0 transition-[opacity,background-color,color] group-hover:opacity-100"
                       >
                         <Pencil className="h-4 w-4" />
                       </button>
                       <button
                         onClick={() => onToggleActive(sub)}
-                        className="text-muted-foreground hover:bg-muted hover:text-foreground rounded-lg p-2 opacity-0 group-hover:opacity-100"
+                        className="text-muted-foreground hover:bg-accent hover:text-foreground rounded-lg p-2 opacity-0 transition-[opacity,background-color,color] group-hover:opacity-100"
                       >
                         <Power className="h-4 w-4" />
                       </button>
                       <button
                         onClick={() => onDelete(sub)}
-                        className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive rounded-lg p-2 opacity-0 group-hover:opacity-100"
+                        className="text-muted-foreground hover:bg-destructive/15 hover:text-destructive rounded-lg p-2 opacity-0 transition-[opacity,background-color,color] group-hover:opacity-100"
                       >
                         <Trash2 className="h-4 w-4" />
                       </button>

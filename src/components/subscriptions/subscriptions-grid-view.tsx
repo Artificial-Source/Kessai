@@ -44,24 +44,24 @@ export const SubscriptionsGridView = memo(function SubscriptionsGridView({
         return (
           <div
             key={sub.id}
-            className={`glass-card hover-lift group relative overflow-hidden ${!sub.is_active ? 'opacity-60' : ''}`}
+            className={`glass-card hover-lift group relative overflow-hidden rounded-xl ${!sub.is_active ? 'opacity-60' : ''}`}
           >
-            <div className="bg-card/80 absolute top-2 right-2 z-10 flex gap-1 rounded-lg p-1 opacity-0 backdrop-blur-sm group-hover:opacity-100">
+            <div className="bg-card/95 border-border absolute top-2 right-2 z-10 flex gap-1 rounded-lg border p-1 opacity-0 transition-opacity group-hover:opacity-100">
               <button
                 onClick={() => onEdit(sub)}
-                className="text-muted-foreground hover:bg-muted hover:text-foreground rounded-md p-1.5"
+                className="text-muted-foreground hover:bg-accent hover:text-foreground rounded-md p-1.5 transition-colors"
               >
                 <Pencil className="h-3.5 w-3.5" />
               </button>
               <button
                 onClick={() => onToggleActive(sub)}
-                className="text-muted-foreground hover:bg-muted hover:text-foreground rounded-md p-1.5"
+                className="text-muted-foreground hover:bg-accent hover:text-foreground rounded-md p-1.5 transition-colors"
               >
                 <Power className="h-3.5 w-3.5" />
               </button>
               <button
                 onClick={() => onDelete(sub)}
-                className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive rounded-md p-1.5"
+                className="text-muted-foreground hover:bg-destructive/15 hover:text-destructive rounded-md p-1.5 transition-colors"
               >
                 <Trash2 className="h-3.5 w-3.5" />
               </button>
@@ -97,12 +97,12 @@ export const SubscriptionsGridView = memo(function SubscriptionsGridView({
                   <div className="flex items-center justify-end gap-1.5">
                     <span
                       className={`h-2 w-2 rounded-full ${
-                        sub.is_active ? 'bg-emerald-500' : 'bg-amber-500'
+                        sub.is_active ? 'bg-success' : 'bg-warning'
                       }`}
                     />
                     <span
                       className={`text-sm font-medium ${
-                        sub.is_active ? 'text-emerald-500' : 'text-amber-500'
+                        sub.is_active ? 'text-success' : 'text-warning'
                       }`}
                     >
                       {sub.is_active ? 'Active' : 'Paused'}
@@ -118,7 +118,7 @@ export const SubscriptionsGridView = memo(function SubscriptionsGridView({
                   size="sm"
                   variant="outline"
                   onClick={() => onMarkAsPaid(sub)}
-                  className="w-full border-emerald-500/30 bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20"
+                  className="border-success/35 bg-success/12 text-success hover:bg-success/20 w-full"
                 >
                   Mark as Paid
                 </Button>

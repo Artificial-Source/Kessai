@@ -12,6 +12,7 @@ import { usePaymentStore } from '@/stores/payment-store'
 import { formatCurrency } from '@/lib/currency'
 import { calculateNextPaymentDate, formatPaymentDate } from '@/lib/date-utils'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { SubscriptionBento } from '@/components/subscriptions/subscription-bento'
 import { SubscriptionsGridView } from '@/components/subscriptions/subscriptions-grid-view'
 import { SubscriptionsListView } from '@/components/subscriptions/subscriptions-list-view'
@@ -149,7 +150,9 @@ export function Subscriptions() {
       <div className="flex h-full flex-col gap-6">
         <header className="flex flex-wrap items-end justify-between gap-4">
           <div className="flex flex-col gap-1">
-            <h1 className="text-foreground text-3xl font-bold tracking-tight">My Subscriptions</h1>
+            <h1 className="text-foreground text-3xl font-semibold tracking-tight md:text-4xl">
+              My Subscriptions
+            </h1>
             <div className="text-muted-foreground flex flex-wrap items-center gap-3 text-sm">
               {monthlySubsTotal > 0 && (
                 <div className="flex items-center gap-1.5">
@@ -180,21 +183,21 @@ export function Subscriptions() {
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div className="relative max-w-sm flex-1">
                 <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
-                <input
+                <Input
                   type="text"
                   placeholder="Search subscriptions..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="border-border bg-card text-foreground placeholder-muted-foreground focus:border-primary focus:ring-primary h-10 w-full rounded-lg border pr-4 pl-10 text-sm focus:ring-1 focus:outline-none"
+                  className="pr-4 pl-10"
                 />
               </div>
-              <div className="border-border bg-card flex rounded-lg border p-1">
+              <div className="border-border bg-card flex rounded-lg border p-1 shadow-[inset_0_1px_0_color-mix(in_srgb,var(--color-card)_60%,transparent)]">
                 <button
                   onClick={() => setViewMode('grid')}
-                  className={`flex h-8 w-9 items-center justify-center rounded-md ${
+                  className={`flex h-8 w-9 items-center justify-center rounded-md transition-colors ${
                     viewMode === 'grid'
-                      ? 'bg-primary text-primary-foreground'
-                      : 'text-muted-foreground hover:text-foreground'
+                      ? 'bg-primary text-primary-foreground shadow-sm'
+                      : 'text-muted-foreground hover:bg-accent hover:text-foreground'
                   }`}
                   title="Grid view"
                 >
@@ -202,10 +205,10 @@ export function Subscriptions() {
                 </button>
                 <button
                   onClick={() => setViewMode('list')}
-                  className={`flex h-8 w-9 items-center justify-center rounded-md ${
+                  className={`flex h-8 w-9 items-center justify-center rounded-md transition-colors ${
                     viewMode === 'list'
-                      ? 'bg-primary text-primary-foreground'
-                      : 'text-muted-foreground hover:text-foreground'
+                      ? 'bg-primary text-primary-foreground shadow-sm'
+                      : 'text-muted-foreground hover:bg-accent hover:text-foreground'
                   }`}
                   title="List view"
                 >
@@ -213,10 +216,10 @@ export function Subscriptions() {
                 </button>
                 <button
                   onClick={() => setViewMode('bento')}
-                  className={`flex h-8 w-9 items-center justify-center rounded-md ${
+                  className={`flex h-8 w-9 items-center justify-center rounded-md transition-colors ${
                     viewMode === 'bento'
-                      ? 'bg-primary text-primary-foreground'
-                      : 'text-muted-foreground hover:text-foreground'
+                      ? 'bg-primary text-primary-foreground shadow-sm'
+                      : 'text-muted-foreground hover:bg-accent hover:text-foreground'
                   }`}
                   title="Bento view"
                 >

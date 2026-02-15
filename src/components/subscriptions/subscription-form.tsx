@@ -282,9 +282,9 @@ export function SubscriptionForm({
                     setLogoPreview(null)
                     form.setValue('logo_url', null)
                   }}
-                  className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500"
+                  className="bg-destructive text-destructive-foreground absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full"
                 >
-                  <X className="h-3 w-3 text-white" />
+                  <X className="h-3 w-3" />
                 </button>
               </div>
             ) : (

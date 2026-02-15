@@ -182,7 +182,7 @@ export function CardManager({ currency }: CardManagerProps) {
                   className={cn(
                     'h-8 w-8 rounded-full transition-all',
                     form.watch('color') === color &&
-                      'ring-offset-background ring-2 ring-white ring-offset-2'
+                      'ring-primary ring-offset-background ring-2 ring-offset-2'
                   )}
                   style={{ backgroundColor: color }}
                 />
@@ -235,7 +235,7 @@ export function CardManager({ currency }: CardManagerProps) {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="text-red-400 hover:text-red-300"
+                  className="text-destructive hover:bg-destructive/15 hover:text-destructive"
                   onClick={() => setDeleteTarget(card)}
                 >
                   <Trash2 className="h-4 w-4" />

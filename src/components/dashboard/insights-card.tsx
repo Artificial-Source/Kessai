@@ -16,12 +16,12 @@ export const InsightsCard = memo(function InsightsCard({
   currency,
 }: InsightsCardProps) {
   return (
-    <div className="glass-card border-primary/20 from-primary/5 flex flex-col rounded-2xl bg-gradient-to-br to-transparent p-6">
+    <div className="glass-card border-primary/20 from-primary/8 flex flex-col rounded-xl bg-gradient-to-br to-transparent p-6">
       <div className="mb-6 flex items-center gap-3">
         <div className="bg-primary/20 text-primary flex h-8 w-8 items-center justify-center rounded-full">
           <Lightbulb className="h-4 w-4" />
         </div>
-        <h3 className="text-foreground text-lg font-bold">Insights</h3>
+        <h3 className="text-foreground text-lg font-semibold tracking-tight">Insights</h3>
       </div>
       <div className="flex flex-col gap-6">
         <InsightItem
@@ -41,7 +41,7 @@ export const InsightsCard = memo(function InsightsCard({
         />
         <div className="bg-border h-px w-full" />
         <InsightItem
-          color="bg-emerald-400"
+          color="bg-success"
           title="Daily Breakdown"
           description={
             <>
@@ -55,7 +55,7 @@ export const InsightsCard = memo(function InsightsCard({
         />
       </div>
       <div className="mt-auto pt-6">
-        <div className="border-border bg-muted/50 rounded-xl border p-4">
+        <div className="border-border bg-muted/45 rounded-xl border p-4">
           <p className="text-muted-foreground mb-1 text-xs">Total Active</p>
           <div className="flex items-end gap-2">
             <span className="text-foreground text-xl font-bold">{subscriptionCount}</span>

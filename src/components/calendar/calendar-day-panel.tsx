@@ -51,16 +51,19 @@ export function CalendarDayPanel({
           <span className="text-muted-foreground text-xs font-bold tracking-widest uppercase">
             Selected Day
           </span>
-          <button onClick={onClose} className="text-muted-foreground hover:text-foreground">
+          <button
+            onClick={onClose}
+            className="text-muted-foreground hover:bg-accent hover:text-foreground rounded-md p-1 transition-colors"
+          >
             <X className="h-5 w-5" />
           </button>
         </div>
-        <h2 className="text-foreground text-3xl font-black">
+        <h2 className="text-foreground text-3xl font-semibold tracking-tight">
           {dayjs(selectedDate).format('MMMM D')}
         </h2>
         <p className="text-muted-foreground mt-1 text-sm font-medium">
           {payments.length} payment{payments.length !== 1 ? 's' : ''} due{' '}
-          <span className="text-foreground font-bold">
+          <span className="text-foreground font-semibold">
             {formatCurrency(totalAmount, currency)} total
           </span>
         </p>

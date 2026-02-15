@@ -20,18 +20,18 @@ export const StatCard = memo(function StatCard({
   iconColor,
 }: StatCardProps) {
   return (
-    <div className="glass-card hover-lift group rounded-2xl p-5">
-      <div className="mb-4 flex items-start justify-between">
-        <p className="text-muted-foreground text-sm font-medium">{label}</p>
+    <div className="glass-card hover-lift group rounded-xl p-5">
+      <div className="mb-4 flex items-start justify-between gap-3">
+        <p className="text-muted-foreground text-sm font-medium tracking-tight">{label}</p>
         <div
-          className={`flex h-8 w-8 items-center justify-center rounded-lg ${iconBg} ${iconColor}`}
+          className={`border-border/60 flex h-9 w-9 items-center justify-center rounded-md border ${iconBg} ${iconColor}`}
         >
           <Icon className="h-4 w-4" />
         </div>
       </div>
-      <p className="text-foreground text-3xl font-bold tracking-tight">{value}</p>
+      <p className="text-foreground text-2xl font-semibold tracking-tight md:text-3xl">{value}</p>
       {subtitle && (
-        <p className={`mt-1 text-xs font-medium ${subtitleColor || 'text-muted-foreground'}`}>
+        <p className={`mt-1.5 text-xs font-medium ${subtitleColor || 'text-muted-foreground'}`}>
           {subtitle}
         </p>
       )}

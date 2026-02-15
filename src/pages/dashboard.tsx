@@ -61,10 +61,14 @@ export function Dashboard() {
   }
 
   return (
-    <div className="flex flex-col gap-8">
-      <header className="flex flex-col gap-1">
-        <h2 className="text-foreground text-3xl font-black tracking-tight">Dashboard</h2>
-        <p className="text-muted-foreground mt-1 text-base">Here's your subscription overview</p>
+    <div className="flex flex-col gap-7">
+      <header className="flex flex-col gap-1.5">
+        <h2 className="text-foreground text-3xl font-semibold tracking-tight md:text-4xl">
+          Dashboard
+        </h2>
+        <p className="text-muted-foreground text-sm md:text-base">
+          Financial overview for this billing cycle
+        </p>
       </header>
 
       <section className="stagger-children grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -109,8 +113,10 @@ export function Dashboard() {
 
       {/* Category Breakdown */}
       {categorySpending.length > 0 && (
-        <section className="glass-card rounded-2xl p-6">
-          <h3 className="text-foreground mb-4 text-lg font-bold">Spending by Category</h3>
+        <section className="glass-card rounded-xl p-6">
+          <h3 className="text-foreground mb-4 text-lg font-semibold tracking-tight">
+            Spending by Category
+          </h3>
           <div className="space-y-3">
             {categorySpending.slice(0, 5).map((cat) => (
               <div key={cat.id} className="flex items-center gap-3">
@@ -118,7 +124,7 @@ export function Dashboard() {
                   className="h-3 w-3 flex-shrink-0 rounded-full"
                   style={{ backgroundColor: cat.color }}
                 />
-                <span className="text-foreground min-w-[120px] text-sm font-medium">
+                <span className="text-foreground min-w-[120px] text-sm font-medium tracking-tight">
                   {cat.name}
                 </span>
                 <div className="bg-muted relative h-2 flex-1 overflow-hidden rounded-full">
@@ -143,8 +149,10 @@ export function Dashboard() {
       )}
 
       <section className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <div className="glass-card rounded-2xl p-6 lg:col-span-2">
-          <h3 className="text-foreground mb-6 text-lg font-bold">Upcoming Payments</h3>
+        <div className="glass-card rounded-xl p-6 lg:col-span-2">
+          <h3 className="text-foreground mb-6 text-lg font-semibold tracking-tight">
+            Upcoming Payments
+          </h3>
           {upcomingPayments.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-8 text-center">
               <span className="mb-2 text-4xl">🎉</span>

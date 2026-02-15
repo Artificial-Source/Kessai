@@ -39,7 +39,7 @@ export const SubscriptionCard = memo(function SubscriptionCard({
       <div className="flex items-center gap-3">
         <div
           className="flex h-10 w-10 items-center justify-center rounded-lg text-sm font-semibold text-white"
-          style={{ backgroundColor: subscription.color || '#8b5cf6' }}
+          style={{ backgroundColor: subscription.color || '#4f8dff' }}
         >
           {subscription.name.charAt(0).toUpperCase()}
         </div>
@@ -48,7 +48,7 @@ export const SubscriptionCard = memo(function SubscriptionCard({
           <div className="flex items-center gap-2">
             <h4 className="text-foreground truncate font-medium">{subscription.name}</h4>
             {isPaid && (
-              <span className="flex items-center gap-1 text-xs text-emerald-500">
+              <span className="text-success flex items-center gap-1 text-xs">
                 <Check className="h-3 w-3" />
                 Paid
               </span>
@@ -84,7 +84,7 @@ export const SubscriptionCard = memo(function SubscriptionCard({
             <Button
               size="sm"
               onClick={onMarkPaid}
-              className="border border-emerald-500/30 bg-emerald-500/20 text-emerald-500 hover:bg-emerald-500/30"
+              className="border-success/30 bg-success/15 text-success hover:bg-success/25 border"
             >
               <Check className="mr-1 h-4 w-4" />
               Pay

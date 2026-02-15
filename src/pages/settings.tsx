@@ -16,6 +16,7 @@ import {
 import { CategoryManager } from '@/components/categories/category-manager'
 import { DataManagement } from '@/components/settings/data-management'
 import { CardManager } from '@/components/settings/card-manager'
+import { AppLogo } from '@/components/layout/app-logo'
 import type { Theme } from '@/types/settings'
 import type { CurrencyCode } from '@/lib/currency'
 
@@ -48,14 +49,18 @@ export function SettingsPage() {
   const currencyOptions = getCurrencyOptions()
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-7">
       <header>
-        <h1 className="text-foreground mb-1 text-3xl font-bold tracking-tight">Settings</h1>
-        <p className="text-muted-foreground">Customize your Subby experience</p>
+        <h1 className="text-foreground mb-1 text-3xl font-semibold tracking-tight md:text-4xl">
+          Settings
+        </h1>
+        <p className="text-muted-foreground text-sm md:text-base">
+          Customize your Subby experience
+        </p>
       </header>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <div className="glass-card space-y-6 p-6">
+        <div className="glass-card space-y-6 rounded-xl p-6">
           <div>
             <h2 className="text-foreground text-lg font-semibold">Appearance</h2>
             <p className="text-muted-foreground text-sm">Customize how Subby looks</p>
@@ -79,7 +84,7 @@ export function SettingsPage() {
           </div>
         </div>
 
-        <div className="glass-card space-y-6 p-6">
+        <div className="glass-card space-y-6 rounded-xl p-6">
           <div>
             <h2 className="text-foreground text-lg font-semibold">Preferences</h2>
             <p className="text-muted-foreground text-sm">Set your default options</p>
@@ -102,7 +107,7 @@ export function SettingsPage() {
           </div>
         </div>
 
-        <div className="glass-card space-y-6 p-6">
+        <div className="glass-card space-y-6 rounded-xl p-6">
           <div>
             <h2 className="text-foreground text-lg font-semibold">Data Management</h2>
             <p className="text-muted-foreground text-sm">Export and import your data</p>
@@ -111,13 +116,14 @@ export function SettingsPage() {
           <DataManagement onDataChanged={handleDataChanged} />
         </div>
 
-        <div className="glass-card space-y-6 p-6">
+        <div className="glass-card space-y-6 rounded-xl p-6">
           <div>
             <h2 className="text-foreground text-lg font-semibold">About</h2>
             <p className="text-muted-foreground text-sm">Application information</p>
           </div>
 
           <div className="space-y-4">
+            <AppLogo />
             <div className="flex items-center justify-between">
               <span className="text-muted-foreground">Version</span>
               <span className="text-foreground font-medium">0.1.0</span>
@@ -133,7 +139,7 @@ export function SettingsPage() {
           </div>
         </div>
 
-        <div className="glass-card space-y-6 p-6">
+        <div className="glass-card space-y-6 rounded-xl p-6">
           <div>
             <h2 className="text-foreground text-lg font-semibold">Payment Cards</h2>
             <p className="text-muted-foreground text-sm">Manage your payment methods</p>
@@ -142,7 +148,7 @@ export function SettingsPage() {
           <CardManager currency={settings.currency as CurrencyCode} />
         </div>
 
-        <div className="glass-card space-y-6 p-6">
+        <div className="glass-card space-y-6 rounded-xl p-6">
           <CategoryManager />
         </div>
       </div>

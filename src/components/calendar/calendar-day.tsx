@@ -33,20 +33,13 @@ const PaymentLogo = memo(function PaymentLogo({
   }, [logoUrl])
 
   if (src) {
-    return (
-      <img
-        src={src}
-        alt=""
-        className="h-5 w-5 shrink-0 rounded object-cover"
-        style={{ borderRadius: '3px' }}
-      />
-    )
+    return <img src={src} alt="" className="h-5 w-5 shrink-0 rounded-[4px] object-cover" />
   }
 
   return (
     <div
-      className="flex h-5 w-5 shrink-0 items-center justify-center text-[9px] font-bold text-white"
-      style={{ backgroundColor: color || '#8b5cf6', borderRadius: '3px' }}
+      className="flex h-5 w-5 shrink-0 items-center justify-center rounded-[4px] text-[9px] font-bold text-white"
+      style={{ backgroundColor: color || '#4f8dff' }}
     >
       {name.charAt(0).toUpperCase()}
     </div>
@@ -100,7 +93,7 @@ export const CalendarDay = memo(function CalendarDay({
       {/* Payment items */}
       <div className="flex flex-1 flex-col gap-1">
         {visiblePayments.map((p) => {
-          const color = p.subscription.color || '#8b5cf6'
+          const color = p.subscription.color || '#4f8dff'
           const isPaidOrSkipped = p.isPaid || p.isSkipped
 
           return (
