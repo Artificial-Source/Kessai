@@ -1,22 +1,14 @@
-import { test, expect } from '@playwright/test'
+import { test, expect } from './fixtures'
 
 test.describe('Subscriptions', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/')
     await page.getByRole('link', { name: /subscriptions/i }).click()
+    await expect(page.getByRole('heading', { name: /my subscriptions/i })).toBeVisible()
   })
 
   test('should show empty state when no subscriptions exist', async ({ page }) => {
-    // This test assumes fresh state - may need to be adjusted
-    // based on whether the database persists between tests
-    const emptyState = page.getByText(/no subscriptions yet/i)
-    const subscriptionsList = page.getByRole('table')
-
-    // Either empty state or subscriptions list should be visible
-    const hasEmptyState = await emptyState.isVisible().catch(() => false)
-    const hasList = await subscriptionsList.isVisible().catch(() => false)
-
-    expect(hasEmptyState || hasList).toBe(true)
+    await expect(page.getByText(/no subscriptions yet/i)).toBeVisible()
   })
 
   test('should open add subscription dialog', async ({ page }) => {
@@ -36,33 +28,32 @@ test.describe('Subscriptions', () => {
     await page.getByRole('button', { name: /add subscription/i }).click()
     await expect(page.getByRole('dialog')).toBeVisible()
 
-    // Click cancel or close button
+    // Press Escape to close
     await page.keyboard.press('Escape')
 
     // Dialog should be closed
     await expect(page.getByRole('dialog')).not.toBeVisible()
   })
 
-  test('should switch between view modes', async ({ page }) => {
-    // Grid view button
-    const gridButton = page.getByRole('button', { name: /grid view/i })
-    const listButton = page.getByRole('button', { name: /list view/i })
-    const bentoButton = page.getByRole('button', { name: /bento view/i })
+  test('should show view controls when subscriptions exist', async ({ page }) => {
+    // Initially empty — add a subscription via the form
+    await page.getByRole('button', { name: /add subscription/i }).click()
+    await expect(page.getByRole('dialog')).toBeVisible()
 
-    // Check if view toggle exists (only shows when there are subscriptions)
-    const hasViewToggle = await gridButton.isVisible().catch(() => false)
+    // Fill the form
+    await page.getByLabel(/name/i).fill('Netflix')
+    await page.getByLabel(/amount/i).fill('15.99')
 
-    if (hasViewToggle) {
-      // Switch to grid view
-      await gridButton.click()
-      // Switch to list view
-      await listButton.click()
-      // Switch to bento view
-      await bentoButton.click()
+    // Submit
+    await page.getByRole('button', { name: /save|add|create/i }).click()
 
-      // Verify we're on bento view (bento component should be visible)
-      expect(true).toBe(true) // View switch completed without error
-    }
+    // Wait for dialog to close and view controls to appear
+    await expect(page.getByRole('dialog')).not.toBeVisible({ timeout: 10000 })
+
+    // View toggle buttons should be visible
+    await expect(page.getByRole('button', { name: /grid view/i })).toBeVisible()
+    await expect(page.getByRole('button', { name: /list view/i })).toBeVisible()
+    await expect(page.getByRole('button', { name: /bento view/i })).toBeVisible()
   })
 
   test('should filter subscriptions by search', async ({ page }) => {

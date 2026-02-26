@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test'
+import { test, expect } from './fixtures'
 
 test.describe('Navigation', () => {
   test('should load the dashboard page by default', async ({ page }) => {
@@ -25,7 +25,7 @@ test.describe('Navigation', () => {
     await page.getByRole('link', { name: /calendar/i }).click()
 
     // Should show calendar heading
-    await expect(page.getByRole('heading', { name: /payment calendar/i })).toBeVisible()
+    await expect(page.getByRole('heading', { name: /calendar/i })).toBeVisible()
   })
 
   test('should navigate to settings page', async ({ page }) => {
