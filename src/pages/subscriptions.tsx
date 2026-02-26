@@ -16,6 +16,7 @@ import { SubscriptionBento } from '@/components/subscriptions/subscription-bento
 import { SubscriptionsGridView } from '@/components/subscriptions/subscriptions-grid-view'
 import { SubscriptionsListView } from '@/components/subscriptions/subscriptions-list-view'
 import { CategoryFilter } from '@/components/subscriptions/category-filter'
+import { SubscriptionsSkeleton } from '@/components/subscriptions/subscriptions-skeleton'
 import type { CurrencyCode } from '@/lib/currency'
 import type { Subscription } from '@/types/subscription'
 
@@ -153,25 +154,15 @@ export function Subscriptions() {
   }
 
   if (isLoading) {
-    return (
-      <div className="flex h-full items-center justify-center">
-        <div
-          role="status"
-          aria-label="Loading subscriptions"
-          className="border-primary h-8 w-8 animate-spin rounded-full border-2 border-t-transparent"
-        />
-      </div>
-    )
+    return <SubscriptionsSkeleton />
   }
 
   return (
     <>
-      <div className="flex h-full flex-col gap-8">
+      <div className="animate-fade-in-up flex h-full flex-col space-y-6">
         <header className="flex flex-wrap items-end justify-between gap-4">
           <div className="flex flex-col gap-2">
-            <h1 className="text-foreground font-[family-name:var(--font-heading)] text-4xl font-bold tracking-tight">
-              My Subscriptions
-            </h1>
+            <h1 className="text-2xl font-bold tracking-tight">My Subscriptions</h1>
             <div className="flex flex-wrap items-center gap-3">
               {monthlySubsTotal > 0 && (
                 <div className="flex items-center gap-3">

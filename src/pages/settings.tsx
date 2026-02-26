@@ -15,6 +15,7 @@ import {
 import { CategoryManager } from '@/components/categories/category-manager'
 import { DataManagement } from '@/components/settings/data-management'
 import { CardManager } from '@/components/settings/card-manager'
+import { SettingsSkeleton } from '@/components/settings/settings-skeleton'
 import type { Theme } from '@/types/settings'
 import type { CurrencyCode } from '@/lib/currency'
 
@@ -31,15 +32,7 @@ export function SettingsPage() {
   }
 
   if (isLoading || !settings) {
-    return (
-      <div className="flex h-full items-center justify-center">
-        <div
-          role="status"
-          aria-label="Loading settings"
-          className="border-primary h-8 w-8 animate-spin rounded-full border-2 border-t-transparent"
-        />
-      </div>
-    )
+    return <SettingsSkeleton />
   }
 
   const themeOptions: { value: Theme; label: string; icon: React.ElementType }[] = [
@@ -51,27 +44,21 @@ export function SettingsPage() {
   const currencyOptions = getCurrencyOptions()
 
   return (
-    <div className="flex flex-col gap-8">
+    <div className="animate-fade-in-up flex flex-col space-y-6">
       <header className="flex flex-col gap-1">
-        <h1 className="text-foreground font-[family-name:var(--font-heading)] text-4xl font-bold tracking-tight">
-          Settings
-        </h1>
-        <p className="text-muted-foreground font-[family-name:var(--font-sans)] text-base">
-          Customize your Subby experience
-        </p>
+        <h1 className="text-2xl font-bold tracking-tight">Settings</h1>
+        <p className="text-muted-foreground text-sm">Customize your Subby experience</p>
       </header>
 
       <div className="grid gap-6 lg:grid-cols-2">
         <div className="glass-card flex flex-col gap-6 p-6">
           <div className="flex flex-col gap-1">
-            <h2 className="text-foreground font-[family-name:var(--font-heading)] text-lg font-bold">
-              Appearance
-            </h2>
+            <h2 className="text-foreground text-lg font-bold">Appearance</h2>
             <p className="text-muted-foreground text-sm">Customize how Subby looks</p>
           </div>
 
           <div className="flex flex-col gap-3">
-            <span className="text-dimmed font-[family-name:var(--font-mono)] text-[10px] tracking-widest uppercase">
+            <span className="text-muted-foreground font-[family-name:var(--font-mono)] text-[10px] tracking-widest uppercase">
               Theme
             </span>
             <div className="flex gap-2">
@@ -93,14 +80,12 @@ export function SettingsPage() {
 
         <div className="glass-card flex flex-col gap-6 p-6">
           <div className="flex flex-col gap-1">
-            <h2 className="text-foreground font-[family-name:var(--font-heading)] text-lg font-bold">
-              Preferences
-            </h2>
+            <h2 className="text-foreground text-lg font-bold">Preferences</h2>
             <p className="text-muted-foreground text-sm">Set your default options</p>
           </div>
 
           <div className="flex flex-col gap-3">
-            <span className="text-dimmed font-[family-name:var(--font-mono)] text-[10px] tracking-widest uppercase">
+            <span className="text-muted-foreground font-[family-name:var(--font-mono)] text-[10px] tracking-widest uppercase">
               Default Currency
             </span>
             <Select value={settings.currency} onValueChange={(value) => setCurrency(value)}>
@@ -120,9 +105,7 @@ export function SettingsPage() {
 
         <div className="glass-card flex flex-col gap-6 p-6">
           <div className="flex flex-col gap-1">
-            <h2 className="text-foreground font-[family-name:var(--font-heading)] text-lg font-bold">
-              Data Management
-            </h2>
+            <h2 className="text-foreground text-lg font-bold">Data Management</h2>
             <p className="text-muted-foreground text-sm">Export and import your data</p>
           </div>
 
@@ -131,9 +114,7 @@ export function SettingsPage() {
 
         <div className="glass-card flex flex-col gap-6 p-6">
           <div className="flex flex-col gap-1">
-            <h2 className="text-foreground font-[family-name:var(--font-heading)] text-lg font-bold">
-              About
-            </h2>
+            <h2 className="text-foreground text-lg font-bold">About</h2>
             <p className="text-muted-foreground text-sm">Application information</p>
           </div>
 
@@ -167,9 +148,7 @@ export function SettingsPage() {
 
         <div className="glass-card flex flex-col gap-6 p-6">
           <div className="flex flex-col gap-1">
-            <h2 className="text-foreground font-[family-name:var(--font-heading)] text-lg font-bold">
-              Payment Cards
-            </h2>
+            <h2 className="text-foreground text-lg font-bold">Payment Cards</h2>
             <p className="text-muted-foreground text-sm">Manage your payment methods</p>
           </div>
 

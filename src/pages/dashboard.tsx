@@ -10,6 +10,7 @@ import { getUpcomingPayments } from '@/lib/date-utils'
 import { StatCard } from '@/components/dashboard/stat-card'
 import { UpcomingPaymentRow } from '@/components/dashboard/upcoming-payment-row'
 import { InsightsCard } from '@/components/dashboard/insights-card'
+import { DashboardSkeleton } from '@/components/dashboard/dashboard-skeleton'
 import type { CurrencyCode } from '@/lib/currency'
 
 export function Dashboard() {
@@ -53,20 +54,14 @@ export function Dashboard() {
   }, [fetchSubscriptions, fetchCategories, fetchSettings])
 
   if (isLoading) {
-    return (
-      <div className="flex h-full items-center justify-center">
-        <div className="border-primary h-8 w-8 animate-spin rounded-full border-2 border-t-transparent" />
-      </div>
-    )
+    return <DashboardSkeleton />
   }
 
   return (
-    <div className="flex flex-col gap-10">
+    <div className="animate-fade-in-up flex flex-col space-y-6">
       <header className="flex flex-col gap-1">
-        <h2 className="text-foreground font-[family-name:var(--font-heading)] text-4xl font-bold tracking-tight">
-          Dashboard
-        </h2>
-        <p className="text-muted-foreground mt-1 text-base">Here's your subscription overview</p>
+        <h2 className="text-2xl font-bold tracking-tight">Dashboard</h2>
+        <p className="text-muted-foreground text-sm">Here's your subscription overview</p>
       </header>
 
       <section className="stagger-children grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-4">
@@ -112,9 +107,7 @@ export function Dashboard() {
       {/* Category Breakdown */}
       {categorySpending.length > 0 && (
         <section className="glass-card p-6">
-          <h3 className="text-foreground mb-4 font-[family-name:var(--font-heading)] text-lg font-bold">
-            Spending by Category
-          </h3>
+          <h3 className="mb-4 text-lg font-bold">Spending by Category</h3>
           <div className="flex flex-col gap-3">
             {categorySpending.slice(0, 5).map((cat) => (
               <div key={cat.id} className="flex items-center gap-3">
@@ -137,7 +130,7 @@ export function Dashboard() {
                 <span className="text-muted-foreground min-w-[80px] text-right font-[family-name:var(--font-mono)] text-xs">
                   {formatCurrency(cat.amount, currency)}
                 </span>
-                <span className="text-dimmed w-12 text-right font-[family-name:var(--font-mono)] text-[10px]">
+                <span className="text-muted-foreground w-12 text-right font-[family-name:var(--font-mono)] text-[10px]">
                   {cat.percentage.toFixed(0)}%
                 </span>
               </div>
@@ -148,9 +141,7 @@ export function Dashboard() {
 
       <section className="flex flex-col gap-6 lg:flex-row">
         <div className="glass-card flex-1 p-6">
-          <h3 className="text-foreground mb-5 font-[family-name:var(--font-heading)] text-lg font-bold">
-            Upcoming Payments
-          </h3>
+          <h3 className="mb-5 text-lg font-bold">Upcoming Payments</h3>
           {upcomingPayments.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-8 text-center">
               <span className="mb-2 text-4xl">🎉</span>
