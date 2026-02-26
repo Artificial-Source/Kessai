@@ -1,12 +1,12 @@
 import { useState } from 'react'
 import { toast } from 'sonner'
 import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-} from '@/components/ui/sheet'
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import { CategoryForm } from './category-form'
 import { useCategoryStore } from '@/stores/category-store'
 import type { CategoryFormData, Category } from '@/types/category'
@@ -57,18 +57,18 @@ export function CategoryDialog({ open, onOpenChange, category }: CategoryDialogP
   }
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="w-full overflow-y-auto sm:max-w-md">
-        <SheetHeader className="mb-6">
-          <SheetTitle className="text-xl">
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="w-full overflow-y-auto sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle className="text-xl">
             {isEditing ? 'Edit Category' : 'Add Category'}
-          </SheetTitle>
-          <SheetDescription>
+          </DialogTitle>
+          <DialogDescription>
             {isEditing
               ? 'Update the details of your category below.'
               : 'Create a new category to organize your subscriptions.'}
-          </SheetDescription>
-        </SheetHeader>
+          </DialogDescription>
+        </DialogHeader>
 
         <CategoryForm
           category={category}
@@ -76,7 +76,7 @@ export function CategoryDialog({ open, onOpenChange, category }: CategoryDialogP
           onCancel={() => onOpenChange(false)}
           isLoading={isLoading}
         />
-      </SheetContent>
-    </Sheet>
+      </DialogContent>
+    </Dialog>
   )
 }

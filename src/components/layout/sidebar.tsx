@@ -37,7 +37,7 @@ export function Sidebar() {
       )}
     >
       <div className="flex items-center gap-3 overflow-hidden p-6">
-        <img src="/icon.png" alt="Subby" className="h-8 w-8 shrink-0 object-contain" />
+        <img src="/icon-transparent.png" alt="Subby" className="h-8 w-8 shrink-0 object-contain" />
         <h1
           className={cn(
             'text-foreground font-[family-name:var(--font-heading)] text-xl font-bold tracking-tight whitespace-nowrap transition-[opacity,transform] duration-200',

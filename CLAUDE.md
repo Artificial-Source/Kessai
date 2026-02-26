@@ -59,6 +59,34 @@
 - `settings` - User preferences (theme, currency, notifications)
 - `payment_cards` - Payment card tracking
 
+## Design System — ASF Brutalist Glassmorphic
+
+### Typography (3-font system)
+
+- **Headings**: Space Grotesk (600, 700) — `font-[family-name:var(--font-heading)]`
+- **Body/UI**: Outfit (400, 500, 600) — `font-[family-name:var(--font-sans)]`
+- **Labels/Data**: Space Mono (400, 600) — `font-[family-name:var(--font-mono)]`
+
+### Color Tokens (Dark Mode)
+
+| Token | Value | Usage |
+|-------|-------|-------|
+| `--color-background` | `#0a0a0a` | Page background (void black) |
+| `--color-foreground` | `#e8e8e8` | Primary text |
+| `--color-primary` | `#bf5af2` | Accent (Plasma Violet) |
+| `--color-card` | `rgba(255,255,255,0.02)` | Glass card surfaces |
+| `--color-border` | `rgba(255,255,255,0.06)` | Hairline borders |
+| `--color-input` | `#111111` | Input backgrounds |
+| `--color-dimmed` | `#585858` | Tertiary text |
+
+### UI Patterns
+
+- **Glass cards**: Transparent bg + 1px hairline border + 12px radius
+- **Sidebar**: Void black (#050505), Space Mono nav labels, 3px violet left-border active state
+- **Buttons (primary)**: Sharp 0px radius (brutalist), solid violet bg
+- **Modals**: Centered Dialog (not Sheet/sidebar) — subscription form uses `max-w-2xl` (672px), category form uses `max-w-lg` (512px), confirmations use `max-w-md` (448px)
+- **Badges**: Space Mono 10px uppercase with wide tracking
+
 ## Design Principles
 
 1. **Performance first**: No heavy animations, no backdrop-blur
@@ -92,6 +120,8 @@ pnpm check            # Lint + typecheck + format check
 - Don't use date-fns (use dayjs instead - smaller bundle)
 - Don't use array index as React keys (use stable IDs)
 - Don't forget useMemo for expensive calculations in hooks
+- Don't use Sheet (slide-out sidebar) for dialogs — use centered Dialog modals
+- Don't use Inter font — use the 3-font system (Space Grotesk / Outfit / Space Mono)
 
 ## Key Patterns
 

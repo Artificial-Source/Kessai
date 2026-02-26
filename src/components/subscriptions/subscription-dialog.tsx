@@ -2,12 +2,12 @@ import { useState } from 'react'
 import { toast } from 'sonner'
 import { useShallow } from 'zustand/react/shallow'
 import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-} from '@/components/ui/sheet'
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import { SubscriptionForm } from './subscription-form'
 import { useSubscriptionStore } from '@/stores/subscription-store'
 import { useUiStore } from '@/stores/ui-store'
@@ -89,21 +89,21 @@ export function SubscriptionDialog() {
   }
 
   return (
-    <Sheet
+    <Dialog
       open={subscriptionDialogOpen}
       onOpenChange={(open) => !open && closeSubscriptionDialog()}
     >
-      <SheetContent className="flex w-full flex-col overflow-hidden sm:max-w-lg">
-        <SheetHeader className="mb-6 flex-shrink-0">
-          <SheetTitle className="text-xl">
+      <DialogContent className="flex max-h-[90vh] w-full flex-col overflow-hidden sm:max-w-2xl">
+        <DialogHeader>
+          <DialogTitle className="text-xl">
             {isEditing ? 'Edit Subscription' : 'Add Subscription'}
-          </SheetTitle>
-          <SheetDescription>
+          </DialogTitle>
+          <DialogDescription>
             {isEditing
               ? 'Update the details of your subscription below.'
               : 'Fill in the details to track a new subscription.'}
-          </SheetDescription>
-        </SheetHeader>
+          </DialogDescription>
+        </DialogHeader>
 
         <div className="flex-1 overflow-y-auto overscroll-contain pr-1">
           <SubscriptionForm
@@ -114,7 +114,7 @@ export function SubscriptionDialog() {
             isLoading={isLoading}
           />
         </div>
-      </SheetContent>
-    </Sheet>
+      </DialogContent>
+    </Dialog>
   )
 }
