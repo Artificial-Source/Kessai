@@ -1,140 +1,35 @@
-use tauri::Manager;
-use tauri_plugin_sql::{Migration, MigrationKind};
 use std::fs;
 use std::path::PathBuf;
+
+use base64::{engine::general_purpose::STANDARD as BASE64, Engine as _};
 use image::ImageReader;
-use base64::{Engine as _, engine::general_purpose::STANDARD as BASE64};
+use tauri::Manager;
 
-fn get_migrations() -> Vec<Migration> {
-    vec![
-        Migration {
-            version: 1,
-            description: "create_initial_tables",
-            sql: r#"
-                CREATE TABLE IF NOT EXISTS categories (
-                    id TEXT PRIMARY KEY,
-                    name TEXT NOT NULL,
-                    color TEXT NOT NULL,
-                    icon TEXT NOT NULL,
-                    is_default INTEGER NOT NULL DEFAULT 0,
-                    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-                );
+use subby_core::models::{
+    BackupData, NewCategory, NewPayment, NewPaymentCard, NewSubscription, PaymentWithSubscription,
+    UpdateCategory, UpdatePaymentCard, UpdateSettings, UpdateSubscription,
+};
+use subby_core::{
+    models::{Category, ImportResult, Payment, PaymentCard, Settings, Subscription},
+    SubbyCore,
+};
 
-                CREATE TABLE IF NOT EXISTS subscriptions (
-                    id TEXT PRIMARY KEY,
-                    name TEXT NOT NULL,
-                    amount REAL NOT NULL,
-                    currency TEXT NOT NULL DEFAULT 'USD',
-                    billing_cycle TEXT NOT NULL,
-                    billing_day INTEGER,
-                    category_id TEXT REFERENCES categories(id),
-                    color TEXT,
-                    logo_url TEXT,
-                    notes TEXT,
-                    is_active INTEGER NOT NULL DEFAULT 1,
-                    next_payment_date TEXT,
-                    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-                );
-
-                CREATE TABLE IF NOT EXISTS settings (
-                    id TEXT PRIMARY KEY DEFAULT 'singleton',
-                    theme TEXT NOT NULL DEFAULT 'dark',
-                    currency TEXT NOT NULL DEFAULT 'USD',
-                    notification_enabled INTEGER NOT NULL DEFAULT 1,
-                    notification_days_before TEXT NOT NULL DEFAULT '[1,3,7]'
-                );
-
-                CREATE INDEX IF NOT EXISTS idx_subscriptions_category ON subscriptions(category_id);
-                CREATE INDEX IF NOT EXISTS idx_subscriptions_next_payment ON subscriptions(next_payment_date);
-            "#,
-            kind: MigrationKind::Up,
-        },
-        Migration {
-            version: 2,
-            description: "seed_default_data",
-            sql: r#"
-                INSERT OR IGNORE INTO categories (id, name, color, icon, is_default) VALUES
-                    ('cat-streaming', 'Streaming', '#8b5cf6', 'play-circle', 1),
-                    ('cat-software', 'Software', '#3b82f6', 'code', 1),
-                    ('cat-gaming', 'Gaming', '#10b981', 'gamepad-2', 1),
-                    ('cat-music', 'Music', '#f59e0b', 'music', 1),
-                    ('cat-cloud', 'Cloud Storage', '#06b6d4', 'cloud', 1),
-                    ('cat-productivity', 'Productivity', '#ec4899', 'briefcase', 1),
-                    ('cat-health', 'Health & Fitness', '#14b8a6', 'heart-pulse', 1),
-                    ('cat-news', 'News & Reading', '#f97316', 'newspaper', 1),
-                    ('cat-other', 'Other', '#6b7280', 'box', 1);
-
-                INSERT OR IGNORE INTO settings (id) VALUES ('singleton');
-            "#,
-            kind: MigrationKind::Up,
-        },
-        Migration {
-            version: 3,
-            description: "create_payments_table",
-            sql: r#"
-                CREATE TABLE IF NOT EXISTS payments (
-                    id TEXT PRIMARY KEY,
-                    subscription_id TEXT NOT NULL,
-                    amount REAL NOT NULL,
-                    paid_at TEXT NOT NULL,
-                    due_date TEXT NOT NULL,
-                    status TEXT NOT NULL DEFAULT 'paid',
-                    notes TEXT,
-                    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                    FOREIGN KEY (subscription_id) REFERENCES subscriptions(id) ON DELETE CASCADE
-                );
-
-                CREATE INDEX IF NOT EXISTS idx_payments_subscription ON payments(subscription_id);
-                CREATE INDEX IF NOT EXISTS idx_payments_paid_at ON payments(paid_at);
-                CREATE INDEX IF NOT EXISTS idx_payments_due_date ON payments(due_date);
-            "#,
-            kind: MigrationKind::Up,
-        },
-        Migration {
-            version: 4,
-            description: "add_notification_settings",
-            sql: r#"
-                ALTER TABLE settings ADD COLUMN email TEXT;
-                ALTER TABLE settings ADD COLUMN notification_email_enabled INTEGER NOT NULL DEFAULT 0;
-                ALTER TABLE settings ADD COLUMN notification_desktop_enabled INTEGER NOT NULL DEFAULT 1;
-            "#,
-            kind: MigrationKind::Up,
-        },
-        Migration {
-            version: 5,
-            description: "create_payment_cards_table",
-            sql: r#"
-                CREATE TABLE IF NOT EXISTS payment_cards (
-                    id TEXT PRIMARY KEY,
-                    name TEXT NOT NULL,
-                    card_type TEXT NOT NULL DEFAULT 'debit',
-                    last_four TEXT,
-                    color TEXT NOT NULL DEFAULT '#6b7280',
-                    credit_limit REAL,
-                    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-                );
-
-                ALTER TABLE subscriptions ADD COLUMN card_id TEXT REFERENCES payment_cards(id);
-            "#,
-            kind: MigrationKind::Up,
-        },
-    ]
-}
+// ── Logo commands (unchanged) ──────────────────────────────────────────────
 
 fn get_logos_dir(app_handle: &tauri::AppHandle) -> PathBuf {
-    let resource_dir = app_handle.path().resource_dir().unwrap_or_else(|_| PathBuf::from("."));
+    let resource_dir = app_handle
+        .path()
+        .resource_dir()
+        .unwrap_or_else(|_| PathBuf::from("."));
     let logos_dir = resource_dir.join("data").join("logos");
     fs::create_dir_all(&logos_dir).ok();
     logos_dir
 }
 
-/// Validates that a filename is safe (no path traversal)
 fn is_valid_logo_filename(filename: &str) -> bool {
-    // Only allow: alphanumeric, dash, underscore, dot, and must end with .webp
-    let valid_chars = filename.chars().all(|c| {
-        c.is_alphanumeric() || c == '-' || c == '_' || c == '.'
-    });
+    let valid_chars = filename
+        .chars()
+        .all(|c| c.is_alphanumeric() || c == '-' || c == '_' || c == '.');
 
     valid_chars
         && filename.ends_with(".webp")
@@ -145,7 +40,11 @@ fn is_valid_logo_filename(filename: &str) -> bool {
 }
 
 #[tauri::command]
-fn save_logo(app_handle: tauri::AppHandle, source_path: String, subscription_id: String) -> Result<String, String> {
+fn save_logo(
+    app_handle: tauri::AppHandle,
+    source_path: String,
+    subscription_id: String,
+) -> Result<String, String> {
     let logos_dir = get_logos_dir(&app_handle);
     let filename = format!("{}.webp", subscription_id);
     let dest_path = logos_dir.join(&filename);
@@ -156,8 +55,9 @@ fn save_logo(app_handle: tauri::AppHandle, source_path: String, subscription_id:
         .map_err(|e| format!("Failed to decode image: {}", e))?;
 
     let resized = img.thumbnail(256, 256);
-    
-    resized.save_with_format(&dest_path, image::ImageFormat::WebP)
+
+    resized
+        .save_with_format(&dest_path, image::ImageFormat::WebP)
         .map_err(|e| format!("Failed to save WebP: {}", e))?;
 
     Ok(filename)
@@ -172,8 +72,7 @@ fn get_logo_base64(app_handle: tauri::AppHandle, filename: String) -> Result<Str
     let logos_dir = get_logos_dir(&app_handle);
     let file_path = logos_dir.join(&filename);
 
-    let data = fs::read(&file_path)
-        .map_err(|e| format!("Failed to read logo: {}", e))?;
+    let data = fs::read(&file_path).map_err(|e| format!("Failed to read logo: {}", e))?;
 
     let base64_data = BASE64.encode(&data);
     Ok(format!("data:image/webp;base64,{}", base64_data))
@@ -191,19 +90,277 @@ fn delete_logo(app_handle: tauri::AppHandle, filename: String) -> Result<(), Str
     Ok(())
 }
 
+// ── Subscription commands ──────────────────────────────────────────────────
+
+#[tauri::command]
+fn list_subscriptions(core: tauri::State<'_, SubbyCore>) -> Result<Vec<Subscription>, String> {
+    core.subscriptions().list().map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn get_subscription(core: tauri::State<'_, SubbyCore>, id: String) -> Result<Subscription, String> {
+    core.subscriptions().get(&id).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn create_subscription(
+    core: tauri::State<'_, SubbyCore>,
+    data: NewSubscription,
+) -> Result<Subscription, String> {
+    core.subscriptions().create(data).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn update_subscription(
+    core: tauri::State<'_, SubbyCore>,
+    id: String,
+    data: UpdateSubscription,
+) -> Result<Subscription, String> {
+    core.subscriptions()
+        .update(&id, data)
+        .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn delete_subscription(core: tauri::State<'_, SubbyCore>, id: String) -> Result<(), String> {
+    core.subscriptions().delete(&id).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn toggle_subscription_active(
+    core: tauri::State<'_, SubbyCore>,
+    id: String,
+) -> Result<Subscription, String> {
+    core.subscriptions()
+        .toggle_active(&id)
+        .map_err(|e| e.to_string())
+}
+
+// ── Category commands ──────────────────────────────────────────────────────
+
+#[tauri::command]
+fn list_categories(core: tauri::State<'_, SubbyCore>) -> Result<Vec<Category>, String> {
+    core.categories().list().map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn create_category(
+    core: tauri::State<'_, SubbyCore>,
+    data: NewCategory,
+) -> Result<Category, String> {
+    core.categories().create(data).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn update_category(
+    core: tauri::State<'_, SubbyCore>,
+    id: String,
+    data: UpdateCategory,
+) -> Result<Category, String> {
+    core.categories()
+        .update(&id, data)
+        .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn delete_category(core: tauri::State<'_, SubbyCore>, id: String) -> Result<(), String> {
+    core.categories().delete(&id).map_err(|e| e.to_string())
+}
+
+// ── Payment commands ───────────────────────────────────────────────────────
+
+#[tauri::command]
+fn list_payments(core: tauri::State<'_, SubbyCore>) -> Result<Vec<Payment>, String> {
+    core.payments().list().map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn list_payments_by_month(
+    core: tauri::State<'_, SubbyCore>,
+    year: i32,
+    month: u32,
+) -> Result<Vec<Payment>, String> {
+    core.payments()
+        .list_by_month(year, month)
+        .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn list_payments_with_details(
+    core: tauri::State<'_, SubbyCore>,
+    year: i32,
+    month: u32,
+) -> Result<Vec<PaymentWithSubscription>, String> {
+    core.payments()
+        .list_with_details(year, month)
+        .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn create_payment(core: tauri::State<'_, SubbyCore>, data: NewPayment) -> Result<Payment, String> {
+    core.payments().create(data).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn mark_payment_paid(
+    core: tauri::State<'_, SubbyCore>,
+    subscription_id: String,
+    due_date: String,
+    amount: f64,
+) -> Result<Payment, String> {
+    core.payments()
+        .mark_as_paid(&subscription_id, &due_date, amount)
+        .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn skip_payment(
+    core: tauri::State<'_, SubbyCore>,
+    subscription_id: String,
+    due_date: String,
+    amount: f64,
+) -> Result<Payment, String> {
+    core.payments()
+        .skip_payment(&subscription_id, &due_date, amount)
+        .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn is_payment_recorded(
+    core: tauri::State<'_, SubbyCore>,
+    subscription_id: String,
+    due_date: String,
+) -> Result<bool, String> {
+    core.payments()
+        .is_recorded(&subscription_id, &due_date)
+        .map_err(|e| e.to_string())
+}
+
+// ── Payment card commands ──────────────────────────────────────────────────
+
+#[tauri::command]
+fn list_payment_cards(core: tauri::State<'_, SubbyCore>) -> Result<Vec<PaymentCard>, String> {
+    core.payment_cards().list().map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn create_payment_card(
+    core: tauri::State<'_, SubbyCore>,
+    data: NewPaymentCard,
+) -> Result<PaymentCard, String> {
+    core.payment_cards().create(data).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn update_payment_card(
+    core: tauri::State<'_, SubbyCore>,
+    id: String,
+    data: UpdatePaymentCard,
+) -> Result<PaymentCard, String> {
+    core.payment_cards()
+        .update(&id, data)
+        .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn delete_payment_card(core: tauri::State<'_, SubbyCore>, id: String) -> Result<(), String> {
+    core.payment_cards().delete(&id).map_err(|e| e.to_string())
+}
+
+// ── Settings commands ──────────────────────────────────────────────────────
+
+#[tauri::command]
+fn get_settings(core: tauri::State<'_, SubbyCore>) -> Result<Settings, String> {
+    core.settings().get().map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn update_settings(
+    core: tauri::State<'_, SubbyCore>,
+    data: UpdateSettings,
+) -> Result<Settings, String> {
+    core.settings().update(data).map_err(|e| e.to_string())
+}
+
+// ── Data management commands ───────────────────────────────────────────────
+
+#[tauri::command]
+fn export_data(core: tauri::State<'_, SubbyCore>) -> Result<BackupData, String> {
+    core.data_management()
+        .export_data()
+        .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn import_data(
+    core: tauri::State<'_, SubbyCore>,
+    data: BackupData,
+    clear_existing: Option<bool>,
+) -> Result<ImportResult, String> {
+    core.data_management()
+        .import_data(data, clear_existing.unwrap_or(false))
+        .map_err(|e| e.to_string())
+}
+
+// ── App setup ──────────────────────────────────────────────────────────────
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
-        .plugin(
-            tauri_plugin_sql::Builder::default()
-                .add_migrations("sqlite:subby.db", get_migrations())
-                .build(),
-        )
         .plugin(tauri_plugin_notification::init())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_dialog::init())
-        .invoke_handler(tauri::generate_handler![save_logo, get_logo_base64, delete_logo])
+        .setup(|app| {
+            let app_data_dir = app
+                .path()
+                .app_data_dir()
+                .expect("Failed to get app data dir");
+            fs::create_dir_all(&app_data_dir).expect("Failed to create app data dir");
+            let db_path = app_data_dir.join("subby.db");
+
+            let core = SubbyCore::new(&db_path).expect("Failed to initialize SubbyCore database");
+
+            app.manage(core);
+            Ok(())
+        })
+        .invoke_handler(tauri::generate_handler![
+            // Logo
+            save_logo,
+            get_logo_base64,
+            delete_logo,
+            // Subscriptions
+            list_subscriptions,
+            get_subscription,
+            create_subscription,
+            update_subscription,
+            delete_subscription,
+            toggle_subscription_active,
+            // Categories
+            list_categories,
+            create_category,
+            update_category,
+            delete_category,
+            // Payments
+            list_payments,
+            list_payments_by_month,
+            list_payments_with_details,
+            create_payment,
+            mark_payment_paid,
+            skip_payment,
+            is_payment_recorded,
+            // Payment cards
+            list_payment_cards,
+            create_payment_card,
+            update_payment_card,
+            delete_payment_card,
+            // Settings
+            get_settings,
+            update_settings,
+            // Data management
+            export_data,
+            import_data,
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

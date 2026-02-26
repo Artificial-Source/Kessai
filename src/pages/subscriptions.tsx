@@ -40,7 +40,15 @@ export function Subscriptions() {
   const { markAsPaid } = usePaymentStore()
   const currency = (settings?.currency || 'USD') as CurrencyCode
 
-  const [viewMode, setViewMode] = useState<'grid' | 'list' | 'bento'>('list')
+  const [viewMode, setViewMode] = useState<'grid' | 'list' | 'bento'>(() => {
+    try {
+      const saved = localStorage.getItem('subby-view-mode')
+      if (saved === 'grid' || saved === 'list' || saved === 'bento') return saved
+    } catch {
+      // ignore
+    }
+    return 'list'
+  })
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategories, setSelectedCategories] = useState<string[]>([])
   const [deleteTarget, setDeleteTarget] = useState<Subscription | null>(null)
@@ -49,6 +57,14 @@ export function Subscriptions() {
   useEffect(() => {
     fetchSettings()
   }, [fetchSettings])
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('subby-view-mode', viewMode)
+    } catch {
+      // ignore
+    }
+  }, [viewMode])
 
   // Calculate subscription counts per category
   const subscriptionCounts = useMemo(() => {
@@ -140,7 +156,11 @@ export function Subscriptions() {
   if (isLoading) {
     return (
       <div className="flex h-full items-center justify-center">
-        <div className="border-primary h-8 w-8 animate-spin rounded-full border-2 border-t-transparent" />
+        <div
+          role="status"
+          aria-label="Loading subscriptions"
+          className="border-primary h-8 w-8 animate-spin rounded-full border-2 border-t-transparent"
+        />
       </div>
     )
   }
@@ -191,37 +211,44 @@ export function Subscriptions() {
                   className="pr-4 pl-10"
                 />
               </div>
-              <div className="border-border bg-card flex rounded-lg border p-1 shadow-[inset_0_1px_0_color-mix(in_srgb,var(--color-card)_60%,transparent)]">
+              <div
+                className="border-border bg-card flex rounded-lg border p-1 shadow-[inset_0_1px_0_color-mix(in_srgb,var(--color-card)_60%,transparent)]"
+                role="group"
+                aria-label="View mode"
+              >
                 <button
                   onClick={() => setViewMode('grid')}
+                  aria-pressed={viewMode === 'grid'}
                   className={`flex h-8 w-9 items-center justify-center rounded-md transition-colors ${
                     viewMode === 'grid'
                       ? 'bg-primary text-primary-foreground shadow-sm'
                       : 'text-muted-foreground hover:bg-accent hover:text-foreground'
                   }`}
-                  title="Grid view"
+                  aria-label="Grid view"
                 >
                   <LayoutGrid className="h-4 w-4" />
                 </button>
                 <button
                   onClick={() => setViewMode('list')}
+                  aria-pressed={viewMode === 'list'}
                   className={`flex h-8 w-9 items-center justify-center rounded-md transition-colors ${
                     viewMode === 'list'
                       ? 'bg-primary text-primary-foreground shadow-sm'
                       : 'text-muted-foreground hover:bg-accent hover:text-foreground'
                   }`}
-                  title="List view"
+                  aria-label="List view"
                 >
                   <List className="h-4 w-4" />
                 </button>
                 <button
                   onClick={() => setViewMode('bento')}
+                  aria-pressed={viewMode === 'bento'}
                   className={`flex h-8 w-9 items-center justify-center rounded-md transition-colors ${
                     viewMode === 'bento'
                       ? 'bg-primary text-primary-foreground shadow-sm'
                       : 'text-muted-foreground hover:bg-accent hover:text-foreground'
                   }`}
-                  title="Bento view"
+                  aria-label="Bento view"
                 >
                   <Grid3x3 className="h-4 w-4" />
                 </button>

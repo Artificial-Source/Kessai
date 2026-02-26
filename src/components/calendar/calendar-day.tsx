@@ -61,9 +61,14 @@ export const CalendarDay = memo(function CalendarDay({
   const visiblePayments = payments.slice(0, maxVisible)
   const remainingCount = payments.length - maxVisible
 
+  const ariaLabel = hasPayments
+    ? `${dayOfMonth}, ${payments.length} payment${payments.length !== 1 ? 's' : ''}`
+    : `${dayOfMonth}`
+
   return (
     <button
       onClick={onClick}
+      aria-label={ariaLabel}
       className={cn(
         'border-border bg-background hover:bg-muted/50 flex min-h-[120px] flex-col border p-1.5 text-left',
         !isCurrentMonth && 'text-muted-foreground/40 bg-muted/20',

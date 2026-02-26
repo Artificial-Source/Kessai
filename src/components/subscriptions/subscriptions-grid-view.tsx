@@ -46,21 +46,24 @@ export const SubscriptionsGridView = memo(function SubscriptionsGridView({
             key={sub.id}
             className={`glass-card hover-lift group relative overflow-hidden rounded-xl ${!sub.is_active ? 'opacity-60' : ''}`}
           >
-            <div className="bg-card/95 border-border absolute top-2 right-2 z-10 flex gap-1 rounded-lg border p-1 opacity-0 transition-opacity group-hover:opacity-100">
+            <div className="bg-card/95 border-border absolute top-2 right-2 z-10 flex gap-1 rounded-lg border p-1 opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100">
               <button
                 onClick={() => onEdit(sub)}
+                aria-label={`Edit ${sub.name}`}
                 className="text-muted-foreground hover:bg-accent hover:text-foreground rounded-md p-1.5 transition-colors"
               >
                 <Pencil className="h-3.5 w-3.5" />
               </button>
               <button
                 onClick={() => onToggleActive(sub)}
+                aria-label={sub.is_active ? `Pause ${sub.name}` : `Activate ${sub.name}`}
                 className="text-muted-foreground hover:bg-accent hover:text-foreground rounded-md p-1.5 transition-colors"
               >
                 <Power className="h-3.5 w-3.5" />
               </button>
               <button
                 onClick={() => onDelete(sub)}
+                aria-label={`Delete ${sub.name}`}
                 className="text-muted-foreground hover:bg-destructive/15 hover:text-destructive rounded-md p-1.5 transition-colors"
               >
                 <Trash2 className="h-3.5 w-3.5" />
@@ -75,7 +78,12 @@ export const SubscriptionsGridView = memo(function SubscriptionsGridView({
                 size="xl"
                 className="mb-4 rounded-2xl shadow-lg"
               />
-              <h3 className="text-foreground text-lg font-bold">{sub.name}</h3>
+              <h3
+                className="text-foreground max-w-full truncate text-lg font-bold"
+                title={sub.name}
+              >
+                {sub.name}
+              </h3>
               {category && (
                 <Badge variant={getCategoryVariant(category.name)} size="sm" className="mt-1">
                   {category.name}

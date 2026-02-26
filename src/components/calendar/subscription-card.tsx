@@ -69,6 +69,7 @@ export const SubscriptionCard = memo(function SubscriptionCard({
               size="sm"
               variant="ghost"
               onClick={onSkip}
+              aria-label={`Skip payment for ${subscription.name}`}
               className="text-muted-foreground hover:text-foreground h-8 w-8 p-0"
             >
               <SkipForward className="h-4 w-4" />
@@ -77,6 +78,7 @@ export const SubscriptionCard = memo(function SubscriptionCard({
               size="sm"
               variant="ghost"
               onClick={onEdit}
+              aria-label={`Edit ${subscription.name}`}
               className="text-muted-foreground hover:text-foreground h-8 w-8 p-0"
             >
               <Edit2 className="h-4 w-4" />

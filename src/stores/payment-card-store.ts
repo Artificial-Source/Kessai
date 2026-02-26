@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { query, execute } from '@/lib/database'
+import { invoke } from '@tauri-apps/api/core'
 import type { PaymentCard, PaymentCardFormData } from '@/types/payment-card'
 
 interface PaymentCardState {
@@ -22,81 +22,36 @@ export const usePaymentCardStore = create<PaymentCardState>((set, get) => ({
   fetch: async () => {
     set({ isLoading: true, error: null })
     try {
-      const rows = await query<PaymentCard>('SELECT * FROM payment_cards ORDER BY name')
+      const rows = await invoke<PaymentCard[]>('list_payment_cards')
       set({ cards: rows, isLoading: false })
     } catch (error) {
-      set({ error: (error as Error).message, isLoading: false })
+      set({ error: (error as Error).message || String(error), isLoading: false })
     }
   },
 
   add: async (data) => {
-    const id = `card-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`
-    const now = new Date().toISOString()
-
-    await execute(
-      `INSERT INTO payment_cards (id, name, card_type, last_four, color, credit_limit, created_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?)`,
-      [
-        id,
-        data.name,
-        data.card_type,
-        data.last_four || null,
-        data.color,
-        data.credit_limit || null,
-        now,
-      ]
-    )
-
-    const card: PaymentCard = {
-      id,
-      ...data,
-      last_four: data.last_four || null,
-      credit_limit: data.credit_limit || null,
-      created_at: now,
-    }
-
+    const card = await invoke<PaymentCard>('create_payment_card', {
+      data: {
+        name: data.name,
+        card_type: data.card_type,
+        last_four: data.last_four || null,
+        color: data.color,
+        credit_limit: data.credit_limit || null,
+      },
+    })
     set((state) => ({ cards: [...state.cards, card] }))
     return card
   },
 
   update: async (id, data) => {
-    const fields: string[] = []
-    const values: unknown[] = []
-
-    if (data.name !== undefined) {
-      fields.push('name = ?')
-      values.push(data.name)
-    }
-    if (data.card_type !== undefined) {
-      fields.push('card_type = ?')
-      values.push(data.card_type)
-    }
-    if (data.last_four !== undefined) {
-      fields.push('last_four = ?')
-      values.push(data.last_four)
-    }
-    if (data.color !== undefined) {
-      fields.push('color = ?')
-      values.push(data.color)
-    }
-    if (data.credit_limit !== undefined) {
-      fields.push('credit_limit = ?')
-      values.push(data.credit_limit)
-    }
-
-    if (fields.length === 0) return
-
-    values.push(id)
-    await execute(`UPDATE payment_cards SET ${fields.join(', ')} WHERE id = ?`, values)
-
+    const updated = await invoke<PaymentCard>('update_payment_card', { id, data })
     set((state) => ({
-      cards: state.cards.map((c) => (c.id === id ? { ...c, ...data } : c)),
+      cards: state.cards.map((c) => (c.id === id ? updated : c)),
     }))
   },
 
   remove: async (id) => {
-    await execute('UPDATE subscriptions SET card_id = NULL WHERE card_id = ?', [id])
-    await execute('DELETE FROM payment_cards WHERE id = ?', [id])
+    await invoke('delete_payment_card', { id })
     set((state) => ({ cards: state.cards.filter((c) => c.id !== id) }))
   },
 

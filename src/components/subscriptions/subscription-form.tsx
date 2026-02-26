@@ -251,6 +251,8 @@ export function SubscriptionForm({
                 key={color}
                 type="button"
                 onClick={() => form.setValue('color', color)}
+                aria-label={`Color ${color}`}
+                aria-pressed={selectedColor === color}
                 className={cn(
                   'h-8 w-8 rounded-lg',
                   selectedColor === color &&

@@ -1,0 +1,3 @@
+[workspace]
+members = ["crates/subby-core", "crates/subby-mcp", "src-tauri"]
+resolver = "2"

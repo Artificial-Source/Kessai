@@ -1,14 +1,13 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { useCategoryStore } from '../category-store'
 
-// Mock data
 const mockCategories = [
   {
     id: 'cat-streaming',
     name: 'Streaming',
     color: '#8b5cf6',
     icon: 'play-circle',
-    is_default: 1,
+    is_default: true,
     created_at: '2024-01-01T00:00:00.000Z',
   },
   {
@@ -16,7 +15,7 @@ const mockCategories = [
     name: 'Music',
     color: '#f59e0b',
     icon: 'music',
-    is_default: 1,
+    is_default: true,
     created_at: '2024-01-01T00:00:00.000Z',
   },
   {
@@ -24,38 +23,33 @@ const mockCategories = [
     name: 'Custom Category',
     color: '#10b981',
     icon: 'box',
-    is_default: 0,
+    is_default: false,
     created_at: '2024-01-15T00:00:00.000Z',
   },
 ]
 
-const mockQuery = vi.fn()
-const mockExecute = vi.fn()
+const mockInvoke = vi.fn()
 
-vi.mock('@/lib/database', () => ({
-  query: (...args: unknown[]) => mockQuery(...args),
-  execute: (...args: unknown[]) => mockExecute(...args),
+vi.mock('@tauri-apps/api/core', () => ({
+  invoke: (...args: unknown[]) => mockInvoke(...args),
 }))
 
 describe('useCategoryStore', () => {
   beforeEach(() => {
-    // Reset store state
     useCategoryStore.setState({
       categories: [],
       isLoading: false,
       error: null,
     })
-
-    // Reset mocks
     vi.clearAllMocks()
-    mockQuery.mockResolvedValue(mockCategories)
-    mockExecute.mockResolvedValue(undefined)
+    mockInvoke.mockResolvedValue(mockCategories)
   })
 
   describe('fetch', () => {
     it('fetches categories and updates state', async () => {
       await useCategoryStore.getState().fetch()
 
+      expect(mockInvoke).toHaveBeenCalledWith('list_categories')
       const state = useCategoryStore.getState()
       expect(state.categories).toHaveLength(3)
       expect(state.categories[0].name).toBe('Streaming')
@@ -63,7 +57,7 @@ describe('useCategoryStore', () => {
       expect(state.error).toBeNull()
     })
 
-    it('converts is_default to boolean', async () => {
+    it('returns booleans for is_default', async () => {
       await useCategoryStore.getState().fetch()
 
       const state = useCategoryStore.getState()
@@ -75,13 +69,12 @@ describe('useCategoryStore', () => {
     it('sets loading state during fetch', async () => {
       const fetchPromise = useCategoryStore.getState().fetch()
       expect(useCategoryStore.getState().isLoading).toBe(true)
-
       await fetchPromise
       expect(useCategoryStore.getState().isLoading).toBe(false)
     })
 
     it('handles fetch errors', async () => {
-      mockQuery.mockRejectedValue(new Error('Database error'))
+      mockInvoke.mockRejectedValue(new Error('Database error'))
 
       await useCategoryStore.getState().fetch()
 
@@ -93,6 +86,16 @@ describe('useCategoryStore', () => {
 
   describe('add', () => {
     it('adds a new category optimistically', async () => {
+      const created = {
+        id: 'cat-new',
+        name: 'New Category',
+        color: '#ef4444',
+        icon: 'star',
+        is_default: false,
+        created_at: '2024-01-20T00:00:00.000Z',
+      }
+      mockInvoke.mockResolvedValue(created)
+
       const newCategory = {
         name: 'New Category',
         color: '#ef4444',
@@ -101,17 +104,13 @@ describe('useCategoryStore', () => {
 
       await useCategoryStore.getState().add(newCategory)
 
-      expect(mockExecute).toHaveBeenCalledWith(
-        expect.stringContaining('INSERT INTO categories'),
-        expect.arrayContaining([expect.any(String), 'New Category', '#ef4444', 'star'])
-      )
-      // State should be updated optimistically
+      expect(mockInvoke).toHaveBeenCalledWith('create_category', { data: newCategory })
       const state = useCategoryStore.getState()
       expect(state.categories.some((c) => c.name === 'New Category')).toBe(true)
     })
 
     it('rolls back on add failure', async () => {
-      mockExecute.mockRejectedValue(new Error('Insert failed'))
+      mockInvoke.mockRejectedValue(new Error('Insert failed'))
 
       const newCategory = {
         name: 'Failed Category',
@@ -120,7 +119,6 @@ describe('useCategoryStore', () => {
       }
 
       await expect(useCategoryStore.getState().add(newCategory)).rejects.toThrow('Insert failed')
-      // State should be rolled back
       const state = useCategoryStore.getState()
       expect(state.categories.some((c) => c.name === 'Failed Category')).toBe(false)
     })
@@ -128,47 +126,33 @@ describe('useCategoryStore', () => {
 
   describe('update', () => {
     beforeEach(() => {
-      // Set initial state with categories for update tests
       useCategoryStore.setState({
-        categories: mockCategories.map((c) => ({
-          ...c,
-          is_default: Boolean(c.is_default),
-        })),
+        categories: [...mockCategories],
         isLoading: false,
         error: null,
       })
     })
 
     it('updates an existing category optimistically', async () => {
+      const updated = { ...mockCategories[2], name: 'Updated Category' }
+      mockInvoke.mockResolvedValue(updated)
+
       await useCategoryStore.getState().update('cat-custom', { name: 'Updated Category' })
 
-      expect(mockExecute).toHaveBeenCalledWith(
-        expect.stringContaining('UPDATE categories'),
-        expect.arrayContaining(['Updated Category', 'cat-custom'])
-      )
-      // State should be updated optimistically
+      expect(mockInvoke).toHaveBeenCalledWith('update_category', {
+        id: 'cat-custom',
+        data: { name: 'Updated Category' },
+      })
       const state = useCategoryStore.getState()
       expect(state.categories.find((c) => c.id === 'cat-custom')?.name).toBe('Updated Category')
     })
 
-    it('ignores protected fields', async () => {
-      await useCategoryStore.getState().update('cat-custom', {
-        name: 'Updated',
-        is_default: true, // Should be ignored
-      } as Record<string, unknown>)
-
-      // The execute call should not contain is_default
-      const executeCall = mockExecute.mock.calls[0]
-      expect(executeCall[0]).not.toContain('is_default')
-    })
-
     it('rolls back on update failure', async () => {
-      mockExecute.mockRejectedValue(new Error('Update failed'))
+      mockInvoke.mockRejectedValue(new Error('Update failed'))
 
       await expect(
         useCategoryStore.getState().update('cat-custom', { name: 'Failed Update' })
       ).rejects.toThrow('Update failed')
-      // State should be rolled back
       const state = useCategoryStore.getState()
       expect(state.categories.find((c) => c.id === 'cat-custom')?.name).toBe('Custom Category')
     })
@@ -176,30 +160,19 @@ describe('useCategoryStore', () => {
 
   describe('remove', () => {
     beforeEach(() => {
-      // Set initial state with categories
       useCategoryStore.setState({
-        categories: mockCategories.map((c) => ({
-          ...c,
-          is_default: Boolean(c.is_default),
-        })),
+        categories: [...mockCategories],
         isLoading: false,
         error: null,
       })
     })
 
     it('removes a custom category optimistically', async () => {
+      mockInvoke.mockResolvedValue(undefined)
+
       await useCategoryStore.getState().remove('cat-custom')
 
-      // Should update subscriptions first
-      expect(mockExecute).toHaveBeenCalledWith(
-        expect.stringContaining('UPDATE subscriptions SET category_id = NULL'),
-        ['cat-custom']
-      )
-      // Then delete the category
-      expect(mockExecute).toHaveBeenCalledWith(expect.stringContaining('DELETE FROM categories'), [
-        'cat-custom',
-      ])
-      // State should be updated optimistically
+      expect(mockInvoke).toHaveBeenCalledWith('delete_category', { id: 'cat-custom' })
       const state = useCategoryStore.getState()
       expect(state.categories.some((c) => c.id === 'cat-custom')).toBe(false)
     })
@@ -211,24 +184,20 @@ describe('useCategoryStore', () => {
     })
 
     it('rolls back on remove failure', async () => {
-      mockExecute.mockRejectedValue(new Error('Delete failed'))
+      mockInvoke.mockRejectedValue(new Error('Delete failed'))
 
       await expect(useCategoryStore.getState().remove('cat-custom')).rejects.toThrow(
         'Delete failed'
       )
-      // State should be rolled back
       const state = useCategoryStore.getState()
       expect(state.categories.some((c) => c.id === 'cat-custom')).toBe(true)
     })
   })
 
   describe('getById', () => {
-    beforeEach(async () => {
+    beforeEach(() => {
       useCategoryStore.setState({
-        categories: mockCategories.map((c) => ({
-          ...c,
-          is_default: Boolean(c.is_default),
-        })),
+        categories: [...mockCategories],
         isLoading: false,
         error: null,
       })

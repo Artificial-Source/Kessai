@@ -1,0 +1,22 @@
+[package]
+name = "subby-mcp"
+version = "0.1.0"
+edition = "2021"
+description = "MCP server for Subby subscription tracker"
+
+[[bin]]
+name = "subby-mcp"
+path = "src/main.rs"
+
+[dependencies]
+subby-core = { path = "../subby-core" }
+rmcp = { version = "0.16", features = ["server", "transport-io"] }
+tokio = { version = "1", features = ["full"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+clap = { version = "4", features = ["derive", "env"] }
+anyhow = "1"
+dirs = "6"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+schemars = "1"

@@ -117,19 +117,22 @@ export const SubscriptionsListView = memo(function SubscriptionsListView({
                     <div className="flex items-center justify-end gap-1">
                       <button
                         onClick={() => onEdit(sub)}
-                        className="text-muted-foreground hover:bg-accent hover:text-foreground rounded-lg p-2 opacity-0 transition-[opacity,background-color,color] group-hover:opacity-100"
+                        aria-label={`Edit ${sub.name}`}
+                        className="text-muted-foreground hover:bg-accent hover:text-foreground rounded-lg p-2 opacity-0 transition-[opacity,background-color,color] group-hover:opacity-100 focus:opacity-100"
                       >
                         <Pencil className="h-4 w-4" />
                       </button>
                       <button
                         onClick={() => onToggleActive(sub)}
-                        className="text-muted-foreground hover:bg-accent hover:text-foreground rounded-lg p-2 opacity-0 transition-[opacity,background-color,color] group-hover:opacity-100"
+                        aria-label={sub.is_active ? `Pause ${sub.name}` : `Activate ${sub.name}`}
+                        className="text-muted-foreground hover:bg-accent hover:text-foreground rounded-lg p-2 opacity-0 transition-[opacity,background-color,color] group-hover:opacity-100 focus:opacity-100"
                       >
                         <Power className="h-4 w-4" />
                       </button>
                       <button
                         onClick={() => onDelete(sub)}
-                        className="text-muted-foreground hover:bg-destructive/15 hover:text-destructive rounded-lg p-2 opacity-0 transition-[opacity,background-color,color] group-hover:opacity-100"
+                        aria-label={`Delete ${sub.name}`}
+                        className="text-muted-foreground hover:bg-destructive/15 hover:text-destructive rounded-lg p-2 opacity-0 transition-[opacity,background-color,color] group-hover:opacity-100 focus:opacity-100"
                       >
                         <Trash2 className="h-4 w-4" />
                       </button>

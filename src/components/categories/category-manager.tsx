@@ -152,7 +152,13 @@ function CategoryItem({ category, onEdit, onDelete }: CategoryItemProps) {
       </div>
       <div className="flex gap-1">
         {onEdit && (
-          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onEdit}>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7"
+            onClick={onEdit}
+            aria-label={`Edit ${category.name}`}
+          >
             <Pencil className="h-3.5 w-3.5" />
           </Button>
         )}
@@ -162,6 +168,7 @@ function CategoryItem({ category, onEdit, onDelete }: CategoryItemProps) {
             size="icon"
             className="text-destructive hover:bg-destructive/15 hover:text-destructive h-7 w-7"
             onClick={onDelete}
+            aria-label={`Delete ${category.name}`}
           >
             <Trash2 className="h-3.5 w-3.5" />
           </Button>

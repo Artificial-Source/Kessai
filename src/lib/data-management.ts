@@ -1,6 +1,6 @@
 import { save } from '@tauri-apps/plugin-dialog'
 import { writeTextFile } from '@tauri-apps/plugin-fs'
-import { getDatabase } from '@/lib/database'
+import { invoke } from '@tauri-apps/api/core'
 import type { Subscription } from '@/types/subscription'
 import type { Category } from '@/types/category'
 import type { Payment } from '@/types/payment'
@@ -15,63 +15,13 @@ interface BackupData {
   settings: Omit<Settings, 'id'>
 }
 
+interface ImportResult {
+  success: boolean
+  message: string
+}
+
 export async function exportData(): Promise<BackupData> {
-  const db = await getDatabase()
-
-  const subscriptions = await db.select<Subscription[]>('SELECT * FROM subscriptions ORDER BY name')
-
-  const categories = await db.select<Category[]>('SELECT * FROM categories ORDER BY name')
-
-  const payments = await db.select<Payment[]>('SELECT * FROM payments ORDER BY paid_at DESC')
-
-  const settingsRows = await db.select<
-    Array<{
-      theme: string
-      currency: string
-      notification_enabled: number
-      notification_days_before: string
-    }>
-  >(
-    'SELECT theme, currency, notification_enabled, notification_days_before FROM settings WHERE id = ?',
-    ['singleton']
-  )
-
-  const settingsRow = settingsRows[0]
-  let notificationDays: number[]
-  try {
-    notificationDays = settingsRow ? JSON.parse(settingsRow.notification_days_before) : [1, 3, 7]
-  } catch {
-    notificationDays = [1, 3, 7]
-  }
-
-  const settings = settingsRow
-    ? {
-        theme: settingsRow.theme as 'dark' | 'light' | 'system',
-        currency: settingsRow.currency,
-        notification_enabled: Boolean(settingsRow.notification_enabled),
-        notification_days_before: notificationDays,
-      }
-    : {
-        theme: 'dark' as const,
-        currency: 'USD',
-        notification_enabled: true,
-        notification_days_before: [1, 3, 7],
-      }
-
-  return {
-    version: '1.0.0',
-    exportedAt: new Date().toISOString(),
-    subscriptions: subscriptions.map((s) => ({
-      ...s,
-      is_active: Boolean(s.is_active),
-    })),
-    categories: categories.map((c) => ({
-      ...c,
-      is_default: Boolean(c.is_default),
-    })),
-    payments,
-    settings,
-  }
+  return await invoke<BackupData>('export_data')
 }
 
 export async function saveBackupToFile(data: BackupData): Promise<boolean> {
@@ -119,130 +69,16 @@ export async function importData(
     clearExisting?: boolean
   } = {}
 ): Promise<{ success: boolean; message: string }> {
-  const db = await getDatabase()
-
   try {
-    // Begin transaction to ensure atomicity
-    await db.execute('BEGIN TRANSACTION')
-
-    if (options.clearExisting) {
-      await db.execute('DELETE FROM payments')
-      await db.execute('DELETE FROM subscriptions')
-      await db.execute('DELETE FROM categories WHERE is_default = 0')
-    }
-
-    // Batch insert categories
-    const categoriesToImport = data.categories.filter((c) => !c.is_default)
-    if (categoriesToImport.length > 0) {
-      const placeholders = categoriesToImport.map(() => '(?, ?, ?, ?, ?, ?)').join(', ')
-      const values: (string | number)[] = []
-
-      for (const category of categoriesToImport) {
-        values.push(
-          category.id,
-          category.name,
-          category.color,
-          category.icon,
-          0,
-          category.created_at || new Date().toISOString()
-        )
-      }
-
-      await db.execute(
-        `INSERT OR REPLACE INTO categories (id, name, color, icon, is_default, created_at)
-         VALUES ${placeholders}`,
-        values
-      )
-    }
-
-    // Batch insert subscriptions
-    if (data.subscriptions.length > 0) {
-      const placeholders = data.subscriptions
-        .map(() => '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
-        .join(', ')
-      const values: (string | number | null)[] = []
-
-      for (const sub of data.subscriptions) {
-        values.push(
-          sub.id,
-          sub.name,
-          sub.amount,
-          sub.currency,
-          sub.billing_cycle,
-          sub.billing_day,
-          sub.next_payment_date,
-          sub.category_id,
-          sub.color,
-          sub.logo_url ?? null,
-          sub.notes,
-          sub.is_active ? 1 : 0,
-          sub.created_at || new Date().toISOString(),
-          sub.updated_at || new Date().toISOString()
-        )
-      }
-
-      await db.execute(
-        `INSERT OR REPLACE INTO subscriptions
-         (id, name, amount, currency, billing_cycle, billing_day, next_payment_date, category_id, color, logo_url, notes, is_active, created_at, updated_at)
-         VALUES ${placeholders}`,
-        values
-      )
-    }
-
-    // Batch insert payments
-    if (data.payments.length > 0) {
-      const placeholders = data.payments.map(() => '(?, ?, ?, ?, ?, ?, ?, ?)').join(', ')
-      const values: (string | number | null)[] = []
-
-      for (const payment of data.payments) {
-        values.push(
-          payment.id,
-          payment.subscription_id,
-          payment.amount,
-          payment.paid_at,
-          payment.due_date,
-          payment.status,
-          payment.notes ?? null,
-          payment.created_at ?? new Date().toISOString()
-        )
-      }
-
-      await db.execute(
-        `INSERT OR REPLACE INTO payments (id, subscription_id, amount, paid_at, due_date, status, notes, created_at)
-         VALUES ${placeholders}`,
-        values
-      )
-    }
-
-    await db.execute(
-      `UPDATE settings SET theme = ?, currency = ?, notification_enabled = ?, notification_days_before = ? WHERE id = ?`,
-      [
-        data.settings.theme,
-        data.settings.currency,
-        data.settings.notification_enabled ? 1 : 0,
-        JSON.stringify(data.settings.notification_days_before),
-        'singleton',
-      ]
-    )
-
-    // Commit transaction on success
-    await db.execute('COMMIT')
-
-    const subCount = data.subscriptions.length
-    const catCount = data.categories.filter((c) => !c.is_default).length
-    const payCount = data.payments.length
-
-    return {
-      success: true,
-      message: `Imported ${subCount} subscriptions, ${catCount} categories, and ${payCount} payments`,
-    }
+    const result = await invoke<ImportResult>('import_data', {
+      data,
+      clearExisting: options.clearExisting ?? false,
+    })
+    return result
   } catch (error) {
-    // Rollback transaction on error
-    await db.execute('ROLLBACK')
-
     return {
       success: false,
-      message: `Import failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      message: `Import failed: ${error instanceof Error ? error.message : String(error)}`,
     }
   }
 }

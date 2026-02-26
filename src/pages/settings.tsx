@@ -35,7 +35,11 @@ export function SettingsPage() {
   if (isLoading || !settings) {
     return (
       <div className="flex h-full items-center justify-center">
-        <div className="border-primary h-8 w-8 animate-spin rounded-full border-2 border-t-transparent" />
+        <div
+          role="status"
+          aria-label="Loading settings"
+          className="border-primary h-8 w-8 animate-spin rounded-full border-2 border-t-transparent"
+        />
       </div>
     )
   }
@@ -75,6 +79,7 @@ export function SettingsPage() {
                   variant={theme === value ? 'default' : 'outline'}
                   className="flex-1 gap-2"
                   onClick={() => setTheme(value)}
+                  aria-pressed={theme === value}
                 >
                   <Icon className="h-4 w-4" />
                   {label}

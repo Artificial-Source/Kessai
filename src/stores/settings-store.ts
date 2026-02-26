@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { query, execute } from '@/lib/database'
+import { invoke } from '@tauri-apps/api/core'
 import type { Settings, Theme } from '@/types/settings'
 import { DEFAULT_SETTINGS } from '@/types/settings'
 
@@ -23,41 +23,14 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
   fetch: async () => {
     set({ isLoading: true, error: null })
     try {
-      const rows = await query<{
-        id: string
-        theme: Theme
-        currency: string
-        notification_enabled: number
-        notification_days_before: string
-      }>('SELECT * FROM settings WHERE id = ?', ['singleton'])
-
-      if (rows.length > 0) {
-        const row = rows[0]
-        let notificationDays: number[]
-        try {
-          notificationDays = JSON.parse(row.notification_days_before)
-        } catch {
-          notificationDays = [1, 3, 7] // Fallback to default
-        }
-
-        set({
-          settings: {
-            id: row.id,
-            theme: row.theme,
-            currency: row.currency,
-            notification_enabled: Boolean(row.notification_enabled),
-            notification_days_before: notificationDays,
-          },
-          isLoading: false,
-        })
-      } else {
-        set({
-          settings: { id: 'singleton', ...DEFAULT_SETTINGS },
-          isLoading: false,
-        })
-      }
+      const settings = await invoke<Settings>('get_settings')
+      set({ settings, isLoading: false })
     } catch (e) {
-      set({ error: String(e), isLoading: false })
+      set({
+        settings: { id: 'singleton', ...DEFAULT_SETTINGS },
+        error: String(e),
+        isLoading: false,
+      })
     }
   },
 
@@ -65,30 +38,17 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
     const current = get().settings
     if (!current) return
 
-    const updates: string[] = []
-    const values: unknown[] = []
+    // Optimistic update
+    set({ settings: { ...current, ...data } })
 
-    if (data.theme !== undefined) {
-      updates.push('theme = ?')
-      values.push(data.theme)
-    }
-    if (data.currency !== undefined) {
-      updates.push('currency = ?')
-      values.push(data.currency)
-    }
-    if (data.notification_enabled !== undefined) {
-      updates.push('notification_enabled = ?')
-      values.push(data.notification_enabled ? 1 : 0)
-    }
-    if (data.notification_days_before !== undefined) {
-      updates.push('notification_days_before = ?')
-      values.push(JSON.stringify(data.notification_days_before))
-    }
-
-    if (updates.length > 0) {
-      values.push('singleton')
-      await execute(`UPDATE settings SET ${updates.join(', ')} WHERE id = ?`, values)
-      set({ settings: { ...current, ...data } })
+    try {
+      const updated = await invoke<Settings>('update_settings', { data })
+      set({ settings: updated })
+    } catch (error) {
+      // Rollback
+      set({ settings: current })
+      console.error('Failed to update settings:', error)
+      throw error
     }
   },
 

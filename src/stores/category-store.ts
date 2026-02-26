@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { query, execute } from '@/lib/database'
+import { invoke } from '@tauri-apps/api/core'
 import type { Category, NewCategory } from '@/types/category'
 
 type CategoryState = {
@@ -22,23 +22,19 @@ export const useCategoryStore = create<CategoryState>((set, get) => ({
   fetch: async () => {
     set({ isLoading: true, error: null })
     try {
-      const cats = await query<Category>('SELECT * FROM categories ORDER BY name ASC')
-      set({
-        categories: cats.map((c) => ({ ...c, is_default: Boolean(c.is_default) })),
-        isLoading: false,
-      })
+      const cats = await invoke<Category[]>('list_categories')
+      set({ categories: cats, isLoading: false })
     } catch (e) {
       set({ error: String(e), isLoading: false })
     }
   },
 
   add: async (category) => {
-    const id = crypto.randomUUID()
+    const optimisticId = crypto.randomUUID()
     const now = new Date().toISOString()
 
-    // Create optimistic category object
     const newCategory: Category = {
-      id,
+      id: optimisticId,
       name: category.name,
       color: category.color,
       icon: category.icon,
@@ -46,21 +42,20 @@ export const useCategoryStore = create<CategoryState>((set, get) => ({
       created_at: now,
     }
 
-    // Optimistically add to state (sorted by name)
     set((state) => ({
       categories: [...state.categories, newCategory].sort((a, b) => a.name.localeCompare(b.name)),
     }))
 
     try {
-      await execute(
-        `INSERT INTO categories (id, name, color, icon, is_default, created_at)
-         VALUES (?, ?, ?, ?, 0, ?)`,
-        [id, category.name, category.color, category.icon, now]
-      )
-    } catch (error) {
-      // Rollback on error
+      const created = await invoke<Category>('create_category', { data: category })
       set((state) => ({
-        categories: state.categories.filter((c) => c.id !== id),
+        categories: state.categories
+          .map((c) => (c.id === optimisticId ? created : c))
+          .sort((a, b) => a.name.localeCompare(b.name)),
+      }))
+    } catch (error) {
+      set((state) => ({
+        categories: state.categories.filter((c) => c.id !== optimisticId),
       }))
       console.error('Failed to add category:', error)
       throw error
@@ -68,34 +63,24 @@ export const useCategoryStore = create<CategoryState>((set, get) => ({
   },
 
   update: async (id, data) => {
-    // Store previous state for rollback
     const previousCategories = get().categories
     const category = previousCategories.find((c) => c.id === id)
     if (!category) return
 
-    // Optimistically update state
     set((state) => ({
       categories: state.categories
         .map((c) => (c.id === id ? { ...c, ...data } : c))
         .sort((a, b) => a.name.localeCompare(b.name)),
     }))
 
-    const fields: string[] = []
-    const values: unknown[] = []
-
-    Object.entries(data).forEach(([key, value]) => {
-      if (key !== 'id' && key !== 'created_at' && key !== 'is_default') {
-        fields.push(`${key} = ?`)
-        values.push(value)
-      }
-    })
-
-    values.push(id)
-
     try {
-      await execute(`UPDATE categories SET ${fields.join(', ')} WHERE id = ?`, values)
+      const updated = await invoke<Category>('update_category', { id, data })
+      set((state) => ({
+        categories: state.categories
+          .map((c) => (c.id === id ? updated : c))
+          .sort((a, b) => a.name.localeCompare(b.name)),
+      }))
     } catch (error) {
-      // Rollback on error
       set({ categories: previousCategories })
       console.error('Failed to update category:', error)
       throw error
@@ -108,19 +93,15 @@ export const useCategoryStore = create<CategoryState>((set, get) => ({
       throw new Error('Cannot delete default category')
     }
 
-    // Store previous state for rollback
     const previousCategories = get().categories
 
-    // Optimistically remove from state
     set((state) => ({
       categories: state.categories.filter((c) => c.id !== id),
     }))
 
     try {
-      await execute('UPDATE subscriptions SET category_id = NULL WHERE category_id = ?', [id])
-      await execute('DELETE FROM categories WHERE id = ?', [id])
+      await invoke('delete_category', { id })
     } catch (error) {
-      // Rollback on error
       set({ categories: previousCategories })
       console.error('Failed to remove category:', error)
       throw error

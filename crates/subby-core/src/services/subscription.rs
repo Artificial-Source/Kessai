@@ -1,0 +1,225 @@
+use rusqlite::params;
+
+use crate::db::DbPool;
+use crate::error::{Result, SubbyCoreError};
+use crate::models::subscription::{
+    BillingCycle, NewSubscription, Subscription, UpdateSubscription,
+};
+
+pub struct SubscriptionService {
+    pool: DbPool,
+}
+
+impl SubscriptionService {
+    pub fn new(pool: DbPool) -> Self {
+        Self { pool }
+    }
+
+    /// List all subscriptions, sorted by next_payment_date ASC (nulls last).
+    pub fn list(&self) -> Result<Vec<Subscription>> {
+        let conn = self.pool.get()?;
+        let mut stmt = conn.prepare(
+            "SELECT id, name, amount, currency, billing_cycle, billing_day, category_id,
+                    card_id, color, logo_url, notes, is_active, next_payment_date,
+                    created_at, updated_at
+             FROM subscriptions
+             ORDER BY
+                CASE WHEN next_payment_date IS NULL THEN 1 ELSE 0 END,
+                next_payment_date ASC",
+        )?;
+
+        let rows = stmt.query_map([], |row| {
+            Ok(Subscription {
+                id: row.get(0)?,
+                name: row.get(1)?,
+                amount: row.get(2)?,
+                currency: row.get(3)?,
+                billing_cycle: billing_cycle_from_db(row.get::<_, String>(4)?),
+                billing_day: row.get(5)?,
+                category_id: row.get(6)?,
+                card_id: row.get(7)?,
+                color: row.get(8)?,
+                logo_url: row.get(9)?,
+                notes: row.get(10)?,
+                is_active: row.get::<_, i32>(11)? != 0,
+                next_payment_date: row.get(12)?,
+                created_at: row.get(13)?,
+                updated_at: row.get(14)?,
+            })
+        })?;
+
+        Ok(rows.collect::<std::result::Result<Vec<_>, _>>()?)
+    }
+
+    /// Get a single subscription by ID.
+    pub fn get(&self, id: &str) -> Result<Subscription> {
+        let conn = self.pool.get()?;
+        conn.query_row(
+            "SELECT id, name, amount, currency, billing_cycle, billing_day, category_id,
+                    card_id, color, logo_url, notes, is_active, next_payment_date,
+                    created_at, updated_at
+             FROM subscriptions WHERE id = ?1",
+            params![id],
+            |row| {
+                Ok(Subscription {
+                    id: row.get(0)?,
+                    name: row.get(1)?,
+                    amount: row.get(2)?,
+                    currency: row.get(3)?,
+                    billing_cycle: billing_cycle_from_db(row.get::<_, String>(4)?),
+                    billing_day: row.get(5)?,
+                    category_id: row.get(6)?,
+                    card_id: row.get(7)?,
+                    color: row.get(8)?,
+                    logo_url: row.get(9)?,
+                    notes: row.get(10)?,
+                    is_active: row.get::<_, i32>(11)? != 0,
+                    next_payment_date: row.get(12)?,
+                    created_at: row.get(13)?,
+                    updated_at: row.get(14)?,
+                })
+            },
+        )
+        .map_err(|e| match e {
+            rusqlite::Error::QueryReturnedNoRows => {
+                SubbyCoreError::NotFound(format!("Subscription '{id}' not found"))
+            }
+            other => SubbyCoreError::Database(other),
+        })
+    }
+
+    /// Create a new subscription. Returns the created subscription.
+    pub fn create(&self, data: NewSubscription) -> Result<Subscription> {
+        let conn = self.pool.get()?;
+        let id = uuid::Uuid::new_v4().to_string();
+        let now = chrono::Utc::now().to_rfc3339();
+
+        conn.execute(
+            "INSERT INTO subscriptions
+             (id, name, amount, currency, billing_cycle, billing_day, category_id,
+              card_id, color, logo_url, notes, is_active, next_payment_date, created_at, updated_at)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15)",
+            params![
+                id,
+                data.name,
+                data.amount,
+                data.currency,
+                data.billing_cycle.as_str(),
+                data.billing_day,
+                data.category_id,
+                data.card_id,
+                data.color,
+                data.logo_url,
+                data.notes,
+                if data.is_active { 1 } else { 0 },
+                data.next_payment_date,
+                now,
+                now,
+            ],
+        )?;
+
+        self.get(&id)
+    }
+
+    /// Update a subscription. Only the provided fields are modified.
+    pub fn update(&self, id: &str, data: UpdateSubscription) -> Result<Subscription> {
+        let conn = self.pool.get()?;
+        let now = chrono::Utc::now().to_rfc3339();
+
+        let mut sets = Vec::new();
+        let mut values: Vec<Box<dyn rusqlite::types::ToSql>> = Vec::new();
+
+        if let Some(ref name) = data.name {
+            sets.push("name = ?");
+            values.push(Box::new(name.clone()));
+        }
+        if let Some(amount) = data.amount {
+            sets.push("amount = ?");
+            values.push(Box::new(amount));
+        }
+        if let Some(ref currency) = data.currency {
+            sets.push("currency = ?");
+            values.push(Box::new(currency.clone()));
+        }
+        if let Some(ref cycle) = data.billing_cycle {
+            sets.push("billing_cycle = ?");
+            values.push(Box::new(cycle.as_str().to_string()));
+        }
+        if let Some(ref billing_day) = data.billing_day {
+            sets.push("billing_day = ?");
+            values.push(Box::new(*billing_day));
+        }
+        if let Some(ref category_id) = data.category_id {
+            sets.push("category_id = ?");
+            values.push(Box::new(category_id.clone()));
+        }
+        if let Some(ref card_id) = data.card_id {
+            sets.push("card_id = ?");
+            values.push(Box::new(card_id.clone()));
+        }
+        if let Some(ref color) = data.color {
+            sets.push("color = ?");
+            values.push(Box::new(color.clone()));
+        }
+        if let Some(ref logo_url) = data.logo_url {
+            sets.push("logo_url = ?");
+            values.push(Box::new(logo_url.clone()));
+        }
+        if let Some(ref notes) = data.notes {
+            sets.push("notes = ?");
+            values.push(Box::new(notes.clone()));
+        }
+        if let Some(is_active) = data.is_active {
+            sets.push("is_active = ?");
+            values.push(Box::new(if is_active { 1i32 } else { 0 }));
+        }
+        if let Some(ref next_payment_date) = data.next_payment_date {
+            sets.push("next_payment_date = ?");
+            values.push(Box::new(next_payment_date.clone()));
+        }
+
+        if sets.is_empty() {
+            return self.get(id);
+        }
+
+        sets.push("updated_at = ?");
+        values.push(Box::new(now));
+        values.push(Box::new(id.to_string()));
+
+        let sql = format!("UPDATE subscriptions SET {} WHERE id = ?", sets.join(", "));
+
+        let params: Vec<&dyn rusqlite::types::ToSql> = values.iter().map(|v| v.as_ref()).collect();
+        conn.execute(&sql, params.as_slice())?;
+
+        self.get(id)
+    }
+
+    /// Delete a subscription by ID.
+    pub fn delete(&self, id: &str) -> Result<()> {
+        let conn = self.pool.get()?;
+        let changes = conn.execute("DELETE FROM subscriptions WHERE id = ?1", params![id])?;
+        if changes == 0 {
+            return Err(SubbyCoreError::NotFound(format!(
+                "Subscription '{id}' not found"
+            )));
+        }
+        Ok(())
+    }
+
+    /// Toggle the is_active flag on a subscription.
+    pub fn toggle_active(&self, id: &str) -> Result<Subscription> {
+        let sub = self.get(id)?;
+        let new_active = !sub.is_active;
+        self.update(
+            id,
+            UpdateSubscription {
+                is_active: Some(new_active),
+                ..Default::default()
+            },
+        )
+    }
+}
+
+fn billing_cycle_from_db(s: String) -> BillingCycle {
+    BillingCycle::from_str(&s).unwrap_or(BillingCycle::Monthly)
+}

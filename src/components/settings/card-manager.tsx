@@ -179,6 +179,8 @@ export function CardManager({ currency }: CardManagerProps) {
                   key={color}
                   type="button"
                   onClick={() => form.setValue('color', color)}
+                  aria-label={`Color ${color}`}
+                  aria-pressed={form.watch('color') === color}
                   className={cn(
                     'h-8 w-8 rounded-full transition-all',
                     form.watch('color') === color &&
@@ -229,7 +231,12 @@ export function CardManager({ currency }: CardManagerProps) {
                     Limit: {formatCurrency(card.credit_limit, currency)}
                   </span>
                 )}
-                <Button variant="ghost" size="sm" onClick={() => handleEdit(card)}>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleEdit(card)}
+                  aria-label={`Edit ${card.name}`}
+                >
                   <Pencil className="h-4 w-4" />
                 </Button>
                 <Button
@@ -237,6 +244,7 @@ export function CardManager({ currency }: CardManagerProps) {
                   size="sm"
                   className="text-destructive hover:bg-destructive/15 hover:text-destructive"
                   onClick={() => setDeleteTarget(card)}
+                  aria-label={`Delete ${card.name}`}
                 >
                   <Trash2 className="h-4 w-4" />
                 </Button>

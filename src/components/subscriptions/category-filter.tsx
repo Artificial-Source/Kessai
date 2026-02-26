@@ -38,6 +38,7 @@ export const CategoryFilter = memo(function CategoryFilter({
       {/* All button */}
       <button
         onClick={handleClearAll}
+        aria-pressed={selectedIds.length === 0}
         className={`rounded-full px-3 py-1.5 text-sm font-medium transition-colors ${
           selectedIds.length === 0
             ? 'bg-primary text-primary-foreground'
@@ -56,6 +57,7 @@ export const CategoryFilter = memo(function CategoryFilter({
           <button
             key={category.id}
             onClick={() => handleToggle(category.id)}
+            aria-pressed={isSelected}
             className={`flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-medium transition-colors ${
               isSelected
                 ? 'bg-primary text-primary-foreground'
@@ -67,7 +69,9 @@ export const CategoryFilter = memo(function CategoryFilter({
               className="h-2.5 w-2.5 rounded-full"
               style={{ backgroundColor: category.color }}
             />
-            <span>{category.name}</span>
+            <span className="truncate" title={category.name}>
+              {category.name}
+            </span>
             <span
               className={`text-xs ${isSelected ? 'text-primary-foreground/70' : 'text-muted-foreground'}`}
             >

@@ -4,6 +4,7 @@ node_modules/
 # Build outputs
 dist/
 dist-ssr/
+target/
 src-tauri/target/
 
 # Logs

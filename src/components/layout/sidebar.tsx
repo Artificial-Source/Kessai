@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { NavLink } from 'react-router-dom'
 import { LayoutDashboard, CreditCard, Calendar, Settings, ChevronLeft } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -11,8 +11,24 @@ const navItems = [
   { to: '/settings', icon: Settings, label: 'Settings' },
 ]
 
+const SIDEBAR_KEY = 'subby-sidebar-collapsed'
+
 export function Sidebar() {
-  const [collapsed, setCollapsed] = useState(false)
+  const [collapsed, setCollapsed] = useState(() => {
+    try {
+      return localStorage.getItem(SIDEBAR_KEY) === 'true'
+    } catch {
+      return false
+    }
+  })
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(SIDEBAR_KEY, String(collapsed))
+    } catch {
+      // ignore
+    }
+  }, [collapsed])
 
   return (
     <aside
@@ -33,6 +49,7 @@ export function Sidebar() {
           <NavLink
             key={to}
             to={to}
+            end={to === '/'}
             className={({ isActive }) =>
               cn(
                 'group flex items-center gap-3 overflow-hidden rounded-xl border px-3 py-2.5 text-sm font-medium transition-[background-color,border-color,color,transform] duration-150 ease-out',
