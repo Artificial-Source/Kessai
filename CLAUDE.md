@@ -74,26 +74,30 @@
 
 | Token | Value | Usage |
 |-------|-------|-------|
-| `--color-background` | `#0a0a0a` | Page background (void black) |
-| `--color-foreground` | `#e8e8e8` | Primary text |
+| `--color-background` | `#020202` | Page background (deep black) |
+| `--color-foreground` | `#f0f0f0` | Primary text |
 | `--color-primary` | `#bf5af2` | Accent (Plasma Violet) |
-| `--color-card` | `rgba(255,255,255,0.02)` | Glass card surfaces |
+| `--color-card` | `rgba(10,10,10,0.6)` | Glass card surfaces (with blur) |
 | `--color-border` | `rgba(255,255,255,0.06)` | Hairline borders |
-| `--color-input` | `#111111` | Input backgrounds |
-| `--color-dimmed` | `#585858` | Tertiary text |
+| `--color-input` | `rgba(255,255,255,0.06)` | Input backgrounds |
+| `--color-muted-foreground` | `#888888` | Secondary/tertiary text |
+| `--color-destructive` | `#ef4444` | Error/danger states |
+| `--color-surface` | `#0a0a0a` | Elevated surface bg |
 
 ### UI Patterns
 
-- **Glass cards**: Transparent bg + 1px hairline border + 12px radius
-- **Sidebar**: Void black (#050505), Space Mono nav labels, 3px violet left-border active state
-- **Buttons (primary)**: Sharp 0px radius (brutalist), solid violet bg
+- **Glass cards**: Semi-transparent bg + backdrop-blur(12px) + 1px hairline border + 12px radius
+- **Grid background**: 40px grid pattern on main content area (`grid-bg` utility)
+- **Sidebar**: Glass morphism bg, 2px violet left-border active state
+- **Buttons (primary)**: Sharp 0px radius (brutalist sm/md), solid violet bg
+- **Border radius**: sm/md = 0px (brutalist), lg/xl/2xl = 12px (cards)
 - **Modals**: Centered Dialog (not Sheet/sidebar) — subscription form uses `max-w-2xl` (672px), category form uses `max-w-lg` (512px), confirmations use `max-w-md` (448px)
 - **Badges**: Space Mono 10px uppercase with wide tracking
 
 ## Design Principles
 
-1. **Performance first**: No heavy animations, no backdrop-blur
-2. **Dark-first**: Design for dark mode, ensure light mode works
+1. **Dark-first**: Design for dark mode, ensure light mode works
+2. **Glass morphism**: Use `backdrop-filter: blur(12px)` on glass elements
 3. **CSS animations only**: Use CSS transitions, avoid JS animation libraries
 4. **Type safety**: Zod schemas → TypeScript types
 
@@ -121,7 +125,6 @@ cargo build -p subby-mcp  # Build MCP server + CLI
 ## Don'ts
 
 - Don't use Framer Motion (removed for performance)
-- Don't use backdrop-filter blur (causes lag)
 - Don't suppress TypeScript errors with `as any`
 - Don't add heavy animations on scroll containers
 - Don't use date-fns (use dayjs instead - smaller bundle)

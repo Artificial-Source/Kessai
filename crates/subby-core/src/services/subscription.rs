@@ -3,7 +3,7 @@ use rusqlite::params;
 use crate::db::DbPool;
 use crate::error::{Result, SubbyCoreError};
 use crate::models::subscription::{
-    BillingCycle, NewSubscription, Subscription, UpdateSubscription,
+    BillingCycle, NewSubscription, Subscription, SubscriptionStatus, UpdateSubscription,
 };
 
 pub struct SubscriptionService {
@@ -21,6 +21,7 @@ impl SubscriptionService {
         let mut stmt = conn.prepare(
             "SELECT id, name, amount, currency, billing_cycle, billing_day, category_id,
                     card_id, color, logo_url, notes, is_active, next_payment_date,
+                    status, trial_end_date, status_changed_at, shared_count,
                     created_at, updated_at
              FROM subscriptions
              ORDER BY
@@ -43,8 +44,12 @@ impl SubscriptionService {
                 notes: row.get(10)?,
                 is_active: row.get::<_, i32>(11)? != 0,
                 next_payment_date: row.get(12)?,
-                created_at: row.get(13)?,
-                updated_at: row.get(14)?,
+                status: status_from_db(row.get::<_, String>(13)?),
+                trial_end_date: row.get(14)?,
+                status_changed_at: row.get(15)?,
+                shared_count: row.get::<_, i32>(16).unwrap_or(1),
+                created_at: row.get(17)?,
+                updated_at: row.get(18)?,
             })
         })?;
 
@@ -57,6 +62,7 @@ impl SubscriptionService {
         conn.query_row(
             "SELECT id, name, amount, currency, billing_cycle, billing_day, category_id,
                     card_id, color, logo_url, notes, is_active, next_payment_date,
+                    status, trial_end_date, status_changed_at, shared_count,
                     created_at, updated_at
              FROM subscriptions WHERE id = ?1",
             params![id],
@@ -75,8 +81,12 @@ impl SubscriptionService {
                     notes: row.get(10)?,
                     is_active: row.get::<_, i32>(11)? != 0,
                     next_payment_date: row.get(12)?,
-                    created_at: row.get(13)?,
-                    updated_at: row.get(14)?,
+                    status: status_from_db(row.get::<_, String>(13)?),
+                    trial_end_date: row.get(14)?,
+                    status_changed_at: row.get(15)?,
+                    shared_count: row.get::<_, i32>(16).unwrap_or(1),
+                    created_at: row.get(17)?,
+                    updated_at: row.get(18)?,
                 })
             },
         )
@@ -94,11 +104,16 @@ impl SubscriptionService {
         let id = uuid::Uuid::new_v4().to_string();
         let now = chrono::Utc::now().to_rfc3339();
 
+        // Derive is_active from status
+        let is_active = data.status.is_billable();
+
         conn.execute(
             "INSERT INTO subscriptions
              (id, name, amount, currency, billing_cycle, billing_day, category_id,
-              card_id, color, logo_url, notes, is_active, next_payment_date, created_at, updated_at)
-             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15)",
+              card_id, color, logo_url, notes, is_active, next_payment_date,
+              status, trial_end_date, status_changed_at, shared_count,
+              created_at, updated_at)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19)",
             params![
                 id,
                 data.name,
@@ -111,8 +126,12 @@ impl SubscriptionService {
                 data.color,
                 data.logo_url,
                 data.notes,
-                if data.is_active { 1 } else { 0 },
+                if is_active { 1 } else { 0 },
                 data.next_payment_date,
+                data.status.as_str(),
+                data.trial_end_date,
+                now,
+                data.shared_count.max(1),
                 now,
                 now,
             ],
@@ -177,6 +196,23 @@ impl SubscriptionService {
             sets.push("next_payment_date = ?");
             values.push(Box::new(next_payment_date.clone()));
         }
+        if let Some(ref status) = data.status {
+            sets.push("status = ?");
+            values.push(Box::new(status.as_str().to_string()));
+            // Sync is_active from status
+            sets.push("is_active = ?");
+            values.push(Box::new(if status.is_billable() { 1i32 } else { 0 }));
+            sets.push("status_changed_at = ?");
+            values.push(Box::new(now.clone()));
+        }
+        if let Some(ref trial_end_date) = data.trial_end_date {
+            sets.push("trial_end_date = ?");
+            values.push(Box::new(trial_end_date.clone()));
+        }
+        if let Some(shared_count) = data.shared_count {
+            sets.push("shared_count = ?");
+            values.push(Box::new(shared_count.max(1)));
+        }
 
         if sets.is_empty() {
             return self.get(id);
@@ -206,14 +242,34 @@ impl SubscriptionService {
         Ok(())
     }
 
-    /// Toggle the is_active flag on a subscription.
+    /// Toggle the active status of a subscription.
+    /// Billable statuses → Paused, non-billable → Active.
     pub fn toggle_active(&self, id: &str) -> Result<Subscription> {
         let sub = self.get(id)?;
-        let new_active = !sub.is_active;
+        let new_status = if sub.status.is_billable() {
+            SubscriptionStatus::Paused
+        } else {
+            SubscriptionStatus::Active
+        };
         self.update(
             id,
             UpdateSubscription {
-                is_active: Some(new_active),
+                status: Some(new_status),
+                ..Default::default()
+            },
+        )
+    }
+
+    /// Transition a subscription to a new status.
+    pub fn transition_status(
+        &self,
+        id: &str,
+        new_status: SubscriptionStatus,
+    ) -> Result<Subscription> {
+        self.update(
+            id,
+            UpdateSubscription {
+                status: Some(new_status),
                 ..Default::default()
             },
         )
@@ -222,4 +278,8 @@ impl SubscriptionService {
 
 fn billing_cycle_from_db(s: String) -> BillingCycle {
     BillingCycle::from_str(&s).unwrap_or(BillingCycle::Monthly)
+}
+
+fn status_from_db(s: String) -> SubscriptionStatus {
+    SubscriptionStatus::from_str(&s).unwrap_or(SubscriptionStatus::Active)
 }

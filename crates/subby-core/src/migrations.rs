@@ -116,6 +116,51 @@ const MIGRATIONS: &[Migration] = &[
             ALTER TABLE subscriptions ADD COLUMN card_id TEXT REFERENCES payment_cards(id);
         "#,
     },
+    Migration {
+        version: 6,
+        description: "add_lifecycle_states_and_trial_fields",
+        sql: r#"
+            ALTER TABLE subscriptions ADD COLUMN status TEXT NOT NULL DEFAULT 'active';
+            ALTER TABLE subscriptions ADD COLUMN trial_end_date TEXT;
+            ALTER TABLE subscriptions ADD COLUMN status_changed_at TEXT;
+
+            CREATE INDEX IF NOT EXISTS idx_subscriptions_status ON subscriptions(status);
+            CREATE INDEX IF NOT EXISTS idx_subscriptions_trial_end ON subscriptions(trial_end_date) WHERE trial_end_date IS NOT NULL;
+        "#,
+    },
+    Migration {
+        version: 7,
+        description: "create_price_history_table",
+        sql: r#"
+            CREATE TABLE IF NOT EXISTS price_history (
+                id TEXT PRIMARY KEY,
+                subscription_id TEXT NOT NULL,
+                old_amount REAL NOT NULL,
+                new_amount REAL NOT NULL,
+                old_currency TEXT NOT NULL DEFAULT 'USD',
+                new_currency TEXT NOT NULL DEFAULT 'USD',
+                changed_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (subscription_id) REFERENCES subscriptions(id) ON DELETE CASCADE
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_price_history_subscription ON price_history(subscription_id);
+            CREATE INDEX IF NOT EXISTS idx_price_history_changed_at ON price_history(changed_at);
+        "#,
+    },
+    Migration {
+        version: 8,
+        description: "add_shared_subscription_splitting",
+        sql: r#"
+            ALTER TABLE subscriptions ADD COLUMN shared_count INTEGER NOT NULL DEFAULT 1;
+        "#,
+    },
+    Migration {
+        version: 9,
+        description: "add_monthly_budget_setting",
+        sql: r#"
+            ALTER TABLE settings ADD COLUMN monthly_budget REAL;
+        "#,
+    },
 ];
 
 /// Runs all pending migrations on the database connection.
@@ -183,6 +228,10 @@ fn should_skip_migration(conn: &Connection, version: u32) -> bool {
         3 => table_exists(conn, "payments"),
         4 => column_exists(conn, "settings", "email"),
         5 => table_exists(conn, "payment_cards"),
+        6 => column_exists(conn, "subscriptions", "status"),
+        7 => table_exists(conn, "price_history"),
+        8 => column_exists(conn, "subscriptions", "shared_count"),
+        9 => column_exists(conn, "settings", "monthly_budget"),
         _ => false,
     }
 }
@@ -234,6 +283,7 @@ mod tests {
         assert!(table_exists(&conn, "settings"));
         assert!(table_exists(&conn, "payments"));
         assert!(table_exists(&conn, "payment_cards"));
+        assert!(table_exists(&conn, "price_history"));
         assert!(table_exists(&conn, "_subby_migrations"));
 
         // Verify default categories seeded
@@ -264,6 +314,6 @@ mod tests {
         let count: i64 = conn
             .query_row("SELECT COUNT(*) FROM _subby_migrations", [], |r| r.get(0))
             .unwrap();
-        assert_eq!(count, 5);
+        assert_eq!(count, 9);
     }
 }

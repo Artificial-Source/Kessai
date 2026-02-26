@@ -7,7 +7,8 @@ use tauri::Manager;
 
 use subby_core::models::{
     BackupData, NewCategory, NewPayment, NewPaymentCard, NewSubscription, PaymentWithSubscription,
-    UpdateCategory, UpdatePaymentCard, UpdateSettings, UpdateSubscription,
+    PriceChange, SubscriptionStatus, UpdateCategory, UpdatePaymentCard, UpdateSettings,
+    UpdateSubscription,
 };
 use subby_core::{
     models::{Category, ImportResult, Payment, PaymentCard, Settings, Subscription},
@@ -116,6 +117,25 @@ fn update_subscription(
     id: String,
     data: UpdateSubscription,
 ) -> Result<Subscription, String> {
+    // Auto-detect price changes and record history
+    if let Some(new_amount) = data.amount {
+        if let Ok(existing) = core.subscriptions().get(&id) {
+            if (existing.amount - new_amount).abs() > 0.001 {
+                let new_currency = data
+                    .currency
+                    .as_deref()
+                    .unwrap_or(&existing.currency);
+                let _ = core.price_history().record(
+                    &id,
+                    existing.amount,
+                    new_amount,
+                    &existing.currency,
+                    new_currency,
+                );
+            }
+        }
+    }
+
     core.subscriptions()
         .update(&id, data)
         .map_err(|e| e.to_string())
@@ -267,6 +287,54 @@ fn delete_payment_card(core: tauri::State<'_, SubbyCore>, id: String) -> Result<
     core.payment_cards().delete(&id).map_err(|e| e.to_string())
 }
 
+// ── Subscription status commands ─────────────────────────────────────
+
+#[tauri::command]
+fn transition_subscription_status(
+    core: tauri::State<'_, SubbyCore>,
+    id: String,
+    status: String,
+) -> Result<Subscription, String> {
+    let new_status = SubscriptionStatus::from_str(&status)
+        .ok_or_else(|| format!("Invalid status: {status}"))?;
+    core.subscriptions()
+        .transition_status(&id, new_status)
+        .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn get_expiring_trials(
+    core: tauri::State<'_, SubbyCore>,
+    days: Option<i64>,
+) -> Result<Vec<Subscription>, String> {
+    let subs = core.subscriptions().list().map_err(|e| e.to_string())?;
+    let days = days.unwrap_or(7);
+    let trials = subby_core::utils::get_expiring_trials(&subs, days);
+    Ok(trials.into_iter().cloned().collect())
+}
+
+// ── Price history commands ──────────────────────────────────────────
+
+#[tauri::command]
+fn list_price_history(
+    core: tauri::State<'_, SubbyCore>,
+    subscription_id: String,
+) -> Result<Vec<PriceChange>, String> {
+    core.price_history()
+        .list_by_subscription(&subscription_id)
+        .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn get_recent_price_changes(
+    core: tauri::State<'_, SubbyCore>,
+    days: Option<i64>,
+) -> Result<Vec<PriceChange>, String> {
+    core.price_history()
+        .list_recent(days.unwrap_or(90))
+        .map_err(|e| e.to_string())
+}
+
 // ── Settings commands ──────────────────────────────────────────────────────
 
 #[tauri::command]
@@ -336,6 +404,8 @@ pub fn run() {
             update_subscription,
             delete_subscription,
             toggle_subscription_active,
+            transition_subscription_status,
+            get_expiring_trials,
             // Categories
             list_categories,
             create_category,
@@ -349,6 +419,9 @@ pub fn run() {
             mark_payment_paid,
             skip_payment,
             is_payment_recorded,
+            // Price history
+            list_price_history,
+            get_recent_price_changes,
             // Payment cards
             list_payment_cards,
             create_payment_card,

@@ -34,6 +34,8 @@ pub struct Settings {
     pub currency: String,
     pub notification_enabled: bool,
     pub notification_days_before: Vec<i32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub monthly_budget: Option<f64>,
 }
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
@@ -46,6 +48,9 @@ pub struct UpdateSettings {
     pub notification_enabled: Option<bool>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub notification_days_before: Option<Vec<i32>>,
+    /// Use `Some(Some(value))` to set, `Some(None)` to clear.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub monthly_budget: Option<Option<f64>>,
 }
 
 pub const DEFAULT_SETTINGS: Settings = Settings {
@@ -54,6 +59,7 @@ pub const DEFAULT_SETTINGS: Settings = Settings {
     currency: String::new(), // Will be set to "USD"
     notification_enabled: true,
     notification_days_before: Vec::new(), // Will be set to [1, 3, 7]
+    monthly_budget: None,
 };
 
 /// Returns default settings with proper values (const can't hold String/Vec with content)
@@ -64,5 +70,6 @@ pub fn default_settings() -> Settings {
         currency: "USD".to_string(),
         notification_enabled: true,
         notification_days_before: vec![1, 3, 7],
+        monthly_budget: None,
     }
 }

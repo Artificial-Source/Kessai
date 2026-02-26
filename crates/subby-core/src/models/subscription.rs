@@ -44,6 +44,52 @@ impl BillingCycle {
     }
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(rename_all = "snake_case")]
+pub enum SubscriptionStatus {
+    Trial,
+    Active,
+    Paused,
+    PendingCancellation,
+    GracePeriod,
+    Cancelled,
+}
+
+impl SubscriptionStatus {
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            SubscriptionStatus::Trial => "trial",
+            SubscriptionStatus::Active => "active",
+            SubscriptionStatus::Paused => "paused",
+            SubscriptionStatus::PendingCancellation => "pending_cancellation",
+            SubscriptionStatus::GracePeriod => "grace_period",
+            SubscriptionStatus::Cancelled => "cancelled",
+        }
+    }
+
+    pub fn from_str(s: &str) -> Option<Self> {
+        match s {
+            "trial" => Some(SubscriptionStatus::Trial),
+            "active" => Some(SubscriptionStatus::Active),
+            "paused" => Some(SubscriptionStatus::Paused),
+            "pending_cancellation" => Some(SubscriptionStatus::PendingCancellation),
+            "grace_period" => Some(SubscriptionStatus::GracePeriod),
+            "cancelled" => Some(SubscriptionStatus::Cancelled),
+            _ => None,
+        }
+    }
+
+    /// Whether this status should be counted in billing totals.
+    pub fn is_billable(&self) -> bool {
+        matches!(
+            self,
+            SubscriptionStatus::Trial
+                | SubscriptionStatus::Active
+                | SubscriptionStatus::GracePeriod
+        )
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Subscription {
     pub id: String,
@@ -59,6 +105,12 @@ pub struct Subscription {
     pub notes: Option<String>,
     pub is_active: bool,
     pub next_payment_date: Option<String>,
+    pub status: SubscriptionStatus,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub trial_end_date: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub status_changed_at: Option<String>,
+    pub shared_count: i32,
     pub created_at: String,
     pub updated_at: String,
 }
@@ -84,10 +136,24 @@ pub struct NewSubscription {
     #[serde(default = "default_true")]
     pub is_active: bool,
     pub next_payment_date: Option<String>,
+    #[serde(default = "default_status")]
+    pub status: SubscriptionStatus,
+    #[serde(default)]
+    pub trial_end_date: Option<String>,
+    #[serde(default = "default_shared_count")]
+    pub shared_count: i32,
 }
 
 fn default_true() -> bool {
     true
+}
+
+fn default_status() -> SubscriptionStatus {
+    SubscriptionStatus::Active
+}
+
+fn default_shared_count() -> i32 {
+    1
 }
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
@@ -116,4 +182,10 @@ pub struct UpdateSubscription {
     pub is_active: Option<bool>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub next_payment_date: Option<Option<String>>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub status: Option<SubscriptionStatus>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub trial_end_date: Option<Option<String>>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub shared_count: Option<i32>,
 }

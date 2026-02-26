@@ -247,6 +247,9 @@ fn cmd_add(
         notes,
         is_active: true,
         next_payment_date: Some(next_date),
+        status: subby_core::models::SubscriptionStatus::Active,
+        trial_end_date: None,
+        shared_count: 1,
     })?;
 
     println!(
@@ -288,6 +291,9 @@ fn cmd_update(
             notes: notes.map(Some),
             is_active: None,
             next_payment_date: next_date.map(Some),
+            status: None,
+            trial_end_date: None,
+            shared_count: None,
         },
     )?;
 

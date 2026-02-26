@@ -70,7 +70,7 @@ export const CategoryFilter = memo(function CategoryFilter({
               {category.name}
             </span>
             <span
-              className={`text-[10px] ${isSelected ? 'text-primary-foreground/70' : 'text-dimmed'}`}
+              className={`text-[10px] ${isSelected ? 'text-primary-foreground/70' : 'text-muted-foreground'}`}
             >
               {count}
             </span>

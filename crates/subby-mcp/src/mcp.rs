@@ -6,7 +6,9 @@ use rmcp::{
     ServerHandler,
 };
 use serde::{Deserialize, Serialize};
-use subby_core::models::{BillingCycle, NewCategory, NewSubscription, UpdateSubscription};
+use subby_core::models::{
+    BillingCycle, NewCategory, NewSubscription, SubscriptionStatus, UpdateSubscription,
+};
 use subby_core::SubbyCore;
 
 // ── Tool parameter types ───────────────────────────────────────────────────
@@ -33,6 +35,12 @@ struct AddSubscriptionParams {
     color: Option<String>,
     #[schemars(description = "Notes about the subscription")]
     notes: Option<String>,
+    #[schemars(description = "Status: trial, active, paused, pending_cancellation, grace_period, cancelled")]
+    status: Option<String>,
+    #[schemars(description = "Trial end date in YYYY-MM-DD format")]
+    trial_end_date: Option<String>,
+    #[schemars(description = "Number of people sharing this subscription (default: 1)")]
+    shared_count: Option<i32>,
 }
 
 #[derive(Debug, Deserialize, schemars::JsonSchema)]
@@ -59,6 +67,12 @@ struct UpdateSubscriptionParams {
     notes: Option<String>,
     #[schemars(description = "New next payment date")]
     next_payment_date: Option<String>,
+    #[schemars(description = "New status")]
+    status: Option<String>,
+    #[schemars(description = "New trial end date")]
+    trial_end_date: Option<String>,
+    #[schemars(description = "New shared count")]
+    shared_count: Option<i32>,
 }
 
 #[derive(Debug, Deserialize, schemars::JsonSchema)]
@@ -160,6 +174,12 @@ impl SubbyMcp {
         let cycle = BillingCycle::from_str(&p.billing_cycle)
             .ok_or_else(|| mcp_err(format!("Invalid billing cycle: {}", p.billing_cycle)))?;
 
+        let status = p
+            .status
+            .as_deref()
+            .and_then(SubscriptionStatus::from_str)
+            .unwrap_or(SubscriptionStatus::Active);
+
         let sub = self
             .core
             .subscriptions()
@@ -176,6 +196,9 @@ impl SubbyMcp {
                 notes: p.notes,
                 is_active: true,
                 next_payment_date: Some(p.next_payment_date),
+                status,
+                trial_end_date: p.trial_end_date,
+                shared_count: p.shared_count.unwrap_or(1),
             })
             .map_err(|e| mcp_err(e.to_string()))?;
 
@@ -201,6 +224,9 @@ impl SubbyMcp {
             notes: p.notes.map(Some),
             is_active: None,
             next_payment_date: p.next_payment_date.map(Some),
+            status: p.status.and_then(|s| SubscriptionStatus::from_str(&s)),
+            trial_end_date: p.trial_end_date.map(Some),
+            shared_count: p.shared_count,
         };
 
         let sub = self
@@ -319,7 +345,7 @@ impl SubbyMcp {
             .list()
             .map_err(|e| mcp_err(e.to_string()))?;
 
-        let active: Vec<_> = subs.iter().filter(|s| s.is_active).collect();
+        let active: Vec<_> = subs.iter().filter(|s| s.status.is_billable()).collect();
 
         let mut spending: std::collections::HashMap<String, (String, String, f64)> =
             std::collections::HashMap::new();
@@ -511,7 +537,7 @@ impl ServerHandler for SubbyMcp {
                     .list()
                     .map_err(|e| mcp_err(e.to_string()))?;
 
-                let active: Vec<_> = subs.iter().filter(|s| s.is_active).collect();
+                let active: Vec<_> = subs.iter().filter(|s| s.status.is_billable()).collect();
                 let total_monthly: f64 = active
                     .iter()
                     .map(|s| {
@@ -653,7 +679,7 @@ impl ServerHandler for SubbyMcp {
                     .list()
                     .map_err(|e| mcp_err(e.to_string()))?;
 
-                let active: Vec<_> = subs.iter().filter(|s| s.is_active).collect();
+                let active: Vec<_> = subs.iter().filter(|s| s.status.is_billable()).collect();
                 let total_monthly: f64 = active
                     .iter()
                     .map(|s| {

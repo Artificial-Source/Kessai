@@ -29,7 +29,7 @@ export function MonthSummaryHeader({
     <div className="glass-card p-5">
       <div className="flex flex-wrap items-center gap-6 md:gap-0">
         <div className="flex flex-col">
-          <span className="text-dimmed mb-1 flex items-center gap-2 font-[family-name:var(--font-mono)] text-[10px] font-normal tracking-widest uppercase">
+          <span className="text-muted-foreground mb-1 flex items-center gap-2 font-[family-name:var(--font-mono)] text-[10px] font-normal tracking-widest uppercase">
             Total
             {(isUp || isDown) && (
               <span
@@ -46,7 +46,7 @@ export function MonthSummaryHeader({
           <span className="text-foreground font-[family-name:var(--font-heading)] text-2xl leading-none font-bold tracking-tight">
             {formatCurrency(totalAmount, currency)}
           </span>
-          <span className="text-dimmed mt-1 font-[family-name:var(--font-mono)] text-[10px]">
+          <span className="text-muted-foreground mt-1 font-[family-name:var(--font-mono)] text-[10px]">
             {paymentCount} payment{paymentCount !== 1 ? 's' : ''}
           </span>
         </div>
@@ -60,7 +60,7 @@ export function MonthSummaryHeader({
           <span className="font-[family-name:var(--font-heading)] text-2xl leading-none font-bold tracking-tight text-emerald-500">
             {formatCurrency(paidAmount, currency)}
           </span>
-          <span className="text-dimmed mt-1 font-[family-name:var(--font-mono)] text-[10px]">
+          <span className="text-muted-foreground mt-1 font-[family-name:var(--font-mono)] text-[10px]">
             {paidCount} payment{paidCount !== 1 ? 's' : ''}
           </span>
         </div>
@@ -74,7 +74,7 @@ export function MonthSummaryHeader({
           <span className="text-primary font-[family-name:var(--font-heading)] text-2xl leading-none font-bold tracking-tight">
             {formatCurrency(upcomingAmount, currency)}
           </span>
-          <span className="text-dimmed mt-1 font-[family-name:var(--font-mono)] text-[10px]">
+          <span className="text-muted-foreground mt-1 font-[family-name:var(--font-mono)] text-[10px]">
             {upcomingCount} payment{upcomingCount !== 1 ? 's' : ''}
           </span>
         </div>

@@ -1,6 +1,6 @@
 use chrono::{Datelike, Duration, NaiveDate, Utc};
 
-use crate::models::subscription::{BillingCycle, Subscription};
+use crate::models::subscription::{BillingCycle, Subscription, SubscriptionStatus};
 
 /// Calculates the next payment date from a start date, advancing by billing cycle
 /// until the date is in the future (after today).
@@ -101,6 +101,37 @@ pub fn get_upcoming_subscriptions(subscriptions: &[Subscription], days: i64) -> 
     });
 
     upcoming
+}
+
+/// Returns the number of days until a trial ends, or None if no trial_end_date.
+pub fn days_until_trial_end(trial_end_date: &str) -> Option<i64> {
+    let today = Utc::now().date_naive();
+    if let Ok(end) = NaiveDate::parse_from_str(trial_end_date, "%Y-%m-%d") {
+        Some((end - today).num_days())
+    } else if let Ok(dt) = trial_end_date.parse::<chrono::NaiveDateTime>() {
+        Some((dt.date() - today).num_days())
+    } else {
+        None
+    }
+}
+
+/// Returns subscriptions that are in trial status with trials expiring within N days.
+pub fn get_expiring_trials(subscriptions: &[Subscription], days: i64) -> Vec<&Subscription> {
+    let mut trials: Vec<&Subscription> = subscriptions
+        .iter()
+        .filter(|sub| {
+            sub.status == SubscriptionStatus::Trial
+                && sub
+                    .trial_end_date
+                    .as_deref()
+                    .and_then(days_until_trial_end)
+                    .map(|d| d >= 0 && d <= days)
+                    .unwrap_or(false)
+        })
+        .collect();
+
+    trials.sort_by(|a, b| a.trial_end_date.cmp(&b.trial_end_date));
+    trials
 }
 
 #[cfg(test)]

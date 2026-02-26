@@ -10,8 +10,8 @@ use std::path::Path;
 use db::DbPool;
 use error::Result;
 use services::{
-    CategoryService, DataManagementService, PaymentCardService, PaymentService, SettingsService,
-    SubscriptionService,
+    CategoryService, DataManagementService, PaymentCardService, PaymentService,
+    PriceHistoryService, SettingsService, SubscriptionService,
 };
 
 /// Top-level API for the Subby core library.
@@ -59,6 +59,10 @@ impl SubbyCore {
 
     pub fn settings(&self) -> SettingsService {
         SettingsService::new(self.pool.clone())
+    }
+
+    pub fn price_history(&self) -> PriceHistoryService {
+        PriceHistoryService::new(self.pool.clone())
     }
 
     pub fn data_management(&self) -> DataManagementService {
@@ -109,12 +113,17 @@ mod tests {
                 notes: None,
                 is_active: true,
                 next_payment_date: Some("2026-03-15".to_string()),
+                status: models::SubscriptionStatus::Active,
+                trial_end_date: None,
+                shared_count: 1,
             })
             .unwrap();
 
         assert_eq!(sub.name, "Netflix");
         assert_eq!(sub.amount, 15.99);
         assert!(sub.is_active);
+        assert_eq!(sub.status, models::SubscriptionStatus::Active);
+        assert_eq!(sub.shared_count, 1);
 
         // Read
         let fetched = core.subscriptions().get(&sub.id).unwrap();
@@ -133,9 +142,15 @@ mod tests {
             .unwrap();
         assert_eq!(updated.amount, 17.99);
 
-        // Toggle active
+        // Toggle active (Active → Paused)
         let toggled = core.subscriptions().toggle_active(&sub.id).unwrap();
         assert!(!toggled.is_active);
+        assert_eq!(toggled.status, models::SubscriptionStatus::Paused);
+
+        // Toggle active again (Paused → Active)
+        let toggled2 = core.subscriptions().toggle_active(&sub.id).unwrap();
+        assert!(toggled2.is_active);
+        assert_eq!(toggled2.status, models::SubscriptionStatus::Active);
 
         // Delete
         core.subscriptions().delete(&sub.id).unwrap();
@@ -202,6 +217,9 @@ mod tests {
                 notes: None,
                 is_active: true,
                 next_payment_date: Some("2026-03-01".to_string()),
+                status: models::SubscriptionStatus::Active,
+                trial_end_date: None,
+                shared_count: 1,
             })
             .unwrap();
 
@@ -262,6 +280,9 @@ mod tests {
                 notes: None,
                 is_active: true,
                 next_payment_date: None,
+                status: models::SubscriptionStatus::Active,
+                trial_end_date: None,
+                shared_count: 1,
             })
             .unwrap();
 
@@ -312,6 +333,9 @@ mod tests {
                 notes: None,
                 is_active: true,
                 next_payment_date: None,
+                status: models::SubscriptionStatus::Active,
+                trial_end_date: None,
+                shared_count: 1,
             })
             .unwrap();
 
@@ -361,6 +385,9 @@ mod tests {
                 notes: None,
                 is_active: true,
                 next_payment_date: None,
+                status: models::SubscriptionStatus::Active,
+                trial_end_date: None,
+                shared_count: 1,
             })
             .unwrap();
 
@@ -385,6 +412,9 @@ mod tests {
                 notes: None,
                 is_active: true,
                 next_payment_date: None,
+                status: models::SubscriptionStatus::Active,
+                trial_end_date: None,
+                shared_count: 1,
             })
             .unwrap();
 
@@ -404,7 +434,7 @@ mod tests {
 
         let backup = core.data_management().export_data().unwrap();
 
-        assert_eq!(backup.version, "1.0.0");
+        assert_eq!(backup.version, "1.1.0");
         assert!(!backup.exported_at.is_empty());
         assert_eq!(backup.categories.len(), 9); // default categories
         assert!(backup.subscriptions.is_empty());

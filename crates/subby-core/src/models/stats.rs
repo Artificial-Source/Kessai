@@ -2,6 +2,7 @@ use serde::{Deserialize, Serialize};
 
 use super::category::Category;
 use super::payment::Payment;
+use super::price_history::PriceChange;
 use super::settings::Settings;
 use super::subscription::Subscription;
 
@@ -32,6 +33,8 @@ pub struct BackupData {
     pub subscriptions: Vec<Subscription>,
     pub categories: Vec<Category>,
     pub payments: Vec<Payment>,
+    #[serde(default)]
+    pub price_history: Vec<PriceChange>,
     pub settings: BackupSettings,
 }
 
@@ -42,6 +45,8 @@ pub struct BackupSettings {
     pub currency: String,
     pub notification_enabled: bool,
     pub notification_days_before: Vec<i32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub monthly_budget: Option<f64>,
 }
 
 impl From<&Settings> for BackupSettings {
@@ -51,6 +56,7 @@ impl From<&Settings> for BackupSettings {
             currency: s.currency.clone(),
             notification_enabled: s.notification_enabled,
             notification_days_before: s.notification_days_before.clone(),
+            monthly_budget: s.monthly_budget,
         }
     }
 }

@@ -96,7 +96,7 @@ export const CalendarDay = memo(function CalendarDay({
           {dayOfMonth}
         </span>
         {hasPayments && totalAmount > 0 && (
-          <span className="text-dimmed font-[family-name:var(--font-mono)] text-[9px]">
+          <span className="text-muted-foreground font-[family-name:var(--font-mono)] text-[9px]">
             {formatCurrency(totalAmount, currency)}
           </span>
         )}

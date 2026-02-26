@@ -6,6 +6,7 @@ use crate::models::settings::Theme;
 use crate::models::stats::{BackupData, BackupSettings, ImportResult};
 use crate::services::category::CategoryService;
 use crate::services::payment::PaymentService;
+use crate::services::price_history::PriceHistoryService;
 use crate::services::settings::SettingsService;
 use crate::services::subscription::SubscriptionService;
 
@@ -23,14 +24,16 @@ impl DataManagementService {
         let subs = SubscriptionService::new(self.pool.clone()).list()?;
         let cats = CategoryService::new(self.pool.clone()).list()?;
         let payments = PaymentService::new(self.pool.clone()).list()?;
+        let price_history = PriceHistoryService::new(self.pool.clone()).list()?;
         let settings = SettingsService::new(self.pool.clone()).get()?;
 
         Ok(BackupData {
-            version: "1.0.0".to_string(),
+            version: "1.1.0".to_string(),
             exported_at: chrono::Utc::now().to_rfc3339(),
             subscriptions: subs,
             categories: cats,
             payments,
+            price_history,
             settings: BackupSettings::from(&settings),
         })
     }
@@ -44,6 +47,7 @@ impl DataManagementService {
         if data.subscriptions.len() > 10000
             || data.categories.len() > 1000
             || data.payments.len() > 100000
+            || data.price_history.len() > 50000
         {
             return false;
         }
@@ -67,7 +71,8 @@ impl DataManagementService {
         let result = (|| -> Result<ImportResult> {
             if clear_existing {
                 tx.execute_batch(
-                    "DELETE FROM payments;
+                    "DELETE FROM price_history;
+                     DELETE FROM payments;
                      DELETE FROM subscriptions;
                      DELETE FROM categories WHERE is_default = 0;",
                 )?;
@@ -91,13 +96,15 @@ impl DataManagementService {
                 )?;
             }
 
-            // Import subscriptions
+            // Import subscriptions (with new fields)
             for sub in &data.subscriptions {
                 tx.execute(
                     "INSERT OR REPLACE INTO subscriptions
                      (id, name, amount, currency, billing_cycle, billing_day, next_payment_date,
-                      category_id, color, logo_url, notes, is_active, created_at, updated_at)
-                     VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14)",
+                      category_id, card_id, color, logo_url, notes, is_active,
+                      status, trial_end_date, status_changed_at, shared_count,
+                      created_at, updated_at)
+                     VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19)",
                     params![
                         sub.id,
                         sub.name,
@@ -107,10 +114,15 @@ impl DataManagementService {
                         sub.billing_day,
                         sub.next_payment_date,
                         sub.category_id,
+                        sub.card_id,
                         sub.color,
                         sub.logo_url,
                         sub.notes,
                         if sub.is_active { 1 } else { 0 },
+                        sub.status.as_str(),
+                        sub.trial_end_date,
+                        sub.status_changed_at,
+                        sub.shared_count,
                         sub.created_at,
                         sub.updated_at,
                     ],
@@ -136,6 +148,24 @@ impl DataManagementService {
                 )?;
             }
 
+            // Import price history
+            for change in &data.price_history {
+                tx.execute(
+                    "INSERT OR REPLACE INTO price_history
+                     (id, subscription_id, old_amount, new_amount, old_currency, new_currency, changed_at)
+                     VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
+                    params![
+                        change.id,
+                        change.subscription_id,
+                        change.old_amount,
+                        change.new_amount,
+                        change.old_currency,
+                        change.new_currency,
+                        change.changed_at,
+                    ],
+                )?;
+            }
+
             // Update settings
             let theme = Theme::from_str(&data.settings.theme)
                 .unwrap_or(Theme::Dark)
@@ -145,23 +175,25 @@ impl DataManagementService {
                 .unwrap_or_else(|_| "[1,3,7]".to_string());
 
             tx.execute(
-                "UPDATE settings SET theme = ?1, currency = ?2, notification_enabled = ?3, notification_days_before = ?4 WHERE id = 'singleton'",
+                "UPDATE settings SET theme = ?1, currency = ?2, notification_enabled = ?3, notification_days_before = ?4, monthly_budget = ?5 WHERE id = 'singleton'",
                 params![
                     theme,
                     data.settings.currency,
                     if data.settings.notification_enabled { 1 } else { 0 },
                     notification_days,
+                    data.settings.monthly_budget,
                 ],
             )?;
 
             let sub_count = data.subscriptions.len();
             let cat_count = non_default_cats.len();
             let pay_count = data.payments.len();
+            let price_count = data.price_history.len();
 
             Ok(ImportResult {
                 success: true,
                 message: format!(
-                    "Imported {sub_count} subscriptions, {cat_count} categories, and {pay_count} payments"
+                    "Imported {sub_count} subscriptions, {cat_count} categories, {pay_count} payments, and {price_count} price changes"
                 ),
             })
         })();

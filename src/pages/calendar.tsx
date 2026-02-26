@@ -97,13 +97,11 @@ export function CalendarPage() {
   }
 
   return (
-    <div className="flex h-full flex-col gap-6 lg:flex-row">
-      <div className="flex flex-1 flex-col gap-6 overflow-auto">
+    <div className="animate-fade-in-up flex h-full flex-col space-y-6 lg:flex-row lg:gap-6 lg:space-y-0">
+      <div className="flex flex-1 flex-col space-y-6 overflow-auto">
         <header className="flex flex-col justify-between gap-4 lg:flex-row lg:items-end">
           <div>
-            <h1 className="text-foreground mb-1 font-[family-name:var(--font-heading)] text-3xl font-bold tracking-tight md:text-4xl">
-              Calendar
-            </h1>
+            <h1 className="mb-1 text-2xl font-bold tracking-tight">Calendar</h1>
             <p className="text-muted-foreground text-base font-normal">
               Track your payment schedule
             </p>
@@ -154,7 +152,7 @@ export function CalendarPage() {
             {WEEKDAYS.map((day) => (
               <div
                 key={day}
-                className="text-dimmed py-3 text-center font-[family-name:var(--font-mono)] text-[10px] font-normal tracking-widest uppercase"
+                className="text-muted-foreground py-3 text-center font-[family-name:var(--font-mono)] text-[10px] font-normal tracking-widest uppercase"
               >
                 {day}
               </div>

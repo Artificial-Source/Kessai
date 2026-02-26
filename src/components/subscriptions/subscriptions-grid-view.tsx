@@ -92,7 +92,7 @@ export const SubscriptionsGridView = memo(function SubscriptionsGridView({
                 >
                   {sub.name}
                 </h3>
-                <p className="text-dimmed font-[family-name:var(--font-mono)] text-[10px] tracking-wider uppercase">
+                <p className="text-muted-foreground font-[family-name:var(--font-mono)] text-[10px] tracking-wider uppercase">
                   {BILLING_CYCLE_LABELS[sub.billing_cycle]}
                 </p>
               </div>
@@ -102,7 +102,7 @@ export const SubscriptionsGridView = memo(function SubscriptionsGridView({
                   <p className="text-foreground font-[family-name:var(--font-heading)] text-[28px] leading-none font-bold">
                     {formatCurrency(sub.amount, currency)}
                   </p>
-                  <span className="text-dimmed font-[family-name:var(--font-mono)] text-xs">
+                  <span className="text-muted-foreground font-[family-name:var(--font-mono)] text-xs">
                     /{sub.billing_cycle === 'yearly' ? 'yr' : 'mo'}
                   </span>
                 </div>

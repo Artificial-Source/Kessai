@@ -16,7 +16,7 @@ impl SettingsService {
     pub fn get(&self) -> Result<Settings> {
         let conn = self.pool.get()?;
         let result = conn.query_row(
-            "SELECT id, theme, currency, notification_enabled, notification_days_before
+            "SELECT id, theme, currency, notification_enabled, notification_days_before, monthly_budget
              FROM settings WHERE id = 'singleton'",
             [],
             |row| {
@@ -31,6 +31,7 @@ impl SettingsService {
                     currency: row.get(2)?,
                     notification_enabled: row.get::<_, i32>(3)? != 0,
                     notification_days_before: notification_days,
+                    monthly_budget: row.get(5)?,
                 })
             },
         );
@@ -64,6 +65,10 @@ impl SettingsService {
         if let Some(ref days) = data.notification_days_before {
             sets.push("notification_days_before = ?");
             values.push(Box::new(serde_json::to_string(days)?));
+        }
+        if let Some(ref budget) = data.monthly_budget {
+            sets.push("monthly_budget = ?");
+            values.push(Box::new(*budget));
         }
 
         if sets.is_empty() {

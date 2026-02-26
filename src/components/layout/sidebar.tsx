@@ -1,7 +1,17 @@
 import { useState, useEffect } from 'react'
 import { NavLink } from 'react-router-dom'
-import { LayoutDashboard, CreditCard, Calendar, Settings, ChevronLeft } from 'lucide-react'
+import {
+  LayoutDashboard,
+  CreditCard,
+  Calendar,
+  Settings,
+  PanelLeftClose,
+  PanelLeft,
+} from 'lucide-react'
 import { cn } from '@/lib/utils'
+
+const SIDEBAR_WIDTH = 240
+const SIDEBAR_COLLAPSED_WIDTH = 60
 
 const navItems = [
   { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
@@ -31,65 +41,46 @@ export function Sidebar() {
 
   return (
     <aside
-      className={cn(
-        'glass-sidebar border-border relative z-20 flex h-full shrink-0 flex-col border-r transition-[width] duration-200 ease-out',
-        collapsed ? 'w-20' : 'w-64'
-      )}
+      className="glass-sidebar flex h-screen flex-col transition-all duration-200"
+      style={{ width: collapsed ? SIDEBAR_COLLAPSED_WIDTH : SIDEBAR_WIDTH }}
     >
-      <div className="flex items-center gap-3 overflow-hidden p-6">
-        <img src="/icon-transparent.png" alt="Subby" className="h-8 w-8 shrink-0 object-contain" />
-        <h1
-          className={cn(
-            'text-foreground font-[family-name:var(--font-heading)] text-xl font-bold tracking-tight whitespace-nowrap transition-[opacity,transform] duration-200',
-            collapsed ? 'translate-x-4 opacity-0' : 'translate-x-0 opacity-100'
-          )}
+      {/* Header */}
+      <div className="flex h-14 items-center justify-between px-4">
+        {!collapsed && (
+          <div className="flex items-center gap-2">
+            <img
+              src="/icon-transparent.png"
+              alt="Subby"
+              className="h-7 w-7 shrink-0 object-contain"
+            />
+            <span className="gradient-text font-heading text-lg font-bold tracking-tight">
+              Subby
+            </span>
+          </div>
+        )}
+        <button
+          onClick={() => setCollapsed(!collapsed)}
+          aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          className="text-muted-foreground hover:text-foreground rounded-lg p-1.5 hover:bg-white/5"
         >
-          Subby
-        </h1>
+          {collapsed ? <PanelLeft size={18} /> : <PanelLeftClose size={18} />}
+        </button>
       </div>
 
-      <nav aria-label="Main navigation" className="flex flex-1 flex-col gap-2 px-4 py-4">
+      {/* Navigation */}
+      <nav aria-label="Main navigation" className="flex-1 space-y-0.5 px-2 py-2">
         {navItems.map(({ to, icon: Icon, label }) => (
           <NavLink
             key={to}
             to={to}
             end={to === '/'}
-            className={({ isActive }) =>
-              cn(
-                'flex items-center gap-3 overflow-hidden rounded-none px-4 py-3 font-[family-name:var(--font-mono)] text-sm',
-                isActive
-                  ? 'border-primary bg-primary/10 text-foreground border-l-[3px]'
-                  : 'text-muted-foreground hover:bg-muted hover:text-foreground border-l-[3px] border-transparent'
-              )
-            }
+            className={({ isActive }) => cn('sidebar-link', isActive && 'sidebar-link-active')}
           >
-            {({ isActive }) => (
-              <>
-                <Icon className="h-5 w-5 shrink-0" />
-                <span
-                  className={cn(
-                    'text-[13px] tracking-wide whitespace-nowrap transition-[opacity,transform] duration-200',
-                    collapsed ? 'translate-x-4 opacity-0' : 'translate-x-0 opacity-100'
-                  )}
-                  {...(isActive ? { 'aria-current': 'page' as const } : {})}
-                >
-                  {label}
-                </span>
-              </>
-            )}
+            <Icon size={18} />
+            {!collapsed && <span>{label}</span>}
           </NavLink>
         ))}
       </nav>
-
-      <button
-        onClick={() => setCollapsed(!collapsed)}
-        aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-        className="border-border bg-card text-muted-foreground hover:text-foreground absolute top-20 -right-3 flex h-6 w-6 items-center justify-center rounded-full border transition-transform duration-200 hover:scale-110"
-      >
-        <span className={cn('transition-transform duration-200', collapsed && 'rotate-180')}>
-          <ChevronLeft className="h-3 w-3" />
-        </span>
-      </button>
     </aside>
   )
 }
