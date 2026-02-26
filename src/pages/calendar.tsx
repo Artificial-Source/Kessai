@@ -101,7 +101,7 @@ export function CalendarPage() {
       <div className="flex flex-1 flex-col gap-6 overflow-auto">
         <header className="flex flex-col justify-between gap-4 lg:flex-row lg:items-end">
           <div>
-            <h1 className="text-foreground mb-1 text-3xl font-semibold tracking-tight md:text-4xl">
+            <h1 className="text-foreground mb-1 font-[family-name:var(--font-heading)] text-3xl font-bold tracking-tight md:text-4xl">
               Calendar
             </h1>
             <p className="text-muted-foreground text-base font-normal">
@@ -109,10 +109,10 @@ export function CalendarPage() {
             </p>
           </div>
 
-          <div className="glass-card flex items-center gap-2 self-start rounded-xl p-1.5 px-3 md:gap-4 lg:self-auto">
+          <div className="glass-card flex items-center gap-4 self-start px-4 py-2 lg:self-auto">
             <button
               onClick={goToToday}
-              className="text-muted-foreground hover:bg-accent hover:text-foreground rounded-lg px-3 py-1.5 text-sm font-semibold transition-colors"
+              className="text-muted-foreground hover:text-foreground font-[family-name:var(--font-mono)] text-[11px] font-bold tracking-widest uppercase"
             >
               Today
             </button>
@@ -121,17 +121,17 @@ export function CalendarPage() {
               <button
                 onClick={() => navigateMonth(-1)}
                 aria-label="Previous month"
-                className="text-foreground hover:bg-accent rounded-lg p-1.5 transition-colors"
+                className="text-foreground hover:bg-muted rounded-lg p-1.5"
               >
                 <ChevronLeft className="h-5 w-5" />
               </button>
-              <span className="text-foreground min-w-[140px] text-center text-lg font-semibold tracking-tight">
+              <span className="text-foreground min-w-[140px] text-center font-[family-name:var(--font-heading)] text-lg font-bold">
                 {dayjs(currentDate).format('MMMM YYYY')}
               </span>
               <button
                 onClick={() => navigateMonth(1)}
                 aria-label="Next month"
-                className="text-foreground hover:bg-accent rounded-lg p-1.5 transition-colors"
+                className="text-foreground hover:bg-muted rounded-lg p-1.5"
               >
                 <ChevronRight className="h-5 w-5" />
               </button>
@@ -149,12 +149,12 @@ export function CalendarPage() {
           currency={currency}
         />
 
-        <div className="glass-card flex flex-1 flex-col overflow-hidden rounded-xl p-1">
-          <div className="border-border bg-muted/50 grid grid-cols-7 border-b">
+        <div className="glass-card flex flex-1 flex-col overflow-hidden p-1">
+          <div className="border-border grid grid-cols-7 border-b">
             {WEEKDAYS.map((day) => (
               <div
                 key={day}
-                className="text-muted-foreground py-4 text-center text-xs font-bold tracking-widest uppercase"
+                className="text-dimmed py-3 text-center font-[family-name:var(--font-mono)] text-[10px] font-normal tracking-widest uppercase"
               >
                 {day}
               </div>
@@ -165,7 +165,7 @@ export function CalendarPage() {
             {Array.from({ length: firstDayOffset }).map((_, i) => (
               <div
                 key={`empty-${i}`}
-                className="border-border bg-muted/30 text-muted-foreground/30 flex min-h-[100px] flex-col gap-1 border p-2"
+                className="border-border flex min-h-[100px] flex-col gap-1 border bg-white/[0.01] p-2"
               />
             ))}
 

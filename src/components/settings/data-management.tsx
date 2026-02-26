@@ -90,12 +90,14 @@ export function DataManagement({ onDataChanged }: DataManagementProps) {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
         <div>
-          <p className="font-medium">Export Data</p>
-          <p className="text-muted-foreground text-sm">
-            Download all your subscriptions as a backup file
+          <p className="text-foreground font-[family-name:var(--font-sans)] text-sm font-medium">
+            Export Data
+          </p>
+          <p className="text-muted-foreground text-xs">
+            Download all your subscriptions as a backup
           </p>
         </div>
         <Button variant="outline" onClick={handleExport} disabled={isExporting} className="gap-2">
@@ -106,8 +108,10 @@ export function DataManagement({ onDataChanged }: DataManagementProps) {
 
       <div className="flex items-center justify-between">
         <div>
-          <p className="font-medium">Import Data</p>
-          <p className="text-muted-foreground text-sm">Restore from a backup file</p>
+          <p className="text-foreground font-[family-name:var(--font-sans)] text-sm font-medium">
+            Import Data
+          </p>
+          <p className="text-muted-foreground text-xs">Restore from a backup file</p>
         </div>
         <Button
           variant="outline"

@@ -33,13 +33,20 @@ const PaymentLogo = memo(function PaymentLogo({
   }, [logoUrl])
 
   if (src) {
-    return <img src={src} alt="" className="h-5 w-5 shrink-0 rounded-[4px] object-cover" />
+    return (
+      <img
+        src={src}
+        alt=""
+        className="h-5 w-5 shrink-0 rounded object-cover"
+        style={{ borderRadius: '3px' }}
+      />
+    )
   }
 
   return (
     <div
-      className="flex h-5 w-5 shrink-0 items-center justify-center rounded-[4px] text-[9px] font-bold text-white"
-      style={{ backgroundColor: color || '#4f8dff' }}
+      className="flex h-5 w-5 shrink-0 items-center justify-center text-[9px] font-bold text-white"
+      style={{ backgroundColor: color || '#bf5af2', borderRadius: '3px' }}
     >
       {name.charAt(0).toUpperCase()}
     </div>
@@ -70,26 +77,26 @@ export const CalendarDay = memo(function CalendarDay({
       onClick={onClick}
       aria-label={ariaLabel}
       className={cn(
-        'border-border bg-background hover:bg-muted/50 flex min-h-[120px] flex-col border p-1.5 text-left',
-        !isCurrentMonth && 'text-muted-foreground/40 bg-muted/20',
+        'border-border bg-background flex min-h-[100px] flex-col border p-2 text-left hover:bg-white/[0.02]',
+        !isCurrentMonth && 'text-muted-foreground/40 bg-white/[0.01]',
         isCurrentMonth && 'text-foreground',
         isToday && 'bg-primary/5',
-        isSelected && 'bg-primary/10 ring-primary/60 z-10 ring-2'
+        isSelected && 'bg-primary/10 ring-primary z-10 ring-2'
       )}
     >
       {/* Header: Day number + total */}
       <div className="mb-1 flex items-center justify-between">
         <span
           className={cn(
-            'text-sm font-medium',
+            'font-[family-name:var(--font-mono)] text-xs font-bold',
             isToday &&
-              'bg-primary text-primary-foreground flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold'
+              'bg-primary text-primary-foreground flex h-6 w-6 items-center justify-center rounded-full text-xs'
           )}
         >
           {dayOfMonth}
         </span>
         {hasPayments && totalAmount > 0 && (
-          <span className="text-muted-foreground text-[10px] font-semibold">
+          <span className="text-dimmed font-[family-name:var(--font-mono)] text-[9px]">
             {formatCurrency(totalAmount, currency)}
           </span>
         )}
@@ -98,7 +105,7 @@ export const CalendarDay = memo(function CalendarDay({
       {/* Payment items */}
       <div className="flex flex-1 flex-col gap-1">
         {visiblePayments.map((p) => {
-          const color = p.subscription.color || '#4f8dff'
+          const color = p.subscription.color || '#bf5af2'
           const isPaidOrSkipped = p.isPaid || p.isSkipped
 
           return (
@@ -121,14 +128,17 @@ export const CalendarDay = memo(function CalendarDay({
               <div className="flex min-w-0 flex-1 items-center justify-between gap-1">
                 <span
                   className={cn(
-                    'truncate text-[10px] font-medium',
+                    'truncate font-[family-name:var(--font-mono)] text-[8px]',
                     isPaidOrSkipped && 'line-through'
                   )}
                   style={{ color }}
                 >
                   {p.subscription.name}
                 </span>
-                <span className="shrink-0 text-[9px] font-semibold" style={{ color }}>
+                <span
+                  className="shrink-0 font-[family-name:var(--font-mono)] text-[8px] font-bold"
+                  style={{ color }}
+                >
                   {formatCurrency(p.amount, currency)}
                 </span>
               </div>

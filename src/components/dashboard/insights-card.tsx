@@ -16,14 +16,16 @@ export const InsightsCard = memo(function InsightsCard({
   currency,
 }: InsightsCardProps) {
   return (
-    <div className="glass-card border-primary/20 from-primary/8 flex flex-col rounded-xl bg-gradient-to-br to-transparent p-6">
-      <div className="mb-6 flex items-center gap-3">
-        <div className="bg-primary/20 text-primary flex h-8 w-8 items-center justify-center rounded-full">
+    <div className="glass-card border-primary/20 flex w-full flex-col p-6 lg:w-[340px] lg:shrink-0">
+      <div className="mb-5 flex items-center gap-3">
+        <div className="bg-primary/15 text-primary flex h-8 w-8 items-center justify-center rounded-lg">
           <Lightbulb className="h-4 w-4" />
         </div>
-        <h3 className="text-foreground text-lg font-semibold tracking-tight">Insights</h3>
+        <h3 className="text-foreground font-[family-name:var(--font-heading)] text-lg font-bold">
+          Insights
+        </h3>
       </div>
-      <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-5">
         <InsightItem
           color="bg-accent-cyan"
           title="Average Cost"
@@ -41,7 +43,7 @@ export const InsightsCard = memo(function InsightsCard({
         />
         <div className="bg-border h-px w-full" />
         <InsightItem
-          color="bg-success"
+          color="bg-emerald-400"
           title="Daily Breakdown"
           description={
             <>
@@ -54,12 +56,18 @@ export const InsightsCard = memo(function InsightsCard({
           }
         />
       </div>
-      <div className="mt-auto pt-6">
-        <div className="border-border bg-muted/45 rounded-xl border p-4">
-          <p className="text-muted-foreground mb-1 text-xs">Total Active</p>
+      <div className="mt-auto pt-5">
+        <div className="border-border rounded-lg border bg-white/[0.03] p-4">
+          <p className="text-muted-foreground mb-1 font-[family-name:var(--font-mono)] text-[10px] tracking-wider uppercase">
+            Total Active
+          </p>
           <div className="flex items-end gap-2">
-            <span className="text-foreground text-xl font-bold">{subscriptionCount}</span>
-            <span className="text-muted-foreground mb-1 text-[10px]">subscriptions</span>
+            <span className="text-foreground font-[family-name:var(--font-heading)] text-xl font-bold">
+              {subscriptionCount}
+            </span>
+            <span className="text-muted-foreground mb-1 font-[family-name:var(--font-mono)] text-[10px]">
+              subscriptions
+            </span>
           </div>
         </div>
       </div>

@@ -39,10 +39,10 @@ export const CategoryFilter = memo(function CategoryFilter({
       <button
         onClick={handleClearAll}
         aria-pressed={selectedIds.length === 0}
-        className={`rounded-full px-3 py-1.5 text-sm font-medium transition-colors ${
+        className={`rounded-full border px-3 py-1.5 font-[family-name:var(--font-mono)] text-[11px] tracking-wider uppercase transition-colors ${
           selectedIds.length === 0
-            ? 'bg-primary text-primary-foreground'
-            : 'bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground'
+            ? 'bg-primary text-primary-foreground border-primary'
+            : 'text-muted-foreground border-border hover:border-border-hover hover:text-foreground bg-transparent'
         }`}
       >
         All
@@ -58,22 +58,19 @@ export const CategoryFilter = memo(function CategoryFilter({
             key={category.id}
             onClick={() => handleToggle(category.id)}
             aria-pressed={isSelected}
-            className={`flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-medium transition-colors ${
+            className={`flex items-center gap-2 rounded-full border px-3 py-1.5 font-[family-name:var(--font-mono)] text-[11px] tracking-wider uppercase transition-colors ${
               isSelected
-                ? 'bg-primary text-primary-foreground'
-                : 'bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground'
+                ? 'bg-primary text-primary-foreground border-primary'
+                : 'text-muted-foreground border-border hover:border-border-hover hover:text-foreground bg-transparent'
             }`}
           >
             {/* Color dot */}
-            <span
-              className="h-2.5 w-2.5 rounded-full"
-              style={{ backgroundColor: category.color }}
-            />
+            <span className="h-2 w-2 rounded-full" style={{ backgroundColor: category.color }} />
             <span className="truncate" title={category.name}>
               {category.name}
             </span>
             <span
-              className={`text-xs ${isSelected ? 'text-primary-foreground/70' : 'text-muted-foreground'}`}
+              className={`text-[10px] ${isSelected ? 'text-primary-foreground/70' : 'text-dimmed'}`}
             >
               {count}
             </span>

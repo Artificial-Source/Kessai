@@ -12,7 +12,6 @@ import { usePaymentStore } from '@/stores/payment-store'
 import { formatCurrency } from '@/lib/currency'
 import { calculateNextPaymentDate, formatPaymentDate } from '@/lib/date-utils'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { SubscriptionBento } from '@/components/subscriptions/subscription-bento'
 import { SubscriptionsGridView } from '@/components/subscriptions/subscriptions-grid-view'
 import { SubscriptionsListView } from '@/components/subscriptions/subscriptions-list-view'
@@ -167,25 +166,29 @@ export function Subscriptions() {
 
   return (
     <>
-      <div className="flex h-full flex-col gap-6">
+      <div className="flex h-full flex-col gap-8">
         <header className="flex flex-wrap items-end justify-between gap-4">
-          <div className="flex flex-col gap-1">
-            <h1 className="text-foreground text-3xl font-semibold tracking-tight md:text-4xl">
+          <div className="flex flex-col gap-2">
+            <h1 className="text-foreground font-[family-name:var(--font-heading)] text-4xl font-bold tracking-tight">
               My Subscriptions
             </h1>
-            <div className="text-muted-foreground flex flex-wrap items-center gap-3 text-sm">
+            <div className="flex flex-wrap items-center gap-3">
               {monthlySubsTotal > 0 && (
-                <div className="flex items-center gap-1.5">
-                  <span>Monthly:</span>
-                  <span className="bg-primary/10 text-primary rounded px-2 py-0.5 font-semibold">
+                <div className="flex items-center gap-3">
+                  <span className="text-muted-foreground font-[family-name:var(--font-mono)] text-[11px] tracking-wider uppercase">
+                    Monthly:
+                  </span>
+                  <span className="bg-primary/10 text-primary rounded px-2.5 py-1 font-[family-name:var(--font-mono)] text-[11px] font-bold">
                     {formatCurrency(monthlySubsTotal, currency)}/mo
                   </span>
                 </div>
               )}
               {yearlySubsTotal > 0 && (
-                <div className="flex items-center gap-1.5">
-                  <span>Yearly:</span>
-                  <span className="bg-accent-cyan/10 text-accent-cyan rounded px-2 py-0.5 font-semibold">
+                <div className="flex items-center gap-3">
+                  <span className="text-muted-foreground font-[family-name:var(--font-mono)] text-[11px] tracking-wider uppercase">
+                    Yearly:
+                  </span>
+                  <span className="bg-accent-cyan/10 text-accent-cyan rounded px-2.5 py-1 font-[family-name:var(--font-mono)] text-[11px] font-bold">
                     {formatCurrency(yearlySubsTotal, currency)}/yr
                   </span>
                 </div>
@@ -201,56 +204,56 @@ export function Subscriptions() {
         {subscriptions.length > 0 && (
           <div className="flex flex-col gap-4">
             <div className="flex flex-wrap items-center justify-between gap-4">
-              <div className="relative max-w-sm flex-1">
+              <div className="relative w-[360px] max-w-full">
                 <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
-                <Input
+                <input
                   type="text"
                   placeholder="Search subscriptions..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pr-4 pl-10"
+                  className="border-border bg-input text-foreground placeholder-muted-foreground focus:border-primary focus:ring-primary h-10 w-full rounded-lg border pr-4 pl-10 font-[family-name:var(--font-sans)] text-sm focus:ring-1 focus:outline-none"
                 />
               </div>
               <div
-                className="border-border bg-card flex rounded-lg border p-1 shadow-[inset_0_1px_0_color-mix(in_srgb,var(--color-card)_60%,transparent)]"
+                className="border-border flex rounded-lg border bg-[#111111] p-1"
                 role="group"
                 aria-label="View mode"
               >
                 <button
                   onClick={() => setViewMode('grid')}
                   aria-pressed={viewMode === 'grid'}
-                  className={`flex h-8 w-9 items-center justify-center rounded-md transition-colors ${
+                  className={`flex h-7 w-8 items-center justify-center rounded-md ${
                     viewMode === 'grid'
-                      ? 'bg-primary text-primary-foreground shadow-sm'
-                      : 'text-muted-foreground hover:bg-accent hover:text-foreground'
+                      ? 'bg-primary text-primary-foreground'
+                      : 'text-muted-foreground hover:text-foreground'
                   }`}
                   aria-label="Grid view"
                 >
-                  <LayoutGrid className="h-4 w-4" />
+                  <LayoutGrid className="h-3.5 w-3.5" />
                 </button>
                 <button
                   onClick={() => setViewMode('list')}
                   aria-pressed={viewMode === 'list'}
-                  className={`flex h-8 w-9 items-center justify-center rounded-md transition-colors ${
+                  className={`flex h-7 w-8 items-center justify-center rounded-md ${
                     viewMode === 'list'
-                      ? 'bg-primary text-primary-foreground shadow-sm'
-                      : 'text-muted-foreground hover:bg-accent hover:text-foreground'
+                      ? 'bg-primary text-primary-foreground'
+                      : 'text-muted-foreground hover:text-foreground'
                   }`}
                   aria-label="List view"
                 >
-                  <List className="h-4 w-4" />
+                  <List className="h-3.5 w-3.5" />
                 </button>
                 <button
                   onClick={() => setViewMode('bento')}
                   aria-pressed={viewMode === 'bento'}
-                  className={`flex h-8 w-9 items-center justify-center rounded-md transition-colors ${
+                  className={`flex h-7 w-8 items-center justify-center rounded-md ${
                     viewMode === 'bento'
-                      ? 'bg-primary text-primary-foreground shadow-sm'
-                      : 'text-muted-foreground hover:bg-accent hover:text-foreground'
+                      ? 'bg-primary text-primary-foreground'
+                      : 'text-muted-foreground hover:text-foreground'
                   }`}
                   aria-label="Bento view"
                 >
-                  <Grid3x3 className="h-4 w-4" />
+                  <Grid3x3 className="h-3.5 w-3.5" />
                 </button>
               </div>
             </div>

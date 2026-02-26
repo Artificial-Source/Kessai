@@ -39,20 +39,20 @@ export const SubscriptionsListView = memo(function SubscriptionsListView({
       <div className="overflow-x-auto">
         <table className="w-full min-w-[600px]">
           <thead>
-            <tr className="border-border bg-muted/30 border-b">
-              <th className="text-muted-foreground px-4 py-3 text-left text-xs font-semibold tracking-wider uppercase">
+            <tr className="border-border border-b bg-white/[0.02]">
+              <th className="text-muted-foreground px-4 py-3 text-left font-[family-name:var(--font-mono)] text-[10px] font-normal tracking-widest uppercase">
                 Service
               </th>
-              <th className="text-muted-foreground px-4 py-3 text-left text-xs font-semibold tracking-wider uppercase">
+              <th className="text-muted-foreground px-4 py-3 text-left font-[family-name:var(--font-mono)] text-[10px] font-normal tracking-widest uppercase">
                 Cost
               </th>
-              <th className="text-muted-foreground hidden px-4 py-3 text-left text-xs font-semibold tracking-wider uppercase md:table-cell">
+              <th className="text-muted-foreground hidden px-4 py-3 text-left font-[family-name:var(--font-mono)] text-[10px] font-normal tracking-widest uppercase md:table-cell">
                 Next Payment
               </th>
-              <th className="text-muted-foreground px-4 py-3 text-left text-xs font-semibold tracking-wider uppercase">
+              <th className="text-muted-foreground px-4 py-3 text-left font-[family-name:var(--font-mono)] text-[10px] font-normal tracking-widest uppercase">
                 Status
               </th>
-              <th className="text-muted-foreground px-4 py-3 text-right text-xs font-semibold tracking-wider uppercase">
+              <th className="text-muted-foreground px-4 py-3 text-right font-[family-name:var(--font-mono)] text-[10px] font-normal tracking-widest uppercase">
                 Actions
               </th>
             </tr>
@@ -85,15 +85,15 @@ export const SubscriptionsListView = memo(function SubscriptionsListView({
                     </div>
                   </td>
                   <td className="px-4 py-4">
-                    <p className="text-foreground font-semibold">
+                    <p className="text-foreground font-[family-name:var(--font-heading)] font-semibold">
                       {formatCurrency(sub.amount, currency)}
                     </p>
-                    <p className="text-muted-foreground text-xs">
+                    <p className="text-muted-foreground font-[family-name:var(--font-mono)] text-[10px] tracking-wider uppercase">
                       {BILLING_CYCLE_SHORT[sub.billing_cycle]}
                     </p>
                   </td>
                   <td className="hidden px-4 py-4 md:table-cell">
-                    <p className="text-muted-foreground text-sm">
+                    <p className="text-muted-foreground font-[family-name:var(--font-mono)] text-xs">
                       {sub.next_payment_date ? formatPaymentDate(sub.next_payment_date) : '-'}
                     </p>
                   </td>
@@ -144,8 +144,8 @@ export const SubscriptionsListView = memo(function SubscriptionsListView({
           </tbody>
         </table>
       </div>
-      <div className="border-border bg-muted/30 mt-auto border-t px-4 py-3">
-        <p className="text-muted-foreground text-sm">
+      <div className="border-border mt-auto border-t bg-white/[0.02] px-4 py-3">
+        <p className="text-dimmed font-[family-name:var(--font-mono)] text-[11px]">
           {subscriptions.length} of {totalCount} subscriptions
         </p>
       </div>

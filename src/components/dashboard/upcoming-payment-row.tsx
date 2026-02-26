@@ -24,30 +24,36 @@ export const UpcomingPaymentRow = memo(function UpcomingPaymentRow({
     : null
 
   return (
-    <div className="group hover:border-border hover:bg-muted/50 flex cursor-pointer items-center justify-between rounded-xl border border-transparent p-3">
-      <div className="flex items-center gap-4">
+    <div className="border-border group flex cursor-pointer items-center justify-between border-b py-3 last:border-b-0">
+      <div className="flex items-center gap-3">
         <SubscriptionLogo
           logoUrl={subscription.logo_url}
           name={subscription.name}
           color={subscription.color}
           size="lg"
-          className="rounded-lg shadow-lg"
+          className="rounded-lg"
         />
         <div>
-          <p className="text-foreground font-semibold">{subscription.name}</p>
-          <p className="text-muted-foreground text-xs">
+          <p className="text-foreground font-[family-name:var(--font-heading)] font-semibold">
+            {subscription.name}
+          </p>
+          <p className="text-muted-foreground font-[family-name:var(--font-mono)] text-[11px]">
             {subscription.next_payment_date && formatShortDate(subscription.next_payment_date)}
           </p>
         </div>
       </div>
       <div className="flex flex-col items-end gap-1">
-        <p className="text-foreground font-bold">{formatCurrency(subscription.amount, currency)}</p>
+        <p className="text-foreground font-[family-name:var(--font-heading)] font-bold">
+          {formatCurrency(subscription.amount, currency)}
+        </p>
         {daysUntil !== null && daysUntil <= 1 ? (
-          <div className="border-accent-orange/20 bg-accent-orange/20 text-accent-orange rounded-full border px-2 py-0.5 text-[10px] font-bold">
+          <div className="border-accent-orange/20 bg-accent-orange/20 text-accent-orange rounded-full border px-2 py-0.5 font-[family-name:var(--font-mono)] text-[10px] font-bold uppercase">
             {daysUntil === 0 ? 'Today' : 'Tomorrow'}
           </div>
         ) : (
-          <p className="text-muted-foreground text-xs">In {daysUntil} days</p>
+          <p className="text-muted-foreground font-[family-name:var(--font-mono)] text-[11px]">
+            In {daysUntil} days
+          </p>
         )}
       </div>
     </div>

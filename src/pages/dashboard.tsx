@@ -61,17 +61,15 @@ export function Dashboard() {
   }
 
   return (
-    <div className="flex flex-col gap-7">
-      <header className="flex flex-col gap-1.5">
-        <h2 className="text-foreground text-3xl font-semibold tracking-tight md:text-4xl">
+    <div className="flex flex-col gap-10">
+      <header className="flex flex-col gap-1">
+        <h2 className="text-foreground font-[family-name:var(--font-heading)] text-4xl font-bold tracking-tight">
           Dashboard
         </h2>
-        <p className="text-muted-foreground text-sm md:text-base">
-          Financial overview for this billing cycle
-        </p>
+        <p className="text-muted-foreground mt-1 text-base">Here's your subscription overview</p>
       </header>
 
-      <section className="stagger-children grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <section className="stagger-children grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-4">
         <StatCard
           label="Monthly Subscriptions"
           value={formatCurrency(monthlySubsTotal, currency)}
@@ -113,33 +111,33 @@ export function Dashboard() {
 
       {/* Category Breakdown */}
       {categorySpending.length > 0 && (
-        <section className="glass-card rounded-xl p-6">
-          <h3 className="text-foreground mb-4 text-lg font-semibold tracking-tight">
+        <section className="glass-card p-6">
+          <h3 className="text-foreground mb-4 font-[family-name:var(--font-heading)] text-lg font-bold">
             Spending by Category
           </h3>
-          <div className="space-y-3">
+          <div className="flex flex-col gap-3">
             {categorySpending.slice(0, 5).map((cat) => (
               <div key={cat.id} className="flex items-center gap-3">
                 <div
-                  className="h-3 w-3 flex-shrink-0 rounded-full"
+                  className="h-2.5 w-2.5 flex-shrink-0 rounded-full"
                   style={{ backgroundColor: cat.color }}
                 />
-                <span className="text-foreground min-w-[120px] text-sm font-medium tracking-tight">
+                <span className="text-foreground min-w-[120px] font-[family-name:var(--font-mono)] text-xs">
                   {cat.name}
                 </span>
-                <div className="bg-muted relative h-2 flex-1 overflow-hidden rounded-full">
+                <div className="relative h-1.5 flex-1 overflow-hidden rounded-sm bg-white/[0.04]">
                   <div
-                    className="absolute inset-y-0 left-0 rounded-full"
+                    className="absolute inset-y-0 left-0 rounded-sm"
                     style={{
                       width: `${cat.percentage}%`,
                       backgroundColor: cat.color,
                     }}
                   />
                 </div>
-                <span className="text-muted-foreground min-w-[80px] text-right text-sm">
+                <span className="text-muted-foreground min-w-[80px] text-right font-[family-name:var(--font-mono)] text-xs">
                   {formatCurrency(cat.amount, currency)}
                 </span>
-                <span className="text-muted-foreground w-12 text-right text-xs">
+                <span className="text-dimmed w-12 text-right font-[family-name:var(--font-mono)] text-[10px]">
                   {cat.percentage.toFixed(0)}%
                 </span>
               </div>
@@ -148,9 +146,9 @@ export function Dashboard() {
         </section>
       )}
 
-      <section className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <div className="glass-card rounded-xl p-6 lg:col-span-2">
-          <h3 className="text-foreground mb-6 text-lg font-semibold tracking-tight">
+      <section className="flex flex-col gap-6 lg:flex-row">
+        <div className="glass-card flex-1 p-6">
+          <h3 className="text-foreground mb-5 font-[family-name:var(--font-heading)] text-lg font-bold">
             Upcoming Payments
           </h3>
           {upcomingPayments.length === 0 ? (

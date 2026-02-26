@@ -44,27 +44,26 @@ export function CalendarDayPanel({
   }
 
   return (
-    <div className="glass-card animate-slide-in-right flex h-full w-full flex-col overflow-hidden shadow-2xl lg:w-[380px]">
+    <div className="glass-card animate-slide-in-right flex h-full w-full flex-col overflow-hidden lg:w-[380px]">
       <div className="border-border relative border-b p-6">
-        <div className="via-border absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent to-transparent" />
         <div className="mb-2 flex items-center justify-between">
-          <span className="text-muted-foreground text-xs font-bold tracking-widest uppercase">
+          <span className="text-muted-foreground font-[family-name:var(--font-mono)] text-[10px] font-normal tracking-widest uppercase">
             Selected Day
           </span>
           <button
             onClick={onClose}
             aria-label="Close panel"
-            className="text-muted-foreground hover:bg-accent hover:text-foreground rounded-md p-1 transition-colors"
+            className="text-muted-foreground hover:text-foreground"
           >
             <X className="h-5 w-5" />
           </button>
         </div>
-        <h2 className="text-foreground text-3xl font-semibold tracking-tight">
+        <h2 className="text-foreground font-[family-name:var(--font-heading)] text-3xl font-bold">
           {dayjs(selectedDate).format('MMMM D')}
         </h2>
         <p className="text-muted-foreground mt-1 text-sm font-medium">
           {payments.length} payment{payments.length !== 1 ? 's' : ''} due{' '}
-          <span className="text-foreground font-semibold">
+          <span className="text-foreground font-bold">
             {formatCurrency(totalAmount, currency)} total
           </span>
         </p>
@@ -102,7 +101,7 @@ export function CalendarDayPanel({
       </div>
 
       {unpaidPayments.length > 0 && (
-        <div className="border-border bg-muted/50 border-t p-6">
+        <div className="border-border border-t bg-white/[0.02] p-6">
           <Button onClick={handleMarkAllPaid} variant="glow" className="w-full gap-2 py-3.5">
             Mark All as Paid
           </Button>
