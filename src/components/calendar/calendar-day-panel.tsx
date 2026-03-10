@@ -101,7 +101,7 @@ export function CalendarDayPanel({
       </div>
 
       {unpaidPayments.length > 0 && (
-        <div className="border-border border-t bg-white/[0.02] p-6">
+        <div className="border-border border-t bg-[var(--color-subtle-overlay)] p-6">
           <Button onClick={handleMarkAllPaid} variant="glow" className="w-full gap-2 py-3.5">
             Mark All as Paid
           </Button>

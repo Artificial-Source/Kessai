@@ -136,7 +136,7 @@ const SummaryCard = memo(function SummaryCard({
   valueColor?: string
 }) {
   return (
-    <div className={`rounded-lg border bg-white/[0.02] p-3 ${className}`}>
+    <div className={`rounded-lg border bg-[var(--color-subtle-overlay)] p-3 ${className}`}>
       <p className="text-muted-foreground mb-1 font-[family-name:var(--font-mono)] text-[10px] tracking-wider uppercase">
         {label}
       </p>

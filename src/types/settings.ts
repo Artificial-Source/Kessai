@@ -1,6 +1,7 @@
 import { z } from 'zod'
 
 const themeSchema = z.enum(['dark', 'light', 'system'])
+const animationSpeedSchema = z.enum(['slow', 'normal', 'fast'])
 
 const _settingsSchema = z.object({
   id: z.string(),
@@ -9,9 +10,14 @@ const _settingsSchema = z.object({
   notification_enabled: z.boolean(),
   notification_days_before: z.array(z.number()),
   monthly_budget: z.number().nullable().optional(),
+  reduce_motion: z.boolean(),
+  enable_transitions: z.boolean(),
+  enable_hover_effects: z.boolean(),
+  animation_speed: animationSpeedSchema,
 })
 
 export type Theme = z.infer<typeof themeSchema>
+export type AnimationSpeed = z.infer<typeof animationSpeedSchema>
 export type Settings = z.infer<typeof _settingsSchema>
 
 export const DEFAULT_SETTINGS: Omit<Settings, 'id'> = {
@@ -20,4 +26,8 @@ export const DEFAULT_SETTINGS: Omit<Settings, 'id'> = {
   notification_enabled: true,
   notification_days_before: [1, 3, 7],
   monthly_budget: null,
+  reduce_motion: false,
+  enable_transitions: true,
+  enable_hover_effects: true,
+  animation_speed: 'normal',
 }

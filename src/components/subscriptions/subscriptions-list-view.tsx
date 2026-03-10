@@ -42,7 +42,7 @@ export const SubscriptionsListView = memo(function SubscriptionsListView({
       <div className="overflow-x-auto">
         <table className="w-full min-w-[600px]">
           <thead>
-            <tr className="border-border border-b bg-white/[0.02]">
+            <tr className="border-border border-b bg-[var(--color-subtle-overlay)]">
               <th className="text-muted-foreground px-4 py-3 text-left font-[family-name:var(--font-mono)] text-[10px] font-normal tracking-widest uppercase">
                 Service
               </th>
@@ -157,7 +157,7 @@ export const SubscriptionsListView = memo(function SubscriptionsListView({
           </tbody>
         </table>
       </div>
-      <div className="border-border mt-auto border-t bg-white/[0.02] px-4 py-3">
+      <div className="border-border mt-auto border-t bg-[var(--color-subtle-overlay)] px-4 py-3">
         <p className="text-muted-foreground font-[family-name:var(--font-mono)] text-[11px]">
           {subscriptions.length} of {totalCount} subscriptions
         </p>

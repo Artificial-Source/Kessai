@@ -5,7 +5,7 @@ import { useSubscriptionStore } from '@/stores/subscription-store'
 import { useCategoryStore } from '@/stores/category-store'
 import { useSettingsStore } from '@/stores/settings-store'
 import { getCurrencyOptions } from '@/lib/currency'
-import { Moon, Sun, Monitor, Wallet } from 'lucide-react'
+import { Moon, Sun, Monitor, Wallet, Zap } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -19,6 +19,7 @@ import {
 import { CategoryManager } from '@/components/categories/category-manager'
 import { DataManagement } from '@/components/settings/data-management'
 import { CardManager } from '@/components/settings/card-manager'
+import { MotionSettings } from '@/components/settings/motion-settings'
 import { SettingsSkeleton } from '@/components/settings/settings-skeleton'
 import type { Theme } from '@/types/settings'
 import type { CurrencyCode } from '@/lib/currency'
@@ -83,6 +84,20 @@ export function SettingsPage() {
               ))}
             </div>
           </div>
+        </div>
+
+        <div className="glass-card flex flex-col gap-6 p-6">
+          <div className="flex flex-col gap-1">
+            <div className="flex items-center gap-2">
+              <Zap className="text-primary h-5 w-5" />
+              <h2 className="text-foreground text-lg font-bold">Motion & Animations</h2>
+            </div>
+            <p className="text-muted-foreground text-sm">
+              Control animations, transitions, and hover effects
+            </p>
+          </div>
+
+          <MotionSettings settings={settings} />
         </div>
 
         <div className="glass-card flex flex-col gap-6 p-6">

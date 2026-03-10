@@ -85,6 +85,12 @@ body,
   --color-cat-development: #f97316;
   --color-cat-security: #eab308;
 
+  /* Theme-adaptive utility colors */
+  --grid-line-color: rgba(255, 255, 255, 0.02);
+  --color-subtle-overlay: rgba(255, 255, 255, 0.04);
+  --color-scrollbar-thumb: rgba(255, 255, 255, 0.08);
+  --color-scrollbar-thumb-hover: rgba(255, 255, 255, 0.15);
+
   /* Radii — ASF brutalist buttons (0px), pill badges (9999px), 12px cards */
   --radius-sm: 0px;
   --radius-md: 0px;
@@ -144,6 +150,25 @@ body,
   --color-secondary-foreground: #0a0a0a;
   --color-popover: #ffffff;
   --color-popover-foreground: #0a0a0a;
+
+  /* Accent adjustments for light mode — slightly deeper violet for contrast */
+  --color-accent-muted: rgba(191, 90, 242, 0.1);
+
+  /* Sidebar — light surface with dark text */
+  --color-sidebar: #f5f5f5;
+  --color-sidebar-foreground: #0a0a0a;
+  --color-sidebar-primary: #bf5af2;
+  --color-sidebar-primary-foreground: #ffffff;
+  --color-sidebar-accent: rgba(191, 90, 242, 0.1);
+  --color-sidebar-accent-foreground: #0a0a0a;
+  --color-sidebar-border: rgba(0, 0, 0, 0.08);
+  --color-sidebar-ring: #bf5af2;
+
+  /* Utility overrides */
+  --grid-line-color: rgba(0, 0, 0, 0.04);
+  --color-subtle-overlay: rgba(0, 0, 0, 0.03);
+  --color-scrollbar-thumb: rgba(0, 0, 0, 0.12);
+  --color-scrollbar-thumb-hover: rgba(0, 0, 0, 0.2);
 }
 
 @layer base {
@@ -177,13 +202,13 @@ body,
 }
 
 @utility glass-sidebar {
-  background: rgba(10, 10, 10, 0.8);
+  background: var(--color-sidebar);
   backdrop-filter: blur(12px);
-  border-right: 1px solid var(--color-border);
+  border-right: 1px solid var(--color-sidebar-border);
 }
 
 @utility glass-panel {
-  background: rgba(10, 10, 10, 0.6);
+  background: var(--color-card);
   backdrop-filter: blur(12px);
   border-left: 1px solid var(--color-border);
 }
@@ -209,8 +234,8 @@ body,
 /* Grid background pattern */
 @utility grid-bg {
   background-image:
-    linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+    linear-gradient(var(--grid-line-color) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line-color) 1px, transparent 1px);
   background-size: 40px 40px;
 }
 
@@ -227,7 +252,7 @@ body,
   transition: all 0.15s ease;
   &:hover {
     color: var(--color-foreground);
-    background: rgba(255, 255, 255, 0.04);
+    background: var(--color-subtle-overlay);
   }
 }
 
@@ -235,6 +260,47 @@ body,
   background: var(--color-accent-muted);
   border-left: 2px solid var(--color-accent);
   color: var(--color-foreground);
+}
+
+/* ── Motion control ───────────────────────────────────────────────────── */
+/* Default animation/transition durations (overridden by JS via useMotionSettings) */
+:root {
+  --animation-duration: 0.3s;
+  --transition-duration: 0.2s;
+  --animation-speed-multiplier: 1;
+}
+
+/* Reduce motion: kill all animations and transitions globally */
+.reduce-motion *,
+.reduce-motion *::before,
+.reduce-motion *::after {
+  animation-duration: 0s !important;
+  animation-delay: 0s !important;
+  transition-duration: 0s !important;
+  transition-delay: 0s !important;
+}
+
+/* No transitions: disable page/component entrance animations but keep micro-interactions */
+.no-transitions .animate-fade-in,
+.no-transitions .animate-fade-in-up,
+.no-transitions .animate-scale-in,
+.no-transitions .animate-slide-in-right,
+.no-transitions .animate-slide-in-left,
+.no-transitions .animate-draw-line,
+.no-transitions .animate-donut-segment,
+.no-transitions .stagger-children > * {
+  animation: none !important;
+  opacity: 1 !important;
+  transform: none !important;
+}
+
+/* No hover effects: disable hover transforms, scales, and glows */
+.no-hover-effects .hover-lift:hover,
+.no-hover-effects .hover-scale:hover {
+  transform: none !important;
+}
+.no-hover-effects .hover-glow:hover {
+  box-shadow: none !important;
 }
 
 /* Animations */
@@ -318,52 +384,52 @@ body,
 }
 
 .animate-fade-in {
-  animation: fade-in 0.2s ease-out;
+  animation: fade-in var(--animation-duration, 0.2s) ease-out;
 }
 
 .animate-fade-in-up {
-  animation: fade-in-up 0.3s ease-out;
+  animation: fade-in-up var(--animation-duration, 0.3s) ease-out;
 }
 
 .animate-scale-in {
-  animation: scale-in 0.2s ease-out;
+  animation: scale-in var(--animation-duration, 0.2s) ease-out;
 }
 
 .animate-slide-in-right {
-  animation: slide-in-right 0.25s ease-out;
+  animation: slide-in-right var(--animation-duration, 0.25s) ease-out;
 }
 
 .animate-slide-in-left {
-  animation: slide-in-left 0.25s ease-out;
+  animation: slide-in-left var(--animation-duration, 0.25s) ease-out;
 }
 
 .animate-draw-line {
   stroke-dasharray: 1000;
   stroke-dashoffset: 1000;
-  animation: draw-line 1s ease-out forwards;
+  animation: draw-line calc(var(--animation-duration, 0.3s) * 3.3) ease-out forwards;
 }
 
 .animate-donut-segment {
-  animation: donut-segment 0.8s ease-out forwards;
+  animation: donut-segment calc(var(--animation-duration, 0.3s) * 2.7) ease-out forwards;
 }
 
 /* Smooth hover animations - GPU accelerated */
 .hover-lift {
-  transition: transform 0.2s ease-out;
+  transition: transform var(--transition-duration, 0.2s) ease-out;
 }
 .hover-lift:hover {
   transform: translateY(-2px);
 }
 
 .hover-scale {
-  transition: transform 0.15s ease-out;
+  transition: transform var(--transition-duration, 0.15s) ease-out;
 }
 .hover-scale:hover {
   transform: scale(1.02);
 }
 
 .hover-glow {
-  transition: box-shadow 0.2s ease-out;
+  transition: box-shadow var(--transition-duration, 0.2s) ease-out;
 }
 .hover-glow:hover {
   box-shadow: 0 0 20px rgba(191, 90, 242, 0.3);
@@ -371,7 +437,7 @@ body,
 
 /* Stagger children animation */
 .stagger-children > * {
-  animation: fade-in-up 0.3s ease-out backwards;
+  animation: fade-in-up var(--animation-duration, 0.3s) ease-out backwards;
 }
 .stagger-children > *:nth-child(1) {
   animation-delay: 0ms;
@@ -403,17 +469,17 @@ body,
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--color-scrollbar-thumb);
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.15);
+  background: var(--color-scrollbar-thumb-hover);
 }
 
 * {
   scrollbar-width: thin;
-  scrollbar-color: rgba(255, 255, 255, 0.08) transparent;
+  scrollbar-color: var(--color-scrollbar-thumb) transparent;
 }
 
 /* GPU-accelerated scrolling for modals */

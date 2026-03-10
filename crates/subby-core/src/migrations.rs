@@ -161,6 +161,16 @@ const MIGRATIONS: &[Migration] = &[
             ALTER TABLE settings ADD COLUMN monthly_budget REAL;
         "#,
     },
+    Migration {
+        version: 10,
+        description: "add_motion_animation_settings",
+        sql: r#"
+            ALTER TABLE settings ADD COLUMN reduce_motion INTEGER NOT NULL DEFAULT 0;
+            ALTER TABLE settings ADD COLUMN enable_transitions INTEGER NOT NULL DEFAULT 1;
+            ALTER TABLE settings ADD COLUMN enable_hover_effects INTEGER NOT NULL DEFAULT 1;
+            ALTER TABLE settings ADD COLUMN animation_speed TEXT NOT NULL DEFAULT 'normal';
+        "#,
+    },
 ];
 
 /// Runs all pending migrations on the database connection.
@@ -232,6 +242,7 @@ fn should_skip_migration(conn: &Connection, version: u32) -> bool {
         7 => table_exists(conn, "price_history"),
         8 => column_exists(conn, "subscriptions", "shared_count"),
         9 => column_exists(conn, "settings", "monthly_budget"),
+        10 => column_exists(conn, "settings", "reduce_motion"),
         _ => false,
     }
 }
@@ -314,6 +325,6 @@ mod tests {
         let count: i64 = conn
             .query_row("SELECT COUNT(*) FROM _subby_migrations", [], |r| r.get(0))
             .unwrap();
-        assert_eq!(count, 9);
+        assert_eq!(count, 10);
     }
 }

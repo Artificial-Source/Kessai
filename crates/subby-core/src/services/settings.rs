@@ -1,6 +1,6 @@
 use crate::db::DbPool;
 use crate::error::Result;
-use crate::models::settings::{default_settings, Settings, Theme, UpdateSettings};
+use crate::models::settings::{default_settings, AnimationSpeed, Settings, Theme, UpdateSettings};
 
 pub struct SettingsService {
     pool: DbPool,
@@ -16,7 +16,8 @@ impl SettingsService {
     pub fn get(&self) -> Result<Settings> {
         let conn = self.pool.get()?;
         let result = conn.query_row(
-            "SELECT id, theme, currency, notification_enabled, notification_days_before, monthly_budget
+            "SELECT id, theme, currency, notification_enabled, notification_days_before, monthly_budget,
+                    reduce_motion, enable_transitions, enable_hover_effects, animation_speed
              FROM settings WHERE id = 'singleton'",
             [],
             |row| {
@@ -25,6 +26,7 @@ impl SettingsService {
                     serde_json::from_str(&notification_days_str).unwrap_or_else(|_| vec![1, 3, 7]);
 
                 let theme_str: String = row.get(1)?;
+                let animation_speed_str: String = row.get(9)?;
                 Ok(Settings {
                     id: row.get(0)?,
                     theme: Theme::from_str(&theme_str).unwrap_or(Theme::Dark),
@@ -32,6 +34,11 @@ impl SettingsService {
                     notification_enabled: row.get::<_, i32>(3)? != 0,
                     notification_days_before: notification_days,
                     monthly_budget: row.get(5)?,
+                    reduce_motion: row.get::<_, i32>(6)? != 0,
+                    enable_transitions: row.get::<_, i32>(7)? != 0,
+                    enable_hover_effects: row.get::<_, i32>(8)? != 0,
+                    animation_speed: AnimationSpeed::from_str(&animation_speed_str)
+                        .unwrap_or(AnimationSpeed::Normal),
                 })
             },
         );
@@ -69,6 +76,22 @@ impl SettingsService {
         if let Some(ref budget) = data.monthly_budget {
             sets.push("monthly_budget = ?");
             values.push(Box::new(*budget));
+        }
+        if let Some(reduce_motion) = data.reduce_motion {
+            sets.push("reduce_motion = ?");
+            values.push(Box::new(if reduce_motion { 1i32 } else { 0 }));
+        }
+        if let Some(enable_transitions) = data.enable_transitions {
+            sets.push("enable_transitions = ?");
+            values.push(Box::new(if enable_transitions { 1i32 } else { 0 }));
+        }
+        if let Some(enable_hover_effects) = data.enable_hover_effects {
+            sets.push("enable_hover_effects = ?");
+            values.push(Box::new(if enable_hover_effects { 1i32 } else { 0 }));
+        }
+        if let Some(ref speed) = data.animation_speed {
+            sets.push("animation_speed = ?");
+            values.push(Box::new(speed.as_str().to_string()));
         }
 
         if sets.is_empty() {

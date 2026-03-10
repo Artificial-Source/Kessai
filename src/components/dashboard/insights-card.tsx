@@ -78,7 +78,7 @@ export const InsightsCard = memo(function InsightsCard({
         )}
       </div>
       <div className="mt-auto pt-5">
-        <div className="border-border rounded-lg border bg-white/[0.03] p-4">
+        <div className="border-border rounded-lg border bg-[var(--color-subtle-overlay)] p-4">
           <p className="text-muted-foreground mb-1 font-[family-name:var(--font-mono)] text-[10px] tracking-wider uppercase">
             Projected Annual
           </p>

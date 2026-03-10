@@ -61,7 +61,7 @@ export function Sidebar() {
         <button
           onClick={() => setCollapsed(!collapsed)}
           aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-          className="text-muted-foreground hover:text-foreground rounded-lg p-1.5 hover:bg-white/5"
+          className="text-muted-foreground hover:text-foreground rounded-lg p-1.5 hover:bg-[var(--color-subtle-overlay)]"
         >
           {collapsed ? <PanelLeft size={18} /> : <PanelLeftClose size={18} />}
         </button>

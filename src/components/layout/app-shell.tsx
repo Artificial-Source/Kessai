@@ -1,7 +1,10 @@
 import { Outlet } from 'react-router-dom'
 import { Sidebar } from './sidebar'
+import { useMotionSettings } from '@/hooks/use-motion-settings'
 
 export function AppShell() {
+  useMotionSettings()
+
   return (
     <div className="bg-background flex h-screen overflow-hidden">
       <Sidebar />

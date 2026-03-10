@@ -14,6 +14,10 @@ const mockSettings = {
   currency: 'USD',
   notification_enabled: true,
   notification_days_before: [1, 3, 7],
+  reduce_motion: false,
+  enable_transitions: true,
+  enable_hover_effects: true,
+  animation_speed: 'normal' as const,
 }
 
 describe('useSettingsStore', () => {

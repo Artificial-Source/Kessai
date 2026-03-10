@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { invoke } from '@tauri-apps/api/core'
-import type { Settings, Theme } from '@/types/settings'
+import type { Settings, Theme, AnimationSpeed } from '@/types/settings'
 import { DEFAULT_SETTINGS } from '@/types/settings'
 
 type SettingsState = {
@@ -14,6 +14,10 @@ type SettingsState = {
   setCurrency: (currency: string) => Promise<void>
   setNotifications: (enabled: boolean, daysBefore?: number[]) => Promise<void>
   setBudget: (budget: number | null) => Promise<void>
+  setReduceMotion: (enabled: boolean) => Promise<void>
+  setEnableTransitions: (enabled: boolean) => Promise<void>
+  setEnableHoverEffects: (enabled: boolean) => Promise<void>
+  setAnimationSpeed: (speed: AnimationSpeed) => Promise<void>
 }
 
 export const useSettingsStore = create<SettingsState>((set, get) => ({
@@ -70,5 +74,21 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
 
   setBudget: async (budget) => {
     await get().update({ monthly_budget: budget })
+  },
+
+  setReduceMotion: async (enabled) => {
+    await get().update({ reduce_motion: enabled })
+  },
+
+  setEnableTransitions: async (enabled) => {
+    await get().update({ enable_transitions: enabled })
+  },
+
+  setEnableHoverEffects: async (enabled) => {
+    await get().update({ enable_hover_effects: enabled })
+  },
+
+  setAnimationSpeed: async (speed) => {
+    await get().update({ animation_speed: speed })
   },
 }))

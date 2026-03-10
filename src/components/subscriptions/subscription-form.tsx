@@ -301,7 +301,7 @@ export function SubscriptionForm({
         </div>
 
         {/* Free Trial Toggle */}
-        <div className="border-border rounded-lg border bg-white/[0.02] p-4">
+        <div className="border-border rounded-lg border bg-[var(--color-subtle-overlay)] p-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Label htmlFor="is_trial" className="cursor-pointer">
@@ -507,7 +507,7 @@ export function SubscriptionForm({
               {priceHistory.length !== 1 ? 's' : ''})
             </button>
             {showPriceHistory && (
-              <div className="border-border rounded-lg border bg-white/[0.02] p-4">
+              <div className="border-border rounded-lg border bg-[var(--color-subtle-overlay)] p-4">
                 <PriceHistoryTimeline
                   changes={priceHistory}
                   currency={(subscription?.currency || 'USD') as CurrencyCode}

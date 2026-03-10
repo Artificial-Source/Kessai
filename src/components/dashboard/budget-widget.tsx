@@ -47,7 +47,7 @@ export const BudgetWidget = memo(function BudgetWidget({
       </div>
 
       {/* Progress bar */}
-      <div className="relative mb-4 h-2.5 overflow-hidden rounded-full bg-white/[0.06]">
+      <div className="relative mb-4 h-2.5 overflow-hidden rounded-full bg-[var(--color-subtle-overlay)]">
         <div
           className={`absolute inset-y-0 left-0 rounded-full transition-all duration-500 ${barColor}`}
           style={{ width: `${percentage}%` }}

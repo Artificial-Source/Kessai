@@ -52,7 +52,15 @@ export function SubscriptionLogo({
   const sizeClass = sizeClasses[size]
 
   if (isLoading) {
-    return <div className={cn(sizeClass, 'animate-pulse rounded-full bg-white/10', className)} />
+    return (
+      <div
+        className={cn(
+          sizeClass,
+          'animate-pulse rounded-full bg-[var(--color-subtle-overlay)]',
+          className
+        )}
+      />
+    )
   }
 
   if (dataUrl) {
