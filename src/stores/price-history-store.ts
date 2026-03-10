@@ -5,6 +5,7 @@ import type { PriceChange } from '@/types/price-history'
 type PriceHistoryState = {
   recentChanges: PriceChange[]
   isLoading: boolean
+  error: string | null
 
   fetchRecent: (days?: number) => Promise<void>
   fetchBySubscription: (subscriptionId: string) => Promise<PriceChange[]>
@@ -13,14 +14,16 @@ type PriceHistoryState = {
 export const usePriceHistoryStore = create<PriceHistoryState>((set) => ({
   recentChanges: [],
   isLoading: false,
+  error: null,
 
   fetchRecent: async (days = 90) => {
-    set({ isLoading: true })
+    set({ isLoading: true, error: null })
     try {
       const changes = await invoke<PriceChange[]>('get_recent_price_changes', { days })
       set({ recentChanges: changes, isLoading: false })
-    } catch {
-      set({ isLoading: false })
+    } catch (e) {
+      console.error('Failed to fetch recent price changes:', e)
+      set({ error: String(e), isLoading: false })
     }
   },
 

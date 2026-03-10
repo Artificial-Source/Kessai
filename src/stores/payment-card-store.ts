@@ -25,7 +25,7 @@ export const usePaymentCardStore = create<PaymentCardState>((set, get) => ({
       const rows = await invoke<PaymentCard[]>('list_payment_cards')
       set({ cards: rows, isLoading: false })
     } catch (error) {
-      set({ error: (error as Error).message || String(error), isLoading: false })
+      set({ error: String(error), isLoading: false })
     }
   },
 

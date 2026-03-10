@@ -19,7 +19,7 @@ interface PaymentState {
   isPaymentRecorded: (subscriptionId: string, dueDate: string) => Promise<boolean>
 }
 
-export const usePaymentStore = create<PaymentState>((set) => ({
+export const usePaymentStore = create<PaymentState>((set, get) => ({
   payments: [],
   isLoading: false,
   error: null,
@@ -30,7 +30,7 @@ export const usePaymentStore = create<PaymentState>((set) => ({
       const result = await invoke<Payment[]>('list_payments')
       set({ payments: result, isLoading: false })
     } catch (error) {
-      set({ error: (error as Error).message || String(error), isLoading: false })
+      set({ error: String(error), isLoading: false })
     }
   },
 
@@ -64,51 +64,92 @@ export const usePaymentStore = create<PaymentState>((set) => ({
   },
 
   addPayment: async (data: PaymentFormData) => {
-    const payment = await invoke<Payment>('create_payment', {
-      data: {
-        subscription_id: data.subscription_id,
-        amount: data.amount,
-        paid_at: data.paid_at,
-        due_date: data.due_date,
-        status: data.status,
-        notes: data.notes || null,
-      },
-    })
-    set((state) => ({ payments: [payment, ...state.payments] }))
-    return payment
+    try {
+      const payment = await invoke<Payment>('create_payment', {
+        data: {
+          subscription_id: data.subscription_id,
+          amount: data.amount,
+          paid_at: data.paid_at,
+          due_date: data.due_date,
+          status: data.status,
+          notes: data.notes || null,
+        },
+      })
+      set((state) => ({ payments: [payment, ...state.payments] }))
+      return payment
+    } catch (error) {
+      console.error('Failed to add payment:', error)
+      throw error
+    }
   },
 
-  updatePayment: async (_id: string, _data: Partial<PaymentFormData>) => {
-    // Payment updates are not commonly used in the UI.
-    // If needed, re-fetch the full payment list from backend.
-    const result = await invoke<Payment[]>('list_payments')
-    set({ payments: result })
+  updatePayment: async (id: string, data: Partial<PaymentFormData>) => {
+    const previousPayments = get().payments
+    const payment = previousPayments.find((p) => p.id === id)
+    if (!payment) return
+
+    // Optimistic update
+    set((state) => ({
+      payments: state.payments.map((p) => (p.id === id ? { ...p, ...data } : p)),
+    }))
+
+    try {
+      const updated = await invoke<Payment>('update_payment', { id, data })
+      set((state) => ({
+        payments: state.payments.map((p) => (p.id === id ? updated : p)),
+      }))
+    } catch (error) {
+      set({ payments: previousPayments })
+      console.error('Failed to update payment:', error)
+      throw error
+    }
   },
 
   deletePayment: async (id: string) => {
+    const previousPayments = get().payments
+
+    // Optimistic delete
     set((state) => ({
       payments: state.payments.filter((p) => p.id !== id),
     }))
+
+    try {
+      await invoke('delete_payment', { id })
+    } catch (error) {
+      set({ payments: previousPayments })
+      console.error('Failed to delete payment:', error)
+      throw error
+    }
   },
 
   markAsPaid: async (subscriptionId: string, dueDate: string, amount: number) => {
-    const payment = await invoke<Payment>('mark_payment_paid', {
-      subscriptionId,
-      dueDate,
-      amount,
-    })
-    set((state) => ({ payments: [payment, ...state.payments] }))
-    return payment
+    try {
+      const payment = await invoke<Payment>('mark_payment_paid', {
+        subscriptionId,
+        dueDate,
+        amount,
+      })
+      set((state) => ({ payments: [payment, ...state.payments] }))
+      return payment
+    } catch (error) {
+      console.error('Failed to mark payment as paid:', error)
+      throw error
+    }
   },
 
   skipPayment: async (subscriptionId: string, dueDate: string, amount: number) => {
-    const payment = await invoke<Payment>('skip_payment', {
-      subscriptionId,
-      dueDate,
-      amount,
-    })
-    set((state) => ({ payments: [payment, ...state.payments] }))
-    return payment
+    try {
+      const payment = await invoke<Payment>('skip_payment', {
+        subscriptionId,
+        dueDate,
+        amount,
+      })
+      set((state) => ({ payments: [payment, ...state.payments] }))
+      return payment
+    } catch (error) {
+      console.error('Failed to skip payment:', error)
+      throw error
+    }
   },
 
   isPaymentRecorded: async (subscriptionId: string, dueDate: string) => {

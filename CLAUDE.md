@@ -31,6 +31,10 @@
 | `src/components/categories/`    | Category management                                   |
 | `src/components/subscriptions/` | Subscription CRUD                                     |
 | `src/components/settings/`      | Settings components                                   |
+| `src/components/layout/`        | Layout components (sidebar, app shell)                |
+| `src/components/skeletons/`     | Skeleton loading state components                     |
+| `src/components/payment-cards/` | Payment card management                               |
+| `src/components/charts/`        | Chart components (donut, trend)                       |
 | `src/pages/`                    | Route-level page components                           |
 | `src/hooks/`                    | Custom React hooks                                    |
 | `src/stores/`                   | Zustand state stores                                  |
@@ -54,6 +58,16 @@
 - [x] Data export/import (JSON backup)
 - [x] Code splitting (lazy-loaded pages)
 
+## Post-MVP Features
+
+- [x] Price history tracking (price_history table)
+- [x] Subscription lifecycle states (trial, active, paused, pending_cancellation, grace_period, cancelled)
+- [x] Trial end date tracking
+- [x] Shared subscription splitting (shared_count)
+- [x] Monthly budget setting
+- [x] Payment card management
+- [x] Logo management
+
 ## Database Tables
 
 - `categories` - Default + custom categories
@@ -61,6 +75,7 @@
 - `payments` - Payment history (paid/skipped)
 - `settings` - User preferences (theme, currency, notifications)
 - `payment_cards` - Payment card tracking
+- `price_history` - Subscription price change history
 
 ## Design System — ASF Brutalist Glassmorphic
 
@@ -114,6 +129,10 @@ pnpm format             # Run Prettier
 pnpm check              # Lint + typecheck + format check
 cargo test --workspace  # Run Rust tests
 cargo build -p subby-mcp  # Build MCP server + CLI
+pnpm test:e2e           # Run Playwright E2E tests
+pnpm typecheck          # Run TypeScript type checking
+pnpm start              # Start Vite dev server (frontend only)
+pnpm lint:fix           # Run ESLint with auto-fix
 ```
 
 ## Code Style

@@ -67,7 +67,7 @@ describe('usePaymentCardStore', () => {
       await usePaymentCardStore.getState().fetch()
 
       const state = usePaymentCardStore.getState()
-      expect(state.error).toBe('Database error')
+      expect(state.error).toBe('Error: Database error')
       expect(state.isLoading).toBe(false)
     })
   })

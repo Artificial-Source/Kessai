@@ -7,8 +7,8 @@ use tauri::Manager;
 
 use subby_core::models::{
     BackupData, NewCategory, NewPayment, NewPaymentCard, NewSubscription, PaymentWithSubscription,
-    PriceChange, SubscriptionStatus, UpdateCategory, UpdatePaymentCard, UpdateSettings,
-    UpdateSubscription,
+    PriceChange, SubscriptionStatus, UpdateCategory, UpdatePayment, UpdatePaymentCard,
+    UpdateSettings, UpdateSubscription,
 };
 use subby_core::{
     models::{Category, ImportResult, Payment, PaymentCard, Settings, Subscription},
@@ -222,6 +222,20 @@ fn create_payment(core: tauri::State<'_, SubbyCore>, data: NewPayment) -> Result
 }
 
 #[tauri::command]
+fn update_payment(
+    core: tauri::State<'_, SubbyCore>,
+    id: String,
+    data: UpdatePayment,
+) -> Result<Payment, String> {
+    core.payments().update(&id, data).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn delete_payment(core: tauri::State<'_, SubbyCore>, id: String) -> Result<(), String> {
+    core.payments().delete(&id).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
 fn mark_payment_paid(
     core: tauri::State<'_, SubbyCore>,
     subscription_id: String,
@@ -416,6 +430,8 @@ pub fn run() {
             list_payments_by_month,
             list_payments_with_details,
             create_payment,
+            update_payment,
+            delete_payment,
             mark_payment_paid,
             skip_payment,
             is_payment_recorded,

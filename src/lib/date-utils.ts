@@ -4,6 +4,7 @@ import isSameOrAfter from 'dayjs/plugin/isSameOrAfter'
 import isToday from 'dayjs/plugin/isToday'
 import isTomorrow from 'dayjs/plugin/isTomorrow'
 import weekOfYear from 'dayjs/plugin/weekOfYear'
+import type { BillingCycle } from '@/types/subscription'
 
 // Extend dayjs with plugins
 dayjs.extend(isSameOrBefore)
@@ -12,8 +13,8 @@ dayjs.extend(isToday)
 dayjs.extend(isTomorrow)
 dayjs.extend(weekOfYear)
 
-/** Supported billing cycle frequencies */
-export type BillingCycle = 'weekly' | 'monthly' | 'quarterly' | 'yearly' | 'custom'
+// Re-export BillingCycle from the canonical source
+export type { BillingCycle }
 
 /**
  * Calculates the next payment date based on billing cycle.

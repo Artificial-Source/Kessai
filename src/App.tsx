@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { Toaster } from 'sonner'
 import { ThemeProvider } from '@/components/theme-provider'
 import { ErrorBoundary } from '@/components/error-boundary'
+import { RouteErrorBoundary } from '@/components/route-error-boundary'
 import { AppShell } from '@/components/layout/app-shell'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import '@/styles/globals.css'
@@ -26,10 +27,38 @@ export default function App() {
           <Suspense fallback={<LoadingSpinner />}>
             <Routes>
               <Route element={<AppShell />}>
-                <Route path="/" element={<Dashboard />} />
-                <Route path="/subscriptions" element={<Subscriptions />} />
-                <Route path="/calendar" element={<CalendarPage />} />
-                <Route path="/settings" element={<SettingsPage />} />
+                <Route
+                  path="/"
+                  element={
+                    <RouteErrorBoundary>
+                      <Dashboard />
+                    </RouteErrorBoundary>
+                  }
+                />
+                <Route
+                  path="/subscriptions"
+                  element={
+                    <RouteErrorBoundary>
+                      <Subscriptions />
+                    </RouteErrorBoundary>
+                  }
+                />
+                <Route
+                  path="/calendar"
+                  element={
+                    <RouteErrorBoundary>
+                      <CalendarPage />
+                    </RouteErrorBoundary>
+                  }
+                />
+                <Route
+                  path="/settings"
+                  element={
+                    <RouteErrorBoundary>
+                      <SettingsPage />
+                    </RouteErrorBoundary>
+                  }
+                />
               </Route>
             </Routes>
           </Suspense>

@@ -2,8 +2,8 @@
 
 ## Prerequisites
 
-- Node.js 20+
-- pnpm 10+
+- Node.js 18+ (22 recommended)
+- pnpm 9+
 - Rust (stable)
 - Tauri system dependencies (Linux example):
 
