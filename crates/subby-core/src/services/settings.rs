@@ -17,7 +17,8 @@ impl SettingsService {
         let conn = self.pool.get()?;
         let result = conn.query_row(
             "SELECT id, theme, currency, notification_enabled, notification_days_before, monthly_budget,
-                    reduce_motion, enable_transitions, enable_hover_effects, animation_speed
+                    reduce_motion, enable_transitions, enable_hover_effects, animation_speed,
+                    notification_advance_days, notification_time
              FROM settings WHERE id = 'singleton'",
             [],
             |row| {
@@ -33,6 +34,8 @@ impl SettingsService {
                     currency: row.get(2)?,
                     notification_enabled: row.get::<_, i32>(3)? != 0,
                     notification_days_before: notification_days,
+                    notification_advance_days: row.get::<_, i32>(10).unwrap_or(1),
+                    notification_time: row.get::<_, String>(11).unwrap_or_else(|_| "09:00".to_string()),
                     monthly_budget: row.get(5)?,
                     reduce_motion: row.get::<_, i32>(6)? != 0,
                     enable_transitions: row.get::<_, i32>(7)? != 0,
@@ -92,6 +95,14 @@ impl SettingsService {
         if let Some(ref speed) = data.animation_speed {
             sets.push("animation_speed = ?");
             values.push(Box::new(speed.as_str().to_string()));
+        }
+        if let Some(advance_days) = data.notification_advance_days {
+            sets.push("notification_advance_days = ?");
+            values.push(Box::new(advance_days));
+        }
+        if let Some(ref time) = data.notification_time {
+            sets.push("notification_time = ?");
+            values.push(Box::new(time.clone()));
         }
 
         if sets.is_empty() {

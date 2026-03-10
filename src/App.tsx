@@ -1,4 +1,4 @@
-import { lazy, Suspense } from 'react'
+import { lazy, Suspense, useEffect } from 'react'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { Toaster } from 'sonner'
 import { ThemeProvider } from '@/components/theme-provider'
@@ -6,6 +6,10 @@ import { ErrorBoundary } from '@/components/error-boundary'
 import { RouteErrorBoundary } from '@/components/route-error-boundary'
 import { AppShell } from '@/components/layout/app-shell'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
+import { useSettingsStore } from '@/stores/settings-store'
+import { useSubscriptionStore } from '@/stores/subscription-store'
+import { preloadRates } from '@/lib/exchange-rates'
+import type { CurrencyCode } from '@/lib/currency'
 import '@/styles/globals.css'
 
 const Dashboard = lazy(() => import('@/pages/dashboard').then((m) => ({ default: m.Dashboard })))
@@ -20,6 +24,34 @@ const SettingsPage = lazy(() =>
 )
 
 export default function App() {
+  // Preload exchange rates on startup for multi-currency support
+  useEffect(() => {
+    const unsubSettings = useSettingsStore.subscribe((state) => state.settings)
+    const unsubSubs = useSubscriptionStore.subscribe((state) => state.subscriptions)
+
+    const loadRates = () => {
+      const settings = useSettingsStore.getState().settings
+      const subs = useSubscriptionStore.getState().subscriptions
+      const currencies = new Set<CurrencyCode>()
+      currencies.add((settings?.currency || 'USD') as CurrencyCode)
+      for (const sub of subs) {
+        if (sub.currency) currencies.add(sub.currency as CurrencyCode)
+      }
+      if (currencies.size > 1) {
+        preloadRates([...currencies])
+      }
+    }
+
+    // Initial load after a short delay to let stores hydrate
+    const timer = setTimeout(loadRates, 500)
+
+    return () => {
+      clearTimeout(timer)
+      unsubSettings()
+      unsubSubs()
+    }
+  }, [])
+
   return (
     <ThemeProvider defaultTheme="dark" storageKey="subby-theme">
       <ErrorBoundary>

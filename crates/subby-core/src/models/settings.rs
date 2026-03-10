@@ -61,6 +61,8 @@ pub struct Settings {
     pub currency: String,
     pub notification_enabled: bool,
     pub notification_days_before: Vec<i32>,
+    pub notification_advance_days: i32,
+    pub notification_time: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub monthly_budget: Option<f64>,
     pub reduce_motion: bool,
@@ -79,6 +81,10 @@ pub struct UpdateSettings {
     pub notification_enabled: Option<bool>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub notification_days_before: Option<Vec<i32>>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub notification_advance_days: Option<i32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub notification_time: Option<String>,
     /// Use `Some(Some(value))` to set, `Some(None)` to clear.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub monthly_budget: Option<Option<f64>>,
@@ -98,6 +104,8 @@ pub const DEFAULT_SETTINGS: Settings = Settings {
     currency: String::new(), // Will be set to "USD"
     notification_enabled: true,
     notification_days_before: Vec::new(), // Will be set to [1, 3, 7]
+    notification_advance_days: 1,
+    notification_time: String::new(), // Will be set to "09:00"
     monthly_budget: None,
     reduce_motion: false,
     enable_transitions: true,
@@ -113,6 +121,8 @@ pub fn default_settings() -> Settings {
         currency: "USD".to_string(),
         notification_enabled: true,
         notification_days_before: vec![1, 3, 7],
+        notification_advance_days: 1,
+        notification_time: "09:00".to_string(),
         monthly_budget: None,
         reduce_motion: false,
         enable_transitions: true,

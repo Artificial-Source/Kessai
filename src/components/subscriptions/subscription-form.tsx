@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from 'react'
+import { useEffect, useState, useMemo, useRef } from 'react'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import dayjs from 'dayjs'
@@ -6,9 +6,11 @@ import { toast } from 'sonner'
 import { useShallow } from 'zustand/react/shallow'
 import { useCategories } from '@/hooks/use-categories'
 import { usePaymentCardStore } from '@/stores/payment-card-store'
+import { useSettingsStore } from '@/stores/settings-store'
+import { useLogoFetch } from '@/hooks/use-logo-fetch'
 import { usePriceHistory } from '@/hooks/use-price-history'
 import { pickAndSaveLogo, getLogoDataUrl } from '@/lib/logo-storage'
-import { CreditCard, Upload, X, Loader2, Users } from 'lucide-react'
+import { CreditCard, Upload, X, Loader2, Users, Check, Globe } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -27,8 +29,8 @@ import {
   type Subscription,
 } from '@/types/subscription'
 import { BILLING_CYCLE_LABELS } from '@/lib/constants'
-import { getCurrencyOptions } from '@/lib/currency'
-import type { CurrencyCode } from '@/lib/currency'
+import { getCurrencyOptions, formatCurrency, type CurrencyCode } from '@/lib/currency'
+import { convertCurrencyCached } from '@/lib/exchange-rates'
 import { cn } from '@/lib/utils'
 import type { SubscriptionTemplate } from '@/data/subscription-templates'
 
@@ -54,10 +56,16 @@ export function SubscriptionForm({
       fetch: state.fetch,
     }))
   )
+  const globalCurrency = (useSettingsStore((s) => s.settings)?.currency || 'USD') as CurrencyCode
   const isEditing = Boolean(subscription)
   const [logoPreview, setLogoPreview] = useState<string | null>(null)
   const [isLoadingLogo, setIsLoadingLogo] = useState(Boolean(subscription?.logo_url))
   const [isUploadingLogo, setIsUploadingLogo] = useState(false)
+
+  // Auto-fetch logo based on subscription name
+  const { fetchedLogoPreview, isFetchingLogo, fetchedLogoFilename, fetchLogo, clearFetchedLogo } =
+    useLogoFetch(500)
+  const prevNameRef = useRef(subscription?.name ?? '')
   const [showPriceHistory, setShowPriceHistory] = useState(false)
 
   const { changes: priceHistory } = usePriceHistory(subscription?.id)
@@ -138,7 +146,7 @@ export function SubscriptionForm({
     return {
       name: '',
       amount: 0,
-      currency: 'USD',
+      currency: globalCurrency,
       billing_cycle: 'monthly',
       billing_day: null,
       category_id: null,
@@ -151,7 +159,7 @@ export function SubscriptionForm({
       trial_end_date: null,
       shared_count: 1,
     }
-  }, [subscription, template, categories])
+  }, [subscription, template, categories, globalCurrency])
 
   const form = useForm<SubscriptionFormData>({
     resolver: zodResolver(subscriptionFormSchema),
@@ -162,6 +170,37 @@ export function SubscriptionForm({
   const selectedColor = form.watch('color')
   const isTrial = form.watch('is_trial')
   const sharedCount = form.watch('shared_count')
+  const watchedAmount = form.watch('amount')
+  const watchedCurrency = form.watch('currency') as CurrencyCode
+
+  // Conversion hint: show approximate display-currency equivalent when currencies differ
+  const conversionHint = useMemo(() => {
+    if (!watchedAmount || watchedAmount <= 0) return null
+    if (watchedCurrency === globalCurrency) return null
+    const converted = convertCurrencyCached(watchedAmount, watchedCurrency, globalCurrency)
+    if (converted === null) return null
+    return formatCurrency(converted, globalCurrency)
+  }, [watchedAmount, watchedCurrency, globalCurrency])
+
+  // Watch the name field and auto-fetch logo when it changes (only for new subscriptions without a logo)
+  useEffect(() => {
+    const sub = form.watch((values) => {
+      const currentName = values.name?.trim() ?? ''
+      const currentLogoUrl = values.logo_url
+
+      // Only auto-fetch if: no logo set, name changed, and name is long enough
+      if (
+        !currentLogoUrl &&
+        !logoPreview &&
+        currentName !== prevNameRef.current &&
+        currentName.length >= 2
+      ) {
+        prevNameRef.current = currentName
+        fetchLogo(currentName)
+      }
+    })
+    return () => sub.unsubscribe()
+  }, [form, fetchLogo, logoPreview])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -228,6 +267,12 @@ export function SubscriptionForm({
             />
           </div>
         </div>
+
+        {conversionHint && (
+          <p className="text-muted-foreground font-[family-name:var(--font-mono)] text-[11px]">
+            ≈ {conversionHint} {globalCurrency}
+          </p>
+        )}
 
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
@@ -407,6 +452,7 @@ export function SubscriptionForm({
                   onClick={() => {
                     setLogoPreview(null)
                     form.setValue('logo_url', null)
+                    clearFetchedLogo()
                   }}
                   className="bg-destructive text-destructive-foreground absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full"
                 >
@@ -415,40 +461,90 @@ export function SubscriptionForm({
               </div>
             ) : (
               <div className="border-border bg-muted/50 flex h-12 w-12 items-center justify-center rounded-lg border">
-                <Upload className="text-muted-foreground h-5 w-5" />
+                {isFetchingLogo ? (
+                  <Loader2 className="text-muted-foreground h-5 w-5 animate-spin" />
+                ) : (
+                  <Upload className="text-muted-foreground h-5 w-5" />
+                )}
               </div>
             )}
-            <Button
-              type="button"
-              variant="outline"
-              disabled={isUploadingLogo}
-              onClick={async () => {
-                setIsUploadingLogo(true)
-                try {
-                  const subId = subscription?.id || `new-${Date.now()}`
-                  const filename = await pickAndSaveLogo(subId)
-                  if (filename) {
-                    form.setValue('logo_url', filename)
-                    const dataUrl = await getLogoDataUrl(filename)
-                    if (dataUrl) {
-                      setLogoPreview(dataUrl)
-                    } else {
-                      toast.error('Failed to load logo preview')
+            <div className="flex flex-col gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                disabled={isUploadingLogo}
+                onClick={async () => {
+                  setIsUploadingLogo(true)
+                  try {
+                    const subId = subscription?.id || `new-${Date.now()}`
+                    const filename = await pickAndSaveLogo(subId)
+                    if (filename) {
+                      form.setValue('logo_url', filename)
+                      clearFetchedLogo()
+                      const dataUrl = await getLogoDataUrl(filename)
+                      if (dataUrl) {
+                        setLogoPreview(dataUrl)
+                      } else {
+                        toast.error('Failed to load logo preview')
+                      }
                     }
+                  } catch (error) {
+                    console.error('Logo upload failed:', error)
+                    toast.error('Failed to upload logo', {
+                      description: 'Please try again with a different image.',
+                    })
+                  } finally {
+                    setIsUploadingLogo(false)
                   }
-                } catch (error) {
-                  console.error('Logo upload failed:', error)
-                  toast.error('Failed to upload logo', {
-                    description: 'Please try again with a different image.',
-                  })
-                } finally {
-                  setIsUploadingLogo(false)
-                }
-              }}
-            >
-              {isUploadingLogo ? 'Uploading...' : logoPreview ? 'Change Logo' : 'Upload Logo'}
-            </Button>
+                }}
+              >
+                {isUploadingLogo ? 'Uploading...' : logoPreview ? 'Change Logo' : 'Upload Logo'}
+              </Button>
+            </div>
           </div>
+          {/* Auto-fetched logo suggestion */}
+          {!logoPreview && fetchedLogoPreview && !isFetchingLogo && (
+            <div className="border-border bg-muted/30 flex items-center gap-3 rounded-lg border p-3">
+              <img
+                src={fetchedLogoPreview}
+                alt="Suggested logo"
+                className="border-border h-10 w-10 rounded-lg border object-cover"
+              />
+              <div className="flex flex-1 flex-col">
+                <span className="text-muted-foreground flex items-center gap-1 text-xs">
+                  <Globe className="h-3 w-3" />
+                  Logo found automatically
+                </span>
+              </div>
+              <div className="flex gap-1.5">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="h-7 px-2"
+                  onClick={() => {
+                    if (fetchedLogoFilename) {
+                      form.setValue('logo_url', fetchedLogoFilename)
+                      setLogoPreview(fetchedLogoPreview)
+                      clearFetchedLogo()
+                    }
+                  }}
+                >
+                  <Check className="mr-1 h-3 w-3" />
+                  Use
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 px-2"
+                  onClick={() => clearFetchedLogo()}
+                >
+                  <X className="h-3 w-3" />
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
 
         {cards.length > 0 && (

@@ -1,8 +1,9 @@
 import { useState, useRef } from 'react'
 import { toast } from 'sonner'
-import { Download, Upload } from 'lucide-react'
+import { Download, Upload, FileUp } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
+import { ImportDialog } from '@/components/settings/import-dialog'
 import {
   exportData,
   saveBackupToFile,
@@ -19,6 +20,7 @@ export function DataManagement({ onDataChanged }: DataManagementProps) {
   const [isExporting, setIsExporting] = useState(false)
   const [isImporting, setIsImporting] = useState(false)
   const [showImportConfirm, setShowImportConfirm] = useState(false)
+  const [showImportDialog, setShowImportDialog] = useState(false)
   const [pendingImportData, setPendingImportData] = useState<unknown>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -131,6 +133,23 @@ export function DataManagement({ onDataChanged }: DataManagementProps) {
         />
       </div>
 
+      <div className="border-border border-t pt-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-foreground font-[family-name:var(--font-sans)] text-sm font-medium">
+              Import from CSV / Other Apps
+            </p>
+            <p className="text-muted-foreground text-xs">
+              Import from CSV, Wallos, or other formats
+            </p>
+          </div>
+          <Button variant="outline" onClick={() => setShowImportDialog(true)} className="gap-2">
+            <FileUp className="h-4 w-4" />
+            Import
+          </Button>
+        </div>
+      </div>
+
       <ConfirmDialog
         open={showImportConfirm}
         onOpenChange={setShowImportConfirm}
@@ -138,6 +157,12 @@ export function DataManagement({ onDataChanged }: DataManagementProps) {
         description="This will replace all your current data with the backup. This action cannot be undone."
         confirmLabel="Import"
         onConfirm={handleImportConfirm}
+      />
+
+      <ImportDialog
+        open={showImportDialog}
+        onOpenChange={setShowImportDialog}
+        onDataChanged={onDataChanged}
       />
     </div>
   )

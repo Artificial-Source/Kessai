@@ -1,13 +1,13 @@
 import { memo } from 'react'
-import { Pencil, Trash2, Power, Users } from 'lucide-react'
+import { Pencil, Trash2, Power } from 'lucide-react'
 import { formatCurrency } from '@/lib/currency'
+import { convertCurrencyCached } from '@/lib/exchange-rates'
 import { formatPaymentDate } from '@/lib/date-utils'
 import { BILLING_CYCLE_SHORT, CATEGORY_BADGE_VARIANTS } from '@/lib/constants'
-import { isBillableStatus } from '@/types/subscription'
 import { Badge } from '@/components/ui/badge'
 import { SubscriptionLogo } from '@/components/ui/subscription-logo'
-import { StatusBadge } from '@/components/subscriptions/status-badge'
-import { TrialCountdown } from '@/components/subscriptions/trial-countdown'
+import { TrialBadge } from '@/components/subscriptions/trial-badge'
+import { PriceHistoryBadge } from '@/components/subscriptions/price-history-badge'
 import type { BadgeVariant } from '@/components/ui/badge'
 import type { CurrencyCode } from '@/lib/currency'
 import type { Subscription } from '@/types/subscription'
@@ -42,7 +42,7 @@ export const SubscriptionsListView = memo(function SubscriptionsListView({
       <div className="overflow-x-auto">
         <table className="w-full min-w-[600px]">
           <thead>
-            <tr className="border-border border-b bg-[var(--color-subtle-overlay)]">
+            <tr className="border-border border-b bg-white/[0.02]">
               <th className="text-muted-foreground px-4 py-3 text-left font-[family-name:var(--font-mono)] text-[10px] font-normal tracking-widest uppercase">
                 Service
               </th>
@@ -63,11 +63,10 @@ export const SubscriptionsListView = memo(function SubscriptionsListView({
           <tbody className="divide-border divide-y">
             {subscriptions.map((sub) => {
               const category = getCategory(sub.category_id)
-              const billable = isBillableStatus(sub.status)
               return (
                 <tr
                   key={sub.id}
-                  className={`group hover:bg-muted/35 transition-colors ${!billable ? 'opacity-60' : ''}`}
+                  className={`group hover:bg-muted/35 transition-colors ${!sub.is_active ? 'opacity-60' : ''}`}
                 >
                   <td className="px-4 py-4">
                     <div className="flex items-center gap-3">
@@ -80,38 +79,37 @@ export const SubscriptionsListView = memo(function SubscriptionsListView({
                       />
                       <div className="min-w-0">
                         <p className="text-foreground truncate font-medium">{sub.name}</p>
-                        <div className="flex items-center gap-2">
-                          {category && (
-                            <Badge variant={getCategoryVariant(category.name)} size="sm">
-                              {category.name}
-                            </Badge>
-                          )}
-                          {sub.shared_count > 1 && (
-                            <span className="text-muted-foreground flex items-center gap-0.5 font-[family-name:var(--font-mono)] text-[10px]">
-                              <Users className="h-3 w-3" />
-                              {sub.shared_count}
-                            </span>
-                          )}
-                        </div>
+                        {category && (
+                          <Badge variant={getCategoryVariant(category.name)} size="sm">
+                            {category.name}
+                          </Badge>
+                        )}
                       </div>
                     </div>
                   </td>
                   <td className="px-4 py-4">
-                    <p className="text-foreground font-[family-name:var(--font-heading)] font-semibold">
-                      {formatCurrency(
-                        sub.shared_count > 1 ? sub.amount / sub.shared_count : sub.amount,
-                        currency
-                      )}
-                    </p>
-                    <p className="text-muted-foreground font-[family-name:var(--font-mono)] text-[10px] tracking-wider uppercase">
-                      {BILLING_CYCLE_SHORT[sub.billing_cycle]}
-                      {sub.shared_count > 1 && (
-                        <span className="text-muted-foreground/60">
-                          {' '}
-                          ({formatCurrency(sub.amount, currency)} total)
-                        </span>
-                      )}
-                    </p>
+                    {(() => {
+                      const subCurrency = (sub.currency || currency) as CurrencyCode
+                      const isDifferent = subCurrency !== currency
+                      const converted = isDifferent
+                        ? convertCurrencyCached(sub.amount, subCurrency, currency)
+                        : null
+                      return (
+                        <>
+                          <p className="text-foreground font-[family-name:var(--font-heading)] font-semibold">
+                            {formatCurrency(sub.amount, subCurrency)}
+                          </p>
+                          {isDifferent && converted !== null && (
+                            <p className="text-muted-foreground font-[family-name:var(--font-mono)] text-[10px]">
+                              ≈ {formatCurrency(converted, currency)}
+                            </p>
+                          )}
+                          <p className="text-muted-foreground font-[family-name:var(--font-mono)] text-[10px] tracking-wider uppercase">
+                            {BILLING_CYCLE_SHORT[sub.billing_cycle]}
+                          </p>
+                        </>
+                      )
+                    })()}
                   </td>
                   <td className="hidden px-4 py-4 md:table-cell">
                     <p className="text-muted-foreground font-[family-name:var(--font-mono)] text-xs">
@@ -119,11 +117,23 @@ export const SubscriptionsListView = memo(function SubscriptionsListView({
                     </p>
                   </td>
                   <td className="px-4 py-4">
-                    <div className="flex flex-col gap-1">
-                      <StatusBadge status={sub.status} />
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span
+                        className={`h-2 w-2 rounded-full ${
+                          sub.is_active ? 'bg-success' : 'bg-warning'
+                        }`}
+                      />
+                      <span
+                        className={`text-sm font-medium ${
+                          sub.is_active ? 'text-success' : 'text-warning'
+                        }`}
+                      >
+                        {sub.is_active ? 'Active' : 'Paused'}
+                      </span>
                       {sub.status === 'trial' && (
-                        <TrialCountdown trialEndDate={sub.trial_end_date} />
+                        <TrialBadge trialEndDate={sub.trial_end_date ?? null} />
                       )}
+                      <PriceHistoryBadge subscriptionId={sub.id} currency={currency} />
                     </div>
                   </td>
                   <td className="px-4 py-4">
@@ -137,7 +147,7 @@ export const SubscriptionsListView = memo(function SubscriptionsListView({
                       </button>
                       <button
                         onClick={() => onToggleActive(sub)}
-                        aria-label={billable ? `Pause ${sub.name}` : `Activate ${sub.name}`}
+                        aria-label={sub.is_active ? `Pause ${sub.name}` : `Activate ${sub.name}`}
                         className="text-muted-foreground hover:bg-accent hover:text-foreground rounded-lg p-2 opacity-0 transition-[opacity,background-color,color] group-hover:opacity-100 focus:opacity-100"
                       >
                         <Power className="h-4 w-4" />
@@ -157,8 +167,8 @@ export const SubscriptionsListView = memo(function SubscriptionsListView({
           </tbody>
         </table>
       </div>
-      <div className="border-border mt-auto border-t bg-[var(--color-subtle-overlay)] px-4 py-3">
-        <p className="text-muted-foreground font-[family-name:var(--font-mono)] text-[11px]">
+      <div className="border-border mt-auto border-t bg-white/[0.02] px-4 py-3">
+        <p className="text-dimmed font-[family-name:var(--font-mono)] text-[11px]">
           {subscriptions.length} of {totalCount} subscriptions
         </p>
       </div>

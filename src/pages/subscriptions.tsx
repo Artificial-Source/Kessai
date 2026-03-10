@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo, lazy, Suspense } from 'react'
 import { toast } from 'sonner'
 import dayjs from 'dayjs'
 import isSameOrBefore from 'dayjs/plugin/isSameOrBefore'
-import { Plus, Search, LayoutGrid, List, Grid3x3 } from 'lucide-react'
+import { Plus, Search, LayoutGrid, List, Grid3x3, ArrowUpDown } from 'lucide-react'
 import { useSubscriptions } from '@/hooks/use-subscriptions'
 import { useSubscriptionStore } from '@/stores/subscription-store'
 import { useCategoryStore } from '@/stores/category-store'
@@ -10,8 +10,16 @@ import { useUiStore } from '@/stores/ui-store'
 import { useSettingsStore } from '@/stores/settings-store'
 import { usePaymentStore } from '@/stores/payment-store'
 import { formatCurrency } from '@/lib/currency'
+import { convertCurrencyCached } from '@/lib/exchange-rates'
 import { calculateNextPaymentDate, formatPaymentDate } from '@/lib/date-utils'
 import { Button } from '@/components/ui/button'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { SubscriptionBento } from '@/components/subscriptions/subscription-bento'
 import { SubscriptionsGridView } from '@/components/subscriptions/subscriptions-grid-view'
 import { SubscriptionsListView } from '@/components/subscriptions/subscriptions-list-view'
@@ -20,6 +28,25 @@ import { SubscriptionsSkeleton } from '@/components/subscriptions/subscriptions-
 import type { CurrencyCode } from '@/lib/currency'
 import { isBillableStatus } from '@/types/subscription'
 import type { Subscription } from '@/types/subscription'
+
+type SortOption =
+  | 'name-asc'
+  | 'name-desc'
+  | 'price-asc'
+  | 'price-desc'
+  | 'date-asc'
+  | 'date-desc'
+  | 'category'
+
+const SORT_LABELS: Record<SortOption, string> = {
+  'name-asc': 'Name (A-Z)',
+  'name-desc': 'Name (Z-A)',
+  'price-asc': 'Price (Low-High)',
+  'price-desc': 'Price (High-Low)',
+  'date-asc': 'Next billing (Soonest)',
+  'date-desc': 'Next billing (Latest)',
+  category: 'Category',
+}
 
 dayjs.extend(isSameOrBefore)
 
@@ -52,6 +79,15 @@ export function Subscriptions() {
   })
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategories, setSelectedCategories] = useState<string[]>([])
+  const [sortOption, setSortOption] = useState<SortOption>(() => {
+    try {
+      const saved = localStorage.getItem('subby-sort-option')
+      if (saved && saved in SORT_LABELS) return saved as SortOption
+    } catch {
+      // ignore
+    }
+    return 'date-asc'
+  })
   const [deleteTarget, setDeleteTarget] = useState<Subscription | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
 
@@ -67,6 +103,14 @@ export function Subscriptions() {
     }
   }, [viewMode])
 
+  useEffect(() => {
+    try {
+      localStorage.setItem('subby-sort-option', sortOption)
+    } catch {
+      // ignore
+    }
+  }, [sortOption])
+
   // Calculate subscription counts per category
   const subscriptionCounts = useMemo(() => {
     const counts: Record<string, number> = {}
@@ -78,26 +122,75 @@ export function Subscriptions() {
     return counts
   }, [subscriptions])
 
-  const filteredSubscriptions = subscriptions.filter((sub) => {
-    const matchesSearch = sub.name.toLowerCase().includes(searchQuery.toLowerCase())
-    const matchesCategory =
-      selectedCategories.length === 0 ||
-      (sub.category_id && selectedCategories.includes(sub.category_id))
-    return matchesSearch && matchesCategory
-  })
+  const filteredSubscriptions = useMemo(() => {
+    const query = searchQuery.toLowerCase()
+    const filtered = subscriptions.filter((sub) => {
+      const matchesSearch = sub.name.toLowerCase().includes(query)
+      const matchesCategory =
+        selectedCategories.length === 0 ||
+        (sub.category_id && selectedCategories.includes(sub.category_id))
+      return matchesSearch && matchesCategory
+    })
 
-  // Separate totals by billing cycle
+    return filtered.sort((a, b) => {
+      switch (sortOption) {
+        case 'name-asc':
+          return a.name.localeCompare(b.name)
+        case 'name-desc':
+          return b.name.localeCompare(a.name)
+        case 'price-asc':
+          return a.amount - b.amount
+        case 'price-desc':
+          return b.amount - a.amount
+        case 'date-asc': {
+          if (!a.next_payment_date && !b.next_payment_date) return 0
+          if (!a.next_payment_date) return 1
+          if (!b.next_payment_date) return -1
+          return new Date(a.next_payment_date).getTime() - new Date(b.next_payment_date).getTime()
+        }
+        case 'date-desc': {
+          if (!a.next_payment_date && !b.next_payment_date) return 0
+          if (!a.next_payment_date) return 1
+          if (!b.next_payment_date) return -1
+          return new Date(b.next_payment_date).getTime() - new Date(a.next_payment_date).getTime()
+        }
+        case 'category': {
+          const catA = getCategory(a.category_id)?.name || ''
+          const catB = getCategory(b.category_id)?.name || ''
+          const cmp = catA.localeCompare(catB)
+          if (cmp !== 0) return cmp
+          return a.name.localeCompare(b.name)
+        }
+        default:
+          return 0
+      }
+    })
+  }, [subscriptions, searchQuery, selectedCategories, sortOption, getCategory])
+
+  // Separate totals by billing cycle (converted to display currency)
   const monthlySubsTotal = useMemo(() => {
     return subscriptions
       .filter((sub) => isBillableStatus(sub.status) && sub.billing_cycle === 'monthly')
-      .reduce((total, sub) => total + sub.amount / Math.max(sub.shared_count, 1), 0)
-  }, [subscriptions])
+      .reduce((total, sub) => {
+        const amount = sub.amount / Math.max(sub.shared_count, 1)
+        const subCurrency = (sub.currency || currency) as CurrencyCode
+        if (subCurrency === currency) return total + amount
+        const converted = convertCurrencyCached(amount, subCurrency, currency)
+        return total + (converted ?? amount)
+      }, 0)
+  }, [subscriptions, currency])
 
   const yearlySubsTotal = useMemo(() => {
     return subscriptions
       .filter((sub) => isBillableStatus(sub.status) && sub.billing_cycle === 'yearly')
-      .reduce((total, sub) => total + sub.amount / Math.max(sub.shared_count, 1), 0)
-  }, [subscriptions])
+      .reduce((total, sub) => {
+        const amount = sub.amount / Math.max(sub.shared_count, 1)
+        const subCurrency = (sub.currency || currency) as CurrencyCode
+        if (subCurrency === currency) return total + amount
+        const converted = convertCurrencyCached(amount, subCurrency, currency)
+        return total + (converted ?? amount)
+      }, 0)
+  }, [subscriptions, currency])
 
   const handleMarkAsPaid = async (sub: Subscription) => {
     if (!sub.next_payment_date) return
@@ -196,15 +289,36 @@ export function Subscriptions() {
         {subscriptions.length > 0 && (
           <div className="flex flex-col gap-4">
             <div className="flex flex-wrap items-center justify-between gap-4">
-              <div className="relative w-full sm:w-[360px] sm:max-w-full">
-                <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
-                <input
-                  type="text"
-                  placeholder="Search subscriptions..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="border-border bg-input text-foreground placeholder-muted-foreground focus:border-primary focus:ring-primary h-10 w-full rounded-lg border pr-4 pl-10 font-[family-name:var(--font-sans)] text-sm focus:ring-1 focus:outline-none"
-                />
+              <div className="flex flex-wrap items-center gap-3">
+                <div className="relative w-full sm:w-[280px]">
+                  <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
+                  <input
+                    type="text"
+                    placeholder="Search subscriptions..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="border-border bg-input text-foreground placeholder-muted-foreground focus:border-primary focus:ring-primary h-10 w-full rounded-lg border pr-4 pl-10 font-[family-name:var(--font-sans)] text-sm focus:ring-1 focus:outline-none"
+                  />
+                </div>
+                <Select value={sortOption} onValueChange={(v) => setSortOption(v as SortOption)}>
+                  <SelectTrigger className="h-10 w-[200px] gap-2 rounded-lg font-[family-name:var(--font-mono)] text-[11px] tracking-wider">
+                    <ArrowUpDown className="h-3.5 w-3.5 shrink-0 opacity-50" />
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {(Object.entries(SORT_LABELS) as [SortOption, string][]).map(
+                      ([value, label]) => (
+                        <SelectItem
+                          key={value}
+                          value={value}
+                          className="font-[family-name:var(--font-mono)] text-[11px] tracking-wider"
+                        >
+                          {label}
+                        </SelectItem>
+                      )
+                    )}
+                  </SelectContent>
+                </Select>
               </div>
               <div
                 className="border-border flex rounded-lg border bg-[#111111] p-1"
@@ -277,12 +391,15 @@ export function Subscriptions() {
             <p className="text-muted-foreground">
               No subscriptions match {searchQuery ? `"${searchQuery}"` : 'your filters'}
             </p>
-            {selectedCategories.length > 0 && (
+            {(selectedCategories.length > 0 || searchQuery) && (
               <button
-                onClick={() => setSelectedCategories([])}
+                onClick={() => {
+                  setSelectedCategories([])
+                  setSearchQuery('')
+                }}
                 className="text-primary mt-2 text-sm hover:underline"
               >
-                Clear filters
+                Clear all filters
               </button>
             )}
           </div>

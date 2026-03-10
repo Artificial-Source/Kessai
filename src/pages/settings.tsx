@@ -19,13 +19,22 @@ import {
 import { CategoryManager } from '@/components/categories/category-manager'
 import { DataManagement } from '@/components/settings/data-management'
 import { CardManager } from '@/components/settings/card-manager'
+import { NotificationSettings } from '@/components/settings/notification-settings'
 import { MotionSettings } from '@/components/settings/motion-settings'
 import { SettingsSkeleton } from '@/components/settings/settings-skeleton'
 import type { Theme } from '@/types/settings'
 import type { CurrencyCode } from '@/lib/currency'
 
 export function SettingsPage() {
-  const { settings, isLoading, setCurrency, refresh: refetchSettings } = useSettings()
+  const {
+    settings,
+    isLoading,
+    setCurrency,
+    setNotifications,
+    setNotificationAdvanceDays,
+    setNotificationTime,
+    refresh: refetchSettings,
+  } = useSettings()
   const { theme, setTheme } = useTheme()
   const { fetch: refetchSubscriptions } = useSubscriptionStore()
   const { fetch: refetchCategories } = useCategoryStore()
@@ -98,6 +107,22 @@ export function SettingsPage() {
           </div>
 
           <MotionSettings settings={settings} />
+        </div>
+
+        <div className="glass-card flex flex-col gap-6 p-6">
+          <div className="flex flex-col gap-1">
+            <h2 className="text-foreground font-[family-name:var(--font-heading)] text-lg font-bold">
+              Notifications
+            </h2>
+            <p className="text-muted-foreground text-sm">Get reminded before subscriptions renew</p>
+          </div>
+
+          <NotificationSettings
+            settings={settings}
+            onToggle={(enabled) => setNotifications(enabled)}
+            onAdvanceDaysChange={setNotificationAdvanceDays}
+            onTimeChange={setNotificationTime}
+          />
         </div>
 
         <div className="glass-card flex flex-col gap-6 p-6">

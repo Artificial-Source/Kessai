@@ -1,6 +1,7 @@
 import { memo } from 'react'
 import { SubscriptionLogo } from '@/components/ui/subscription-logo'
 import { formatCurrency, type CurrencyCode } from '@/lib/currency'
+import { convertCurrencyCached } from '@/lib/exchange-rates'
 import { formatShortDate, getDaysUntil } from '@/lib/date-utils'
 
 interface UpcomingPaymentRowProps {
@@ -8,6 +9,7 @@ interface UpcomingPaymentRowProps {
     id: string
     name: string
     amount: number
+    currency?: string
     next_payment_date?: string | null
     logo_url?: string | null
     color?: string | null
@@ -43,9 +45,25 @@ export const UpcomingPaymentRow = memo(function UpcomingPaymentRow({
         </div>
       </div>
       <div className="flex flex-col items-end gap-1">
-        <p className="text-foreground font-[family-name:var(--font-heading)] font-bold">
-          {formatCurrency(subscription.amount, currency)}
-        </p>
+        {(() => {
+          const subCurrency = (subscription.currency || currency) as CurrencyCode
+          const isDifferent = subCurrency !== currency
+          const converted = isDifferent
+            ? convertCurrencyCached(subscription.amount, subCurrency, currency)
+            : null
+          return (
+            <>
+              <p className="text-foreground font-[family-name:var(--font-heading)] font-bold">
+                {formatCurrency(subscription.amount, subCurrency)}
+              </p>
+              {isDifferent && converted !== null && (
+                <p className="text-muted-foreground font-[family-name:var(--font-mono)] text-[10px]">
+                  ≈ {formatCurrency(converted, currency)}
+                </p>
+              )}
+            </>
+          )
+        })()}
         {daysUntil !== null && daysUntil <= 1 ? (
           <div className="border-accent-orange/20 bg-accent-orange/20 text-accent-orange rounded-full border px-2 py-0.5 font-[family-name:var(--font-mono)] text-[10px] font-bold uppercase">
             {daysUntil === 0 ? 'Today' : 'Tomorrow'}

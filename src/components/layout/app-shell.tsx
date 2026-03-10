@@ -2,9 +2,14 @@ import { Outlet } from 'react-router-dom'
 import { Sidebar } from './sidebar'
 import { BottomTabBar } from './bottom-tab-bar'
 import { useMotionSettings } from '@/hooks/use-motion-settings'
+import { useKeyboardShortcuts } from '@/hooks/use-keyboard-shortcuts'
+import { useNotificationScheduler } from '@/hooks/use-notification-scheduler'
+import { KeyboardShortcutsDialog } from '@/components/ui/keyboard-shortcuts-dialog'
 
 export function AppShell() {
   useMotionSettings()
+  useKeyboardShortcuts()
+  useNotificationScheduler()
 
   return (
     <div className="bg-background flex h-screen overflow-hidden">
@@ -17,6 +22,7 @@ export function AppShell() {
       </main>
 
       <BottomTabBar />
+      <KeyboardShortcutsDialog />
     </div>
   )
 }

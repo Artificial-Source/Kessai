@@ -2,8 +2,18 @@ import { useEffect } from 'react'
 import { useSettingsStore } from '@/stores/settings-store'
 
 export function useSettings() {
-  const { settings, isLoading, error, fetch, update, setTheme, setCurrency, setNotifications } =
-    useSettingsStore()
+  const {
+    settings,
+    isLoading,
+    error,
+    fetch,
+    update,
+    setTheme,
+    setCurrency,
+    setNotifications,
+    setNotificationAdvanceDays,
+    setNotificationTime,
+  } = useSettingsStore()
 
   useEffect(() => {
     fetch()
@@ -17,6 +27,8 @@ export function useSettings() {
     setTheme,
     setCurrency,
     setNotifications,
+    setNotificationAdvanceDays,
+    setNotificationTime,
     refresh: fetch,
   }
 }

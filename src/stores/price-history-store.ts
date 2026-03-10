@@ -9,6 +9,7 @@ type PriceHistoryState = {
 
   fetchRecent: (days?: number) => Promise<void>
   fetchBySubscription: (subscriptionId: string) => Promise<PriceChange[]>
+  getLatest: (subscriptionId: string) => Promise<PriceChange | null>
 }
 
 export const usePriceHistoryStore = create<PriceHistoryState>((set) => ({
@@ -30,5 +31,15 @@ export const usePriceHistoryStore = create<PriceHistoryState>((set) => ({
   fetchBySubscription: async (subscriptionId: string) => {
     const changes = await invoke<PriceChange[]>('list_price_history', { subscriptionId })
     return changes
+  },
+
+  getLatest: async (subscriptionId: string) => {
+    try {
+      const changes = await invoke<PriceChange[]>('list_price_history', { subscriptionId })
+      return changes.length > 0 ? changes[0] : null
+    } catch (e) {
+      console.error('Failed to get latest price change:', e)
+      return null
+    }
   },
 }))

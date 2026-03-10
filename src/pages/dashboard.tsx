@@ -1,5 +1,6 @@
-import { useState, useEffect, lazy, Suspense } from 'react'
+import { useState, useEffect, useMemo, lazy, Suspense } from 'react'
 import { useShallow } from 'zustand/react/shallow'
+import dayjs from 'dayjs'
 import { CalendarDays, Calendar, CalendarClock, CreditCard, FlaskConical } from 'lucide-react'
 import { useSubscriptionStore } from '@/stores/subscription-store'
 import { useCategoryStore } from '@/stores/category-store'
@@ -10,8 +11,11 @@ import { getUpcomingPayments } from '@/lib/date-utils'
 import { StatCard } from '@/components/dashboard/stat-card'
 import { UpcomingPaymentRow } from '@/components/dashboard/upcoming-payment-row'
 import { InsightsCard } from '@/components/dashboard/insights-card'
+import { SpendingTrends } from '@/components/dashboard/spending-trends'
 import { TrialsWidget } from '@/components/dashboard/trials-widget'
 import { BudgetWidget } from '@/components/dashboard/budget-widget'
+import { TrialAlertCard } from '@/components/dashboard/trial-alert-card'
+import { PriceChangesCard } from '@/components/dashboard/price-changes-card'
 import { DashboardSkeleton } from '@/components/dashboard/dashboard-skeleton'
 import { Button } from '@/components/ui/button'
 import type { CurrencyCode } from '@/lib/currency'
@@ -50,14 +54,20 @@ export function Dashboard() {
     yearlySubsTotal,
     monthlySubsCount,
     yearlySubsCount,
-    trialCount,
-    expiringTrials,
-    sharedSubscriptionCount,
-    sharingSavingsMonthly,
   } = useDashboardStats()
 
   const [whatIfOpen, setWhatIfOpen] = useState(false)
   const currency = (settings?.currency || 'USD') as CurrencyCode
+
+  // Trial stats for TrialsWidget
+  const { trialCount, expiringTrials } = useMemo(() => {
+    const trials = subscriptions.filter((s) => s.status === 'trial' && s.is_active)
+    const weekEnd = dayjs().add(7, 'day')
+    const expiring = trials.filter(
+      (s) => s.trial_end_date && dayjs(s.trial_end_date).isBefore(weekEnd)
+    )
+    return { trialCount: trials.length, expiringTrials: expiring }
+  }, [subscriptions])
   const monthlyBudget = settings?.monthly_budget ?? null
   const upcomingPayments = getUpcomingPayments(subscriptions, 7)
   const upcomingTotal = upcomingPayments.reduce((sum, sub) => sum + sub.amount, 0)
@@ -170,6 +180,13 @@ export function Dashboard() {
         </section>
       )}
 
+      <SpendingTrends currency={currency} />
+
+      <section className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+        <TrialAlertCard subscriptions={subscriptions} />
+        <PriceChangesCard currency={currency} />
+      </section>
+
       <section className="flex flex-col gap-6 lg:flex-row">
         <div className="glass-card flex-1 p-6">
           <h3 className="mb-5 text-lg font-bold">Upcoming Payments</h3>
@@ -187,13 +204,7 @@ export function Dashboard() {
           )}
         </div>
 
-        <InsightsCard
-          activeCount={activeCount}
-          totalMonthly={totalMonthly}
-          currency={currency}
-          sharedSubscriptionCount={sharedSubscriptionCount}
-          sharingSavingsMonthly={sharingSavingsMonthly}
-        />
+        <InsightsCard activeCount={activeCount} totalMonthly={totalMonthly} currency={currency} />
       </section>
 
       <Suspense fallback={null}>

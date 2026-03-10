@@ -13,6 +13,8 @@ type SettingsState = {
   setTheme: (theme: Theme) => Promise<void>
   setCurrency: (currency: string) => Promise<void>
   setNotifications: (enabled: boolean, daysBefore?: number[]) => Promise<void>
+  setNotificationAdvanceDays: (days: number) => Promise<void>
+  setNotificationTime: (time: string) => Promise<void>
   setBudget: (budget: number | null) => Promise<void>
   setReduceMotion: (enabled: boolean) => Promise<void>
   setEnableTransitions: (enabled: boolean) => Promise<void>
@@ -90,5 +92,13 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
 
   setAnimationSpeed: async (speed) => {
     await get().update({ animation_speed: speed })
+  },
+
+  setNotificationAdvanceDays: async (days) => {
+    await get().update({ notification_advance_days: days })
+  },
+
+  setNotificationTime: async (time) => {
+    await get().update({ notification_time: time })
   },
 }))

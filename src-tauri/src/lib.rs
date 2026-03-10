@@ -91,6 +91,65 @@ fn delete_logo(app_handle: tauri::AppHandle, filename: String) -> Result<(), Str
     Ok(())
 }
 
+// ── Logo fetch command ────────────────────────────────────────────────────
+
+#[tauri::command]
+async fn fetch_logo(
+    app_handle: tauri::AppHandle,
+    name: String,
+) -> Result<Option<String>, String> {
+    let clean_name = name.trim().to_lowercase().replace(' ', "");
+    if clean_name.is_empty() {
+        return Ok(None);
+    }
+
+    let domains = vec![
+        format!("{}.com", clean_name),
+        format!("{}.io", clean_name),
+        format!("{}.app", clean_name),
+    ];
+
+    let client = reqwest::Client::builder()
+        .timeout(std::time::Duration::from_secs(5))
+        .build()
+        .map_err(|e| format!("Failed to create HTTP client: {}", e))?;
+
+    for domain in &domains {
+        let url = format!(
+            "https://www.google.com/s2/favicons?domain={}&sz=128",
+            domain
+        );
+
+        match client.get(&url).send().await {
+            Ok(resp) if resp.status().is_success() => {
+                if let Ok(bytes) = resp.bytes().await {
+                    // Google returns a default 16x16 globe icon for unknown domains.
+                    // Real favicons at sz=128 are typically > 1KB.
+                    if bytes.len() > 1000 {
+                        let logos_dir = get_logos_dir(&app_handle);
+                        let filename = format!("fetched-{}.webp", clean_name);
+                        let dest_path = logos_dir.join(&filename);
+
+                        // Decode the fetched PNG into an image and save as WebP
+                        if let Ok(img) = image::load_from_memory(&bytes) {
+                            let resized = img.thumbnail(128, 128);
+                            if resized
+                                .save_with_format(&dest_path, image::ImageFormat::WebP)
+                                .is_ok()
+                            {
+                                return Ok(Some(filename));
+                            }
+                        }
+                    }
+                }
+            }
+            _ => continue,
+        }
+    }
+
+    Ok(None)
+}
+
 // ── Subscription commands ──────────────────────────────────────────────────
 
 #[tauri::command]
@@ -411,6 +470,7 @@ pub fn run() {
             save_logo,
             get_logo_base64,
             delete_logo,
+            fetch_logo,
             // Subscriptions
             list_subscriptions,
             get_subscription,

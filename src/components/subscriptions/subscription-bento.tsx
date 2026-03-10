@@ -1,12 +1,8 @@
-import { useState, useEffect, useMemo, useRef, memo } from 'react'
+import { useState, useEffect, useMemo, useCallback, useRef, memo } from 'react'
 import { formatCurrency, type CurrencyCode } from '@/lib/currency'
+import { convertCurrencyCached } from '@/lib/exchange-rates'
 import { getLogoDataUrl } from '@/lib/logo-storage'
-import {
-  calculateMonthlyAmount,
-  isBillableStatus,
-  STATUS_LABELS,
-  type Subscription,
-} from '@/types/subscription'
+import { calculateMonthlyAmount, type Subscription } from '@/types/subscription'
 import type { Category } from '@/types/category'
 
 interface SubscriptionBentoProps {
@@ -191,7 +187,12 @@ const BentoTile = memo(function BentoTile({
   onClick: () => void
 }) {
   const [logoSrc, setLogoSrc] = useState<string | null>(null)
-  const monthlyAmount = calculateMonthlyAmount(subscription.amount, subscription.billing_cycle)
+  const subCurrency = (subscription.currency || currency) as CurrencyCode
+  const convertedAmount =
+    subCurrency === currency
+      ? subscription.amount
+      : (convertCurrencyCached(subscription.amount, subCurrency, currency) ?? subscription.amount)
+  const monthlyAmount = calculateMonthlyAmount(convertedAmount, subscription.billing_cycle)
   const bgColor = BENTO_COLORS[colorIndex % BENTO_COLORS.length]
 
   // Determine tile size for adaptive content
@@ -290,14 +291,14 @@ const BentoTile = memo(function BentoTile({
         )}
       </div>
 
-      {/* Non-billable overlay */}
-      {!isBillableStatus(subscription.status) && (
+      {/* Inactive overlay */}
+      {!subscription.is_active && (
         <div className="absolute inset-0 flex items-center justify-center bg-black/60">
           <span
             className="bg-black/60 px-2 py-0.5 text-xs font-medium text-white"
             style={{ borderRadius: '3px' }}
           >
-            {STATUS_LABELS[subscription.status] || 'Inactive'}
+            Paused
           </span>
         </div>
       )}
@@ -337,22 +338,31 @@ export function SubscriptionBento({
     return () => resizeObserver.disconnect()
   }, [])
 
-  // Sort by monthly amount descending
+  const getConvertedAmount = useCallback(
+    (sub: Subscription): number => {
+      const subCurrency = (sub.currency || currency) as CurrencyCode
+      if (subCurrency === currency) return sub.amount
+      return convertCurrencyCached(sub.amount, subCurrency, currency) ?? sub.amount
+    },
+    [currency]
+  )
+
+  // Sort by monthly amount descending (converted)
   const sortedSubscriptions = useMemo(() => {
     return [...subscriptions].sort((a, b) => {
-      const amountA = calculateMonthlyAmount(a.amount, a.billing_cycle)
-      const amountB = calculateMonthlyAmount(b.amount, b.billing_cycle)
+      const amountA = calculateMonthlyAmount(getConvertedAmount(a), a.billing_cycle)
+      const amountB = calculateMonthlyAmount(getConvertedAmount(b), b.billing_cycle)
       return amountB - amountA
     })
-  }, [subscriptions])
+  }, [subscriptions, getConvertedAmount])
 
-  // Calculate total monthly spending
+  // Calculate total monthly spending (converted)
   const totalMonthly = useMemo(() => {
     return subscriptions.reduce(
-      (sum, sub) => sum + calculateMonthlyAmount(sub.amount, sub.billing_cycle),
+      (sum, sub) => sum + calculateMonthlyAmount(getConvertedAmount(sub), sub.billing_cycle),
       0
     )
-  }, [subscriptions])
+  }, [subscriptions, getConvertedAmount])
 
   // Calculate treemap layout
   const treemapRects = useMemo((): TreemapRect[] => {
@@ -364,9 +374,9 @@ export function SubscriptionBento({
       return []
     }
 
-    // Prepare nodes for treemap
+    // Prepare nodes for treemap (use converted amounts for sizing)
     const nodes: TreemapNode[] = sortedSubscriptions.map((sub, index) => ({
-      value: calculateMonthlyAmount(sub.amount, sub.billing_cycle),
+      value: calculateMonthlyAmount(getConvertedAmount(sub), sub.billing_cycle),
       subscription: sub,
       colorIndex: index,
     }))
@@ -378,7 +388,7 @@ export function SubscriptionBento({
       width: containerSize.width,
       height: containerSize.height,
     })
-  }, [sortedSubscriptions, containerSize])
+  }, [sortedSubscriptions, containerSize, getConvertedAmount])
 
   const getCategory = (categoryId: string | null) => {
     if (!categoryId) return undefined
