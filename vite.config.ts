@@ -14,6 +14,20 @@ export default defineConfig(async () => ({
     },
   },
 
+  // Pre-bundle heavy deps so Vite doesn't reprocess them on every HMR update
+  optimizeDeps: {
+    include: [
+      'recharts',
+      'lucide-react',
+      'react-hook-form',
+      '@hookform/resolvers/zod',
+      'zod',
+      'dayjs',
+      'zustand',
+      'sonner',
+    ],
+  },
+
   // Build optimizations
   build: {
     rollupOptions: {
