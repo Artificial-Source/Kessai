@@ -441,4 +441,248 @@ mod tests {
         assert!(backup.payments.is_empty());
         assert_eq!(backup.settings.currency, "USD");
     }
+
+    #[test]
+    fn test_price_history_record_and_list() {
+        let tmp = tempfile::NamedTempFile::new().unwrap();
+        let core = SubbyCore::new(tmp.path()).unwrap();
+
+        // Create a subscription first
+        let sub = core
+            .subscriptions()
+            .create(models::NewSubscription {
+                name: "Netflix".to_string(),
+                amount: 15.99,
+                currency: "USD".to_string(),
+                billing_cycle: models::BillingCycle::Monthly,
+                billing_day: None,
+                category_id: None,
+                card_id: None,
+                color: None,
+                logo_url: None,
+                notes: None,
+                is_active: true,
+                next_payment_date: None,
+                status: models::SubscriptionStatus::Active,
+                trial_end_date: None,
+                shared_count: 1,
+            })
+            .unwrap();
+
+        // Record a price change
+        let change = core
+            .price_history()
+            .record(&sub.id, 15.99, 17.99, "USD", "USD")
+            .unwrap();
+
+        assert_eq!(change.old_amount, 15.99);
+        assert_eq!(change.new_amount, 17.99);
+        assert_eq!(change.subscription_id, sub.id);
+
+        // Record another
+        core.price_history()
+            .record(&sub.id, 17.99, 19.99, "USD", "USD")
+            .unwrap();
+
+        // List by subscription
+        let history = core.price_history().list_by_subscription(&sub.id).unwrap();
+        assert_eq!(history.len(), 2);
+        // Most recent first
+        assert_eq!(history[0].new_amount, 19.99);
+        assert_eq!(history[1].new_amount, 17.99);
+
+        // List recent (within 90 days)
+        let recent = core.price_history().list_recent(90).unwrap();
+        assert_eq!(recent.len(), 2);
+
+        // List all
+        let all = core.price_history().list().unwrap();
+        assert_eq!(all.len(), 2);
+    }
+
+    #[test]
+    fn test_price_history_empty_for_no_changes() {
+        let tmp = tempfile::NamedTempFile::new().unwrap();
+        let core = SubbyCore::new(tmp.path()).unwrap();
+
+        let history = core
+            .price_history()
+            .list_by_subscription("nonexistent")
+            .unwrap();
+        assert!(history.is_empty());
+
+        let recent = core.price_history().list_recent(90).unwrap();
+        assert!(recent.is_empty());
+    }
+
+    #[test]
+    fn test_expiring_trials() {
+        let tmp = tempfile::NamedTempFile::new().unwrap();
+        let core = SubbyCore::new(tmp.path()).unwrap();
+
+        // Create a trial subscription expiring in 3 days
+        let future_date = (chrono::Utc::now() + chrono::Duration::days(3))
+            .format("%Y-%m-%d")
+            .to_string();
+        let sub = core
+            .subscriptions()
+            .create(models::NewSubscription {
+                name: "Trial App".to_string(),
+                amount: 9.99,
+                currency: "USD".to_string(),
+                billing_cycle: models::BillingCycle::Monthly,
+                billing_day: None,
+                category_id: None,
+                card_id: None,
+                color: None,
+                logo_url: None,
+                notes: None,
+                is_active: true,
+                next_payment_date: None,
+                status: models::SubscriptionStatus::Trial,
+                trial_end_date: Some(future_date),
+                shared_count: 1,
+            })
+            .unwrap();
+
+        assert_eq!(sub.status, models::SubscriptionStatus::Trial);
+
+        // Get expiring trials within 7 days
+        let subs = core.subscriptions().list().unwrap();
+        let expiring = utils::get_expiring_trials(&subs, 7);
+        assert_eq!(expiring.len(), 1);
+        assert_eq!(expiring[0].name, "Trial App");
+
+        // Within 1 day should not include this (3 days away)
+        let expiring_1d = utils::get_expiring_trials(&subs, 1);
+        assert!(expiring_1d.is_empty());
+    }
+
+    #[test]
+    fn test_settings_export_import_preserves_all_fields() {
+        let tmp = tempfile::NamedTempFile::new().unwrap();
+        let core = SubbyCore::new(tmp.path()).unwrap();
+
+        // Update settings with non-default values
+        core.settings()
+            .update(models::UpdateSettings {
+                currency: Some("EUR".to_string()),
+                reduce_motion: Some(true),
+                enable_transitions: Some(false),
+                enable_hover_effects: Some(false),
+                animation_speed: Some(models::AnimationSpeed::Slow),
+                notification_advance_days: Some(3),
+                notification_time: Some("14:30".to_string()),
+                monthly_budget: Some(Some(150.0)),
+                ..Default::default()
+            })
+            .unwrap();
+
+        // Export
+        let backup = core.data_management().export_data().unwrap();
+        assert_eq!(backup.settings.currency, "EUR");
+        assert!(backup.settings.reduce_motion);
+        assert!(!backup.settings.enable_transitions);
+        assert!(!backup.settings.enable_hover_effects);
+        assert_eq!(backup.settings.animation_speed, "slow");
+        assert_eq!(backup.settings.notification_advance_days, 3);
+        assert_eq!(backup.settings.notification_time, "14:30");
+        assert_eq!(backup.settings.monthly_budget, Some(150.0));
+
+        // Import into fresh DB
+        let tmp2 = tempfile::NamedTempFile::new().unwrap();
+        let core2 = SubbyCore::new(tmp2.path()).unwrap();
+
+        let result = core2.data_management().import_data(backup, true).unwrap();
+        assert!(result.success);
+
+        // Verify all settings are restored
+        let settings = core2.settings().get().unwrap();
+        assert_eq!(settings.currency, "EUR");
+        assert!(settings.reduce_motion);
+        assert!(!settings.enable_transitions);
+        assert!(!settings.enable_hover_effects);
+        assert_eq!(settings.animation_speed, models::AnimationSpeed::Slow);
+        assert_eq!(settings.notification_advance_days, 3);
+        assert_eq!(settings.notification_time, "14:30");
+        assert_eq!(settings.monthly_budget, Some(150.0));
+    }
+
+    #[test]
+    fn test_subscription_status_transitions() {
+        let tmp = tempfile::NamedTempFile::new().unwrap();
+        let core = SubbyCore::new(tmp.path()).unwrap();
+
+        let sub = core
+            .subscriptions()
+            .create(models::NewSubscription {
+                name: "Test".to_string(),
+                amount: 10.0,
+                currency: "USD".to_string(),
+                billing_cycle: models::BillingCycle::Monthly,
+                billing_day: None,
+                category_id: None,
+                card_id: None,
+                color: None,
+                logo_url: None,
+                notes: None,
+                is_active: true,
+                next_payment_date: None,
+                status: models::SubscriptionStatus::Active,
+                trial_end_date: None,
+                shared_count: 1,
+            })
+            .unwrap();
+
+        // Active → PendingCancellation
+        let updated = core
+            .subscriptions()
+            .transition_status(&sub.id, models::SubscriptionStatus::PendingCancellation)
+            .unwrap();
+        assert_eq!(updated.status, models::SubscriptionStatus::PendingCancellation);
+
+        // PendingCancellation → Cancelled
+        let cancelled = core
+            .subscriptions()
+            .transition_status(&sub.id, models::SubscriptionStatus::Cancelled)
+            .unwrap();
+        assert_eq!(cancelled.status, models::SubscriptionStatus::Cancelled);
+        assert!(!cancelled.is_active);
+    }
+
+    #[test]
+    fn test_price_history_included_in_export() {
+        let tmp = tempfile::NamedTempFile::new().unwrap();
+        let core = SubbyCore::new(tmp.path()).unwrap();
+
+        let sub = core
+            .subscriptions()
+            .create(models::NewSubscription {
+                name: "Spotify".to_string(),
+                amount: 9.99,
+                currency: "USD".to_string(),
+                billing_cycle: models::BillingCycle::Monthly,
+                billing_day: None,
+                category_id: None,
+                card_id: None,
+                color: None,
+                logo_url: None,
+                notes: None,
+                is_active: true,
+                next_payment_date: None,
+                status: models::SubscriptionStatus::Active,
+                trial_end_date: None,
+                shared_count: 1,
+            })
+            .unwrap();
+
+        core.price_history()
+            .record(&sub.id, 9.99, 10.99, "USD", "USD")
+            .unwrap();
+
+        let backup = core.data_management().export_data().unwrap();
+        assert_eq!(backup.price_history.len(), 1);
+        assert_eq!(backup.price_history[0].old_amount, 9.99);
+        assert_eq!(backup.price_history[0].new_amount, 10.99);
+    }
 }

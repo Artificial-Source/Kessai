@@ -8,6 +8,7 @@ import { useSettingsStore } from '@/stores/settings-store'
 import { useDashboardStats } from '@/hooks/use-dashboard-stats'
 import { formatCurrency } from '@/lib/currency'
 import { getUpcomingPayments } from '@/lib/date-utils'
+import { ProgressBar } from '@/components/ui/progress-bar'
 import { StatCard } from '@/components/dashboard/stat-card'
 import { UpcomingPaymentRow } from '@/components/dashboard/upcoming-payment-row'
 import { InsightsCard } from '@/components/dashboard/insights-card'
@@ -159,15 +160,13 @@ export function Dashboard() {
                 <span className="text-foreground min-w-[120px] font-[family-name:var(--font-mono)] text-xs">
                   {cat.name}
                 </span>
-                <div className="relative h-1.5 flex-1 overflow-hidden rounded-sm bg-[var(--color-subtle-overlay)]">
-                  <div
-                    className="absolute inset-y-0 left-0 rounded-sm"
-                    style={{
-                      width: `${cat.percentage}%`,
-                      backgroundColor: cat.color,
-                    }}
-                  />
-                </div>
+                <ProgressBar
+                  value={cat.percentage}
+                  colorStyle={cat.color}
+                  height="sm"
+                  rounded="sm"
+                  className="flex-1"
+                />
                 <span className="text-muted-foreground min-w-[80px] text-right font-[family-name:var(--font-mono)] text-xs">
                   {formatCurrency(cat.amount, currency)}
                 </span>

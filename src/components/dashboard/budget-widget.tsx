@@ -1,6 +1,7 @@
 import { memo, useMemo } from 'react'
 import { Wallet } from 'lucide-react'
 import { formatCurrency, type CurrencyCode } from '@/lib/currency'
+import { ProgressBar } from '@/components/ui/progress-bar'
 
 interface BudgetWidgetProps {
   budget: number
@@ -47,12 +48,7 @@ export const BudgetWidget = memo(function BudgetWidget({
       </div>
 
       {/* Progress bar */}
-      <div className="relative mb-4 h-2.5 overflow-hidden rounded-full bg-[var(--color-subtle-overlay)]">
-        <div
-          className={`absolute inset-y-0 left-0 rounded-full transition-all duration-500 ${barColor}`}
-          style={{ width: `${percentage}%` }}
-        />
-      </div>
+      <ProgressBar value={percentage} color={barColor} height="md" rounded="full" className="mb-4" />
 
       <div className="grid grid-cols-3 gap-4">
         <div>
