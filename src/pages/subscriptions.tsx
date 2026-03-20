@@ -297,6 +297,7 @@ export function Subscriptions() {
                     placeholder="Search subscriptions..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
+                    aria-label="Search subscriptions"
                     className="border-border bg-input text-foreground placeholder-muted-foreground focus:border-primary focus:ring-primary h-10 w-full rounded-lg border pr-4 pl-10 font-[family-name:var(--font-sans)] text-sm focus:ring-1 focus:outline-none"
                   />
                 </div>
@@ -374,7 +375,7 @@ export function Subscriptions() {
 
         {subscriptions.length === 0 ? (
           <div className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-[var(--color-border-hover)] bg-[var(--color-card)] py-16 backdrop-blur-xl">
-            <div className="bg-primary/10 mb-4 animate-pulse rounded-full p-4">
+            <div className="bg-primary/10 animate-gentle-float mb-4 rounded-full p-4">
               <Plus className="text-primary h-8 w-8" />
             </div>
             <h2 className="text-foreground mb-2 text-xl font-semibold">No subscriptions yet</h2>

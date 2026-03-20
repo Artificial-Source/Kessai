@@ -103,6 +103,8 @@ export default function App() {
             background: 'var(--color-surface)',
             border: '1px solid var(--color-border)',
             color: 'var(--color-foreground)',
+            fontFamily: 'var(--font-sans)',
+            backdropFilter: 'blur(12px)',
           },
         }}
       />

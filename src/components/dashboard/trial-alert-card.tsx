@@ -74,9 +74,9 @@ export const TrialAlertCard = memo(function TrialAlertCard({ subscriptions }: Tr
               {expiringThisWeek.map((sub) => {
                 const daysLeft = dayjs(sub.trial_end_date).diff(dayjs().startOf('day'), 'day')
                 return (
-                  <div key={sub.id} className="flex items-center justify-between">
-                    <span className="text-foreground text-sm">{sub.name}</span>
-                    <span className="font-[family-name:var(--font-mono)] text-[10px] font-medium tracking-wider text-amber-500">
+                  <div key={sub.id} className="flex items-center justify-between gap-2">
+                    <span className="text-foreground min-w-0 truncate text-sm">{sub.name}</span>
+                    <span className="shrink-0 font-[family-name:var(--font-mono)] text-[10px] font-medium tracking-wider text-amber-500">
                       {daysLeft === 0 ? 'TODAY' : `${daysLeft}D LEFT`}
                     </span>
                   </div>
@@ -93,9 +93,9 @@ export const TrialAlertCard = memo(function TrialAlertCard({ subscriptions }: Tr
             </p>
             <div className="flex flex-col gap-1.5">
               {expiredTrials.map((sub) => (
-                <div key={sub.id} className="flex items-center justify-between">
-                  <span className="text-foreground text-sm">{sub.name}</span>
-                  <span className="text-destructive font-[family-name:var(--font-mono)] text-[10px] font-medium tracking-wider">
+                <div key={sub.id} className="flex items-center justify-between gap-2">
+                  <span className="text-foreground min-w-0 truncate text-sm">{sub.name}</span>
+                  <span className="text-destructive shrink-0 font-[family-name:var(--font-mono)] text-[10px] font-medium tracking-wider">
                     EXPIRED
                   </span>
                 </div>

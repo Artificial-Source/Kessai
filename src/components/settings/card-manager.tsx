@@ -117,7 +117,7 @@ export function CardManager({ currency }: CardManagerProps) {
             </Button>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="card-name">Card Name *</Label>
               <Input
@@ -145,7 +145,7 @@ export function CardManager({ currency }: CardManagerProps) {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="last-four">Last 4 Digits</Label>
               <Input
@@ -173,7 +173,7 @@ export function CardManager({ currency }: CardManagerProps) {
 
           <div className="space-y-2">
             <Label>Card Color</Label>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               {CARD_COLORS.map((color) => (
                 <button
                   key={color}
@@ -210,16 +210,16 @@ export function CardManager({ currency }: CardManagerProps) {
               key={card.id}
               className="border-border bg-muted/50 flex items-center justify-between rounded-lg border p-3"
             >
-              <div className="flex items-center gap-3">
+              <div className="flex min-w-0 items-center gap-3">
                 <div
-                  className="flex h-10 w-10 items-center justify-center rounded-lg"
+                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg"
                   style={{ backgroundColor: card.color }}
                 >
                   <CreditCard className="h-5 w-5 text-white" />
                 </div>
-                <div>
-                  <p className="text-foreground font-medium">{card.name}</p>
-                  <p className="text-muted-foreground text-sm">
+                <div className="min-w-0">
+                  <p className="text-foreground truncate font-medium">{card.name}</p>
+                  <p className="text-muted-foreground truncate text-sm">
                     {card.card_type === 'credit' ? 'Credit' : 'Debit'}
                     {card.last_four && ` •••• ${card.last_four}`}
                   </p>

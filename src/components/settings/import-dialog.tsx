@@ -276,7 +276,7 @@ export function ImportDialog({ open, onOpenChange, onDataChanged }: ImportDialog
 
         {step === 'preview' && parseResult && (
           <DialogFooter className="border-border flex-shrink-0 border-t pt-4">
-            <div className="flex w-full items-center justify-between">
+            <div className="flex w-full flex-col sm:flex-row items-center justify-between gap-2">
               <Button variant="outline" onClick={() => setStep('upload')}>
                 Back
               </Button>
@@ -414,8 +414,8 @@ function MappingStep({
 
       <div className="flex flex-col gap-3">
         {MAPPABLE_FIELDS.map((field) => (
-          <div key={field.key} className="flex items-center justify-between gap-4">
-            <label className="text-foreground min-w-[100px] text-sm">
+          <div key={field.key} className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4">
+            <label className="text-foreground sm:min-w-[100px] text-sm">
               {field.label}
               {field.required && <span className="text-destructive ml-1">*</span>}
             </label>

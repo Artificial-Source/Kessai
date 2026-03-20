@@ -211,6 +211,10 @@ body,
   backdrop-filter: blur(12px);
   border: 1px solid var(--color-border);
   border-radius: 12px;
+  transition: border-color 0.15s ease;
+  &:hover {
+    border-color: var(--color-border-hover);
+  }
 }
 
 @utility glass-sidebar {
@@ -340,6 +344,7 @@ body,
 .no-transitions .animate-slide-in-left,
 .no-transitions .animate-draw-line,
 .no-transitions .animate-donut-segment,
+.no-transitions .animate-gentle-float,
 .no-transitions .stagger-children > * {
   animation: none !important;
   opacity: 1 !important;
@@ -509,6 +514,12 @@ body,
 .stagger-children > *:nth-child(6) {
   animation-delay: 250ms;
 }
+.stagger-children > *:nth-child(7) {
+  animation-delay: 300ms;
+}
+.stagger-children > *:nth-child(8) {
+  animation-delay: 350ms;
+}
 
 /* Scrollbar */
 ::-webkit-scrollbar {
@@ -541,6 +552,36 @@ body,
   -webkit-overflow-scrolling: touch;
 }
 
+/* Thin scrollbar for dialog/modal scroll containers */
+[role='dialog'] ::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+[role='dialog'] ::-webkit-scrollbar-track {
+  background: transparent;
+}
+[role='dialog'] ::-webkit-scrollbar-thumb {
+  background: var(--color-scrollbar-thumb);
+  border-radius: 3px;
+}
+[role='dialog'] ::-webkit-scrollbar-thumb:hover {
+  background: var(--color-scrollbar-thumb-hover);
+}
+
 .overflow-y-auto {
   -webkit-overflow-scrolling: touch;
+}
+
+/* Gentle float animation for empty states */
+@keyframes gentle-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+.animate-gentle-float {
+  animation: gentle-float 3s ease-in-out infinite;
 }

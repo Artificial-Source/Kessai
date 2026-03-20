@@ -50,7 +50,7 @@ export const BudgetWidget = memo(function BudgetWidget({
       {/* Progress bar */}
       <ProgressBar value={percentage} color={barColor} height="md" rounded="full" className="mb-4" />
 
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div>
           <p className="text-muted-foreground mb-0.5 font-[family-name:var(--font-mono)] text-[10px] tracking-wider uppercase">
             Spent

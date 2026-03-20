@@ -6,7 +6,7 @@ export function DashboardSkeleton() {
       {/* Header */}
       <header className="flex flex-col gap-1">
         <Skeleton className="h-8 w-40" />
-        <Skeleton className="h-4 w-64" />
+        <Skeleton className="h-4 w-48 sm:w-64" />
       </header>
 
       {/* Stat cards */}

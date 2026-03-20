@@ -31,7 +31,7 @@ export const TrialsWidget = memo(function TrialsWidget({
             const urgent = daysLeft <= 3
             return (
               <div key={sub.id} className="flex items-center justify-between gap-2">
-                <span className="text-foreground truncate text-sm">{sub.name}</span>
+                <span className="text-foreground min-w-0 truncate text-sm">{sub.name}</span>
                 <span
                   className={`shrink-0 rounded px-1.5 py-0.5 font-[family-name:var(--font-mono)] text-[10px] font-medium ${
                     urgent ? 'bg-amber-400/10 text-amber-400' : 'bg-blue-400/10 text-blue-400'

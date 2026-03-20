@@ -148,7 +148,7 @@ export const SpendingTrends = memo(function SpendingTrends({ currency }: Spendin
 
   return (
     <div className="glass-card p-6">
-      <div className="mb-6 flex items-start justify-between">
+      <div className="mb-6 flex flex-wrap items-start justify-between gap-3">
         <div className="flex items-center gap-3">
           <div className="bg-primary/15 text-primary flex h-8 w-8 items-center justify-center rounded-lg">
             <TrendingUp className="h-4 w-4" />
@@ -166,7 +166,7 @@ export const SpendingTrends = memo(function SpendingTrends({ currency }: Spendin
         <div className="border-border flex overflow-hidden rounded-none border">
           <button
             onClick={() => handleToggle(6)}
-            className={`px-3 py-1.5 font-[family-name:var(--font-mono)] text-[10px] tracking-wider uppercase transition-colors ${
+            className={`min-w-[40px] px-3 py-1.5 font-[family-name:var(--font-mono)] text-[10px] tracking-wider uppercase transition-colors ${
               range === 6
                 ? 'bg-primary text-white'
                 : 'text-muted-foreground hover:text-foreground bg-transparent'
@@ -176,7 +176,7 @@ export const SpendingTrends = memo(function SpendingTrends({ currency }: Spendin
           </button>
           <button
             onClick={() => handleToggle(12)}
-            className={`border-border border-l px-3 py-1.5 font-[family-name:var(--font-mono)] text-[10px] tracking-wider uppercase transition-colors ${
+            className={`border-border min-w-[40px] border-l px-3 py-1.5 font-[family-name:var(--font-mono)] text-[10px] tracking-wider uppercase transition-colors ${
               range === 12
                 ? 'bg-primary text-white'
                 : 'text-muted-foreground hover:text-foreground bg-transparent'
@@ -187,7 +187,7 @@ export const SpendingTrends = memo(function SpendingTrends({ currency }: Spendin
         </div>
       </div>
 
-      <div className="h-[240px] w-full">
+      <div className="h-[180px] sm:h-[240px] w-full">
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={data} margin={{ top: 4, right: 4, bottom: 0, left: -12 }}>
             <defs>

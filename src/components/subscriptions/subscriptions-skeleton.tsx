@@ -18,11 +18,11 @@ export function SubscriptionsSkeleton() {
       {/* Search bar + view toggle */}
       <div className="flex flex-col gap-4">
         <div className="flex flex-wrap items-center justify-between gap-4">
-          <Skeleton className="h-10 w-[360px]" />
+          <Skeleton className="h-10 w-full sm:w-[360px]" />
           <Skeleton className="h-9 w-28 rounded-lg" />
         </div>
         {/* Category filter chips */}
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           {Array.from({ length: 5 }).map((_, i) => (
             <Skeleton key={i} className="h-7 w-20 rounded-full" />
           ))}

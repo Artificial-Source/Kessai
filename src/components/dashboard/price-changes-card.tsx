@@ -48,11 +48,11 @@ export const PriceChangesCard = memo(function PriceChangesCard({
               key={change.id}
               className="border-border flex items-center justify-between rounded-lg border bg-[var(--color-subtle-overlay)] px-4 py-3"
             >
-              <div className="flex flex-col gap-1">
-                <span className="text-foreground text-sm font-medium">
+              <div className="min-w-0 flex flex-col gap-1">
+                <span className="text-foreground truncate text-sm font-medium">
                   {getSubName(change.subscription_id)}
                 </span>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-1 sm:gap-2">
                   <span className="text-muted-foreground font-[family-name:var(--font-mono)] text-xs">
                     {formatCurrency(change.old_amount, currency)}
                   </span>

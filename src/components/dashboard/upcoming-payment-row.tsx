@@ -27,16 +27,16 @@ export const UpcomingPaymentRow = memo(function UpcomingPaymentRow({
 
   return (
     <div className="border-border group flex cursor-pointer items-center justify-between border-b py-3 last:border-b-0">
-      <div className="flex items-center gap-3">
+      <div className="flex min-w-0 items-center gap-3">
         <SubscriptionLogo
           logoUrl={subscription.logo_url}
           name={subscription.name}
           color={subscription.color}
           size="lg"
-          className="rounded-lg"
+          className="shrink-0 rounded-lg"
         />
-        <div>
-          <p className="text-foreground font-[family-name:var(--font-heading)] font-semibold">
+        <div className="min-w-0">
+          <p className="text-foreground truncate font-[family-name:var(--font-heading)] font-semibold">
             {subscription.name}
           </p>
           <p className="text-muted-foreground font-[family-name:var(--font-mono)] text-[11px]">
