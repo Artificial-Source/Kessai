@@ -128,7 +128,7 @@ export const CalendarDay = memo(function CalendarDay({
               <div className="flex min-w-0 flex-1 items-center justify-between gap-1">
                 <span
                   className={cn(
-                    'truncate font-[family-name:var(--font-mono)] text-[8px]',
+                    'truncate font-[family-name:var(--font-mono)] text-[9px]',
                     isPaidOrSkipped && 'line-through'
                   )}
                   style={{ color }}
@@ -136,7 +136,7 @@ export const CalendarDay = memo(function CalendarDay({
                   {p.subscription.name}
                 </span>
                 <span
-                  className="hidden shrink-0 font-[family-name:var(--font-mono)] text-[8px] font-bold sm:inline"
+                  className="hidden shrink-0 font-[family-name:var(--font-mono)] text-[9px] font-bold sm:inline"
                   style={{ color }}
                 >
                   {formatCurrency(p.amount, currency)}

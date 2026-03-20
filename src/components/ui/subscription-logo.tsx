@@ -56,7 +56,7 @@ export function SubscriptionLogo({
       <div
         className={cn(
           sizeClass,
-          'animate-pulse rounded-full bg-[var(--color-subtle-overlay)]',
+          'animate-pulse bg-[var(--color-subtle-overlay)]',
           className
         )}
       />
@@ -70,7 +70,7 @@ export function SubscriptionLogo({
         alt={name}
         loading="lazy"
         decoding="async"
-        className={cn(sizeClass, 'rounded-full border border-white/20 object-cover', className)}
+        className={cn(sizeClass, 'border border-white/20 object-cover', className)}
       />
     )
   }
@@ -79,7 +79,7 @@ export function SubscriptionLogo({
     <div
       className={cn(
         sizeClass,
-        'flex items-center justify-center rounded-full font-bold text-white',
+        'flex items-center justify-center font-bold text-white',
         className
       )}
       style={{ backgroundColor: color || '#bf5af2' }}

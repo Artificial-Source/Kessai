@@ -46,7 +46,10 @@ fn add_months(date: NaiveDate, months: u32) -> NaiveDate {
     let max_day = days_in_month(target_year, target_month);
     let target_day = date.day().min(max_day);
     NaiveDate::from_ymd_opt(target_year, target_month, target_day)
-        .unwrap_or_else(|| NaiveDate::from_ymd_opt(target_year, target_month, 1).unwrap())
+        .unwrap_or_else(|| {
+            NaiveDate::from_ymd_opt(target_year, target_month, 1)
+                .expect("first day of month is always valid for valid year/month")
+        })
 }
 
 /// Returns the number of days in a given month/year.

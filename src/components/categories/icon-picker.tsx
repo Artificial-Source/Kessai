@@ -32,7 +32,7 @@ const iconComponents: Record<string, LucideIcons.LucideIcon> = {
 
 export function IconPicker({ value, onChange }: IconPickerProps) {
   return (
-    <div className="grid grid-cols-5 gap-2">
+    <div className="grid grid-cols-4 gap-2 sm:grid-cols-5">
       {CATEGORY_ICONS.map((iconName) => {
         const IconComponent = iconComponents[iconName]
         if (!IconComponent) return null
@@ -45,7 +45,7 @@ export function IconPicker({ value, onChange }: IconPickerProps) {
             aria-label={`Icon: ${iconName}`}
             aria-pressed={value === iconName}
             className={cn(
-              'flex h-10 w-10 items-center justify-center rounded-lg transition-all',
+              'flex h-11 w-11 items-center justify-center rounded-lg transition-all sm:h-10 sm:w-10',
               value === iconName
                 ? 'bg-primary text-primary-foreground ring-ring ring-offset-background ring-2 ring-offset-2'
                 : 'bg-secondary text-muted-foreground hover:bg-accent hover:text-foreground'

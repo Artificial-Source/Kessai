@@ -301,7 +301,7 @@ export function Subscriptions() {
                   />
                 </div>
                 <Select value={sortOption} onValueChange={(v) => setSortOption(v as SortOption)}>
-                  <SelectTrigger className="h-10 w-[200px] gap-2 rounded-lg font-[family-name:var(--font-mono)] text-[11px] tracking-wider">
+                  <SelectTrigger className="h-10 w-full gap-2 rounded-lg font-[family-name:var(--font-mono)] text-[11px] tracking-wider sm:w-[200px]">
                     <ArrowUpDown className="h-3.5 w-3.5 shrink-0 opacity-50" />
                     <SelectValue />
                   </SelectTrigger>

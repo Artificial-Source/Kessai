@@ -12,13 +12,13 @@ export function DashboardSkeleton() {
       {/* Stat cards */}
       <section className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-4">
         {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="glass-card flex items-center gap-4 p-6">
-            <Skeleton className="h-10 w-10 rounded-lg" />
-            <div className="flex flex-1 flex-col gap-2">
+          <div key={i} className="glass-card p-5">
+            <div className="mb-4 flex items-start justify-between">
               <Skeleton className="h-3 w-24" />
-              <Skeleton className="h-6 w-20" />
-              <Skeleton className="h-3 w-16" />
+              <Skeleton className="h-8 w-8 rounded-lg" />
             </div>
+            <Skeleton className="h-8 w-28" />
+            <Skeleton className="mt-2 h-3 w-16" />
           </div>
         ))}
       </section>
