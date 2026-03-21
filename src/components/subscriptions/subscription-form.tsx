@@ -8,6 +8,7 @@ import { useCategories } from '@/hooks/use-categories'
 import { usePaymentCardStore } from '@/stores/payment-card-store'
 import { useSettingsStore } from '@/stores/settings-store'
 import { useLogoFetch } from '@/hooks/use-logo-fetch'
+import { fetchLogoForName, getCachedLogoFilename } from '@/lib/logo-fetch'
 import { usePriceHistory } from '@/hooks/use-price-history'
 import { pickAndSaveLogo, getLogoDataUrl } from '@/lib/logo-storage'
 import { SUBSCRIPTION_TEMPLATES } from '@/data/subscription-templates'
@@ -522,8 +523,20 @@ export function SubscriptionForm({
           </div>
           {/* Logo library picker */}
           <LogoLibraryPicker
-            onSelect={(domain, name) => {
-              fetchLogo(name, domain)
+            onSelect={async (domain, name) => {
+              // Directly fetch and apply the logo (skip the suggestion step)
+              try {
+                const dataUrl = await fetchLogoForName(name, domain)
+                if (dataUrl) {
+                  const filename = getCachedLogoFilename(name)
+                  form.setValue('logo_url', filename)
+                  setLogoPreview(dataUrl)
+                  clearFetchedLogo()
+                }
+              } catch {
+                // Fall back to suggestion flow
+                fetchLogo(name, domain)
+              }
             }}
           />
           {/* Auto-fetched logo suggestion */}
