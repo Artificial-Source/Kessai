@@ -1,4 +1,21 @@
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Deserializer, Serialize};
+
+/// Custom deserializer for `Option<Option<T>>` that properly distinguishes between:
+/// - Field absent from JSON   -> `None`        (don't update)
+/// - Field present as `null`  -> `Some(None)`  (set to NULL)
+/// - Field present with value -> `Some(Some(value))`
+///
+/// Without this, serde's default treats both absent and null as `None`,
+/// making it impossible to clear nullable fields via an update.
+fn deserialize_double_option<'de, T, D>(deserializer: D) -> Result<Option<Option<T>>, D::Error>
+where
+    T: Deserialize<'de>,
+    D: Deserializer<'de>,
+{
+    // If this function is called, the field was present in the JSON.
+    // Deserialize the inner value as Option<T> to handle null vs value.
+    Ok(Some(Option::deserialize(deserializer)?))
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(rename_all = "lowercase")]
@@ -168,25 +185,25 @@ pub struct UpdateSubscription {
     pub currency: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub billing_cycle: Option<BillingCycle>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(default, skip_serializing_if = "Option::is_none", deserialize_with = "deserialize_double_option")]
     pub billing_day: Option<Option<i32>>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(default, skip_serializing_if = "Option::is_none", deserialize_with = "deserialize_double_option")]
     pub category_id: Option<Option<String>>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(default, skip_serializing_if = "Option::is_none", deserialize_with = "deserialize_double_option")]
     pub card_id: Option<Option<String>>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(default, skip_serializing_if = "Option::is_none", deserialize_with = "deserialize_double_option")]
     pub color: Option<Option<String>>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(default, skip_serializing_if = "Option::is_none", deserialize_with = "deserialize_double_option")]
     pub logo_url: Option<Option<String>>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(default, skip_serializing_if = "Option::is_none", deserialize_with = "deserialize_double_option")]
     pub notes: Option<Option<String>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub is_active: Option<bool>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(default, skip_serializing_if = "Option::is_none", deserialize_with = "deserialize_double_option")]
     pub next_payment_date: Option<Option<String>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub status: Option<SubscriptionStatus>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(default, skip_serializing_if = "Option::is_none", deserialize_with = "deserialize_double_option")]
     pub trial_end_date: Option<Option<String>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub shared_count: Option<i32>,
