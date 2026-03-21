@@ -10,7 +10,8 @@ import { useSettingsStore } from '@/stores/settings-store'
 import { useLogoFetch } from '@/hooks/use-logo-fetch'
 import { usePriceHistory } from '@/hooks/use-price-history'
 import { pickAndSaveLogo, getLogoDataUrl } from '@/lib/logo-storage'
-import { CreditCard, Upload, X, Loader2, Users, Check, Globe } from 'lucide-react'
+import { SUBSCRIPTION_TEMPLATES } from '@/data/subscription-templates'
+import { CreditCard, Upload, X, Loader2, Users, Check, Globe, ChevronDown } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -519,6 +520,12 @@ export function SubscriptionForm({
               </Button>
             </div>
           </div>
+          {/* Logo library picker */}
+          <LogoLibraryPicker
+            onSelect={(domain, name) => {
+              fetchLogo(name, domain)
+            }}
+          />
           {/* Auto-fetched logo suggestion */}
           {!logoPreview && fetchedLogoPreview && !isFetchingLogo && (
             <div className="border-border bg-muted/30 flex items-center gap-3 rounded-lg border p-3">
@@ -649,5 +656,100 @@ export function SubscriptionForm({
         </Button>
       </div>
     </form>
+  )
+}
+
+// ── Logo Library Picker ─────────────────────────────────────────────
+const LOGO_LIBRARY = SUBSCRIPTION_TEMPLATES.filter((t) => t.domain).map((t) => ({
+  name: t.name,
+  domain: t.domain!,
+  color: t.color,
+}))
+
+function LogoLibraryPicker({
+  onSelect,
+}: {
+  onSelect: (domain: string, name: string) => void
+}) {
+  const [open, setOpen] = useState(false)
+  const [search, setSearch] = useState('')
+
+  const filtered = useMemo(() => {
+    if (!search) return LOGO_LIBRARY.slice(0, 24)
+    const q = search.toLowerCase()
+    return LOGO_LIBRARY.filter(
+      (l) => l.name.toLowerCase().includes(q) || l.domain.toLowerCase().includes(q)
+    ).slice(0, 24)
+  }, [search])
+
+  return (
+    <div className="space-y-2">
+      <button
+        type="button"
+        onClick={() => setOpen(!open)}
+        className="text-muted-foreground hover:text-foreground flex items-center gap-1.5 font-[family-name:var(--font-mono)] text-[11px] tracking-wider uppercase transition-colors"
+      >
+        <ChevronDown
+          className={cn('h-3 w-3 transition-transform', open && 'rotate-180')}
+        />
+        Pick from library
+      </button>
+      {open && (
+        <div className="space-y-2">
+          <input
+            type="text"
+            placeholder="Search logos..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="border-border bg-input text-foreground placeholder-muted-foreground focus:border-primary focus:ring-primary h-8 w-full rounded-lg border px-3 font-[family-name:var(--font-sans)] text-xs focus:ring-1 focus:outline-none"
+          />
+          <div className="grid grid-cols-6 gap-1.5 sm:grid-cols-8">
+            {filtered.map((logo) => (
+              <button
+                key={logo.domain}
+                type="button"
+                title={logo.name}
+                onClick={() => {
+                  onSelect(logo.domain, logo.name)
+                  setOpen(false)
+                  setSearch('')
+                }}
+                className="border-border hover:border-primary/50 hover:bg-primary/5 group flex h-10 w-10 items-center justify-center rounded-lg border transition-colors"
+              >
+                <LogoLibraryIcon domain={logo.domain} name={logo.name} color={logo.color} />
+              </button>
+            ))}
+          </div>
+          {filtered.length === 0 && (
+            <p className="text-muted-foreground py-2 text-center text-xs">No logos found</p>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function LogoLibraryIcon({ domain, name, color }: { domain: string; name: string; color: string }) {
+  const [error, setError] = useState(false)
+  const url = `https://www.google.com/s2/favicons?domain=${domain}&sz=64`
+
+  if (error) {
+    return (
+      <div
+        className="flex h-7 w-7 items-center justify-center rounded text-[10px] font-bold text-white"
+        style={{ backgroundColor: color }}
+      >
+        {name.charAt(0).toUpperCase()}
+      </div>
+    )
+  }
+
+  return (
+    <img
+      src={url}
+      alt={name}
+      className="h-7 w-7 rounded object-cover"
+      onError={() => setError(true)}
+    />
   )
 }
