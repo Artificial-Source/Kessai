@@ -8,10 +8,9 @@ import { useCategories } from '@/hooks/use-categories'
 import { usePaymentCardStore } from '@/stores/payment-card-store'
 import { useSettingsStore } from '@/stores/settings-store'
 import { useLogoFetch } from '@/hooks/use-logo-fetch'
-import { fetchLogoForName, getCachedLogoFilename } from '@/lib/logo-fetch'
 import { usePriceHistory } from '@/hooks/use-price-history'
 import { pickAndSaveLogo, getLogoDataUrl } from '@/lib/logo-storage'
-import { SUBSCRIPTION_TEMPLATES } from '@/data/subscription-templates'
+import { SUBSCRIPTION_TEMPLATES, getTemplateLogo } from '@/data/subscription-templates'
 import { CreditCard, Upload, X, Loader2, Users, Check, Globe, ChevronDown } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -523,24 +522,13 @@ export function SubscriptionForm({
           </div>
           {/* Logo library picker */}
           <LogoLibraryPicker
-            onSelect={async (domain, name) => {
-              // Clear current logo so we can set the new one
-              setLogoPreview(null)
-              form.setValue('logo_url', null)
-              clearFetchedLogo()
-              // Fetch and auto-apply the logo
-              try {
-                const dataUrl = await fetchLogoForName(name, domain)
-                const filename = getCachedLogoFilename(name)
-                if (dataUrl && filename) {
-                  form.setValue('logo_url', filename, { shouldDirty: true })
-                  setLogoPreview(dataUrl)
-                  toast.success('Logo applied', { description: `Using ${name} logo` })
-                } else {
-                  toast.error('Logo not found', { description: `Could not fetch logo for ${name}` })
-                }
-              } catch (err) {
-                toast.error('Logo fetch failed', { description: String(err) })
+            onSelect={(domain) => {
+              // Use the bundled local logo — no network fetch needed
+              const logoPath = getTemplateLogo(domain)
+              if (logoPath) {
+                form.setValue('logo_url', logoPath, { shouldDirty: true })
+                setLogoPreview(logoPath)
+                clearFetchedLogo()
               }
             }}
           />
@@ -749,9 +737,9 @@ function LogoLibraryPicker({
 
 function LogoLibraryIcon({ domain, name, color }: { domain: string; name: string; color: string }) {
   const [error, setError] = useState(false)
-  const url = `https://www.google.com/s2/favicons?domain=${domain}&sz=64`
+  const logoPath = getTemplateLogo(domain)
 
-  if (error) {
+  if (!logoPath || error) {
     return (
       <div
         className="flex h-7 w-7 items-center justify-center rounded text-[10px] font-bold text-white"
@@ -764,7 +752,7 @@ function LogoLibraryIcon({ domain, name, color }: { domain: string; name: string
 
   return (
     <img
-      src={url}
+      src={logoPath}
       alt={name}
       className="h-7 w-7 rounded object-cover"
       onError={() => setError(true)}

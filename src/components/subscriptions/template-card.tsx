@@ -1,6 +1,7 @@
 import { memo, useState } from 'react'
 import { formatCurrency, type CurrencyCode } from '@/lib/currency'
 import { BILLING_CYCLE_SHORT } from '@/lib/constants'
+import { getTemplateLogo } from '@/data/subscription-templates'
 import type { SubscriptionTemplate } from '@/data/subscription-templates'
 
 interface TemplateCardProps {
@@ -10,18 +11,16 @@ interface TemplateCardProps {
 
 export const TemplateCard = memo(function TemplateCard({ template, onClick }: TemplateCardProps) {
   const [imgError, setImgError] = useState(false)
-  const faviconUrl = template.domain
-    ? `https://www.google.com/s2/favicons?domain=${template.domain}&sz=64`
-    : null
+  const logoPath = getTemplateLogo(template.domain)
 
   return (
     <button
       onClick={onClick}
       className="hover-lift glass-card group flex items-center gap-3 p-3 text-left transition-all"
     >
-      {faviconUrl && !imgError ? (
+      {logoPath && !imgError ? (
         <img
-          src={faviconUrl}
+          src={logoPath}
           alt=""
           className="h-9 w-9 shrink-0 rounded-lg object-cover"
           onError={() => setImgError(true)}

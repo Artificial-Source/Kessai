@@ -32,6 +32,12 @@ export function SubscriptionLogo({
   useEffect(() => {
     if (!logoUrl) return
 
+    // Bundled static logos (e.g. /logos/templates/xxx.png) — use directly
+    if (logoUrl.startsWith('/logos/')) {
+      setState({ dataUrl: logoUrl, isLoading: false })
+      return
+    }
+
     let cancelled = false
 
     getLogoDataUrl(logoUrl)

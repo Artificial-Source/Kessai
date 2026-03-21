@@ -12,6 +12,13 @@ export interface SubscriptionTemplate {
   keywords: string[]
 }
 
+/** Get the bundled logo path for a template domain */
+export function getTemplateLogo(domain: string | null): string | null {
+  if (!domain) return null
+  const slug = domain.replace(/[^a-zA-Z0-9]/g, '-')
+  return `/logos/templates/${slug}.png`
+}
+
 export const SUBSCRIPTION_TEMPLATES: SubscriptionTemplate[] = [
   // ── Streaming ──────────────────────────────────────────
   {
