@@ -1,5 +1,5 @@
 import { memo } from 'react'
-import { Pencil, Trash2, Power } from 'lucide-react'
+import { Pencil, Trash2, Power, Pin } from 'lucide-react'
 import { formatCurrency } from '@/lib/currency'
 import { convertCurrencyCached } from '@/lib/exchange-rates'
 import { formatPaymentDate } from '@/lib/date-utils'
@@ -21,6 +21,7 @@ interface SubscriptionsListViewProps {
   onEdit: (sub: Subscription) => void
   onDelete: (sub: Subscription) => void
   onToggleActive: (sub: Subscription) => void
+  onTogglePinned: (sub: Subscription) => void
 }
 
 function getCategoryVariant(categoryName?: string): BadgeVariant {
@@ -36,6 +37,7 @@ export const SubscriptionsListView = memo(function SubscriptionsListView({
   onEdit,
   onDelete,
   onToggleActive,
+  onTogglePinned,
 }: SubscriptionsListViewProps) {
   return (
     <div className="glass-card flex flex-1 flex-col overflow-hidden rounded-xl">
@@ -78,7 +80,12 @@ export const SubscriptionsListView = memo(function SubscriptionsListView({
                         className="shrink-0 rounded-lg"
                       />
                       <div className="min-w-0">
-                        <p className="text-foreground truncate font-medium">{sub.name}</p>
+                        <div className="flex items-center gap-1.5">
+                          <p className="text-foreground truncate font-medium">{sub.name}</p>
+                          {sub.is_pinned && (
+                            <Pin className="h-3 w-3 shrink-0 fill-[var(--color-primary)] text-[var(--color-primary)]" />
+                          )}
+                        </div>
                         {category && (
                           <Badge variant={getCategoryVariant(category.name)} size="sm">
                             {category.name}
@@ -143,6 +150,17 @@ export const SubscriptionsListView = memo(function SubscriptionsListView({
                   </td>
                   <td className="px-4 py-4">
                     <div className="flex items-center justify-end gap-1 md:opacity-0 md:transition-[opacity] md:group-hover:opacity-100 md:focus-within:opacity-100">
+                      <button
+                        onClick={() => onTogglePinned(sub)}
+                        aria-label={sub.is_pinned ? `Unpin ${sub.name}` : `Pin ${sub.name}`}
+                        className={`rounded-lg p-2 transition-colors ${
+                          sub.is_pinned
+                            ? 'text-[var(--color-primary)] hover:bg-[var(--color-primary)]/15'
+                            : 'text-muted-foreground hover:bg-accent hover:text-foreground'
+                        }`}
+                      >
+                        <Pin className={`h-4 w-4 ${sub.is_pinned ? 'fill-current' : ''}`} />
+                      </button>
                       <button
                         onClick={() => onEdit(sub)}
                         aria-label={`Edit ${sub.name}`}

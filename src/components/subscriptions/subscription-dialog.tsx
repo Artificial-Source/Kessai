@@ -96,6 +96,7 @@ export function SubscriptionDialog() {
           status: data.is_trial ? 'trial' : undefined,
           trial_end_date: data.is_trial ? (data.trial_end_date ?? null) : null,
           shared_count: data.shared_count,
+          is_pinned: data.is_pinned,
         })
         toast.success('Subscription updated', {
           description: `${data.name} has been updated successfully.`,
@@ -117,6 +118,7 @@ export function SubscriptionDialog() {
           status: data.is_trial ? 'trial' : 'active',
           trial_end_date: data.is_trial ? (data.trial_end_date ?? null) : null,
           shared_count: data.shared_count,
+          is_pinned: data.is_pinned,
         })
         toast.success('Subscription added', {
           description: `${data.name} has been added to your subscriptions.`,

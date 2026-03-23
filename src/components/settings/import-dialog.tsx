@@ -184,6 +184,7 @@ export function ImportDialog({ open, onOpenChange, onDataChanged }: ImportDialog
           is_active: true,
           status: 'active',
           shared_count: 1,
+          is_pinned: false,
           next_payment_date: sub.start_date || new Date().toISOString().split('T')[0],
         })
         imported++

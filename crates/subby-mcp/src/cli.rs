@@ -251,6 +251,7 @@ fn cmd_add(
         status: subby_core::models::SubscriptionStatus::Active,
         trial_end_date: None,
         shared_count: 1,
+        is_pinned: false,
     })?;
 
     println!(
@@ -295,6 +296,7 @@ fn cmd_update(
             status: None,
             trial_end_date: None,
             shared_count: None,
+            is_pinned: None,
         },
     )?;
 

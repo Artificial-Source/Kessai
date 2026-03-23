@@ -61,7 +61,8 @@ const ConfirmDialog = lazy(() =>
 )
 
 export function Subscriptions() {
-  const { subscriptions, isLoading, remove, toggleActive, getCategory } = useSubscriptions()
+  const { subscriptions, isLoading, remove, toggleActive, togglePinned, getCategory } =
+    useSubscriptions()
   const categories = useCategoryStore((state) => state.categories)
   const { openSubscriptionDialog } = useUiStore()
   const { settings, fetch: fetchSettings } = useSettingsStore()
@@ -133,6 +134,10 @@ export function Subscriptions() {
     })
 
     return filtered.sort((a, b) => {
+      // Pinned subscriptions always come first
+      if (a.is_pinned && !b.is_pinned) return -1
+      if (!a.is_pinned && b.is_pinned) return 1
+
       switch (sortOption) {
         case 'name-asc':
           return a.name.localeCompare(b.name)
@@ -233,6 +238,17 @@ export function Subscriptions() {
     } finally {
       setIsDeleting(false)
       setDeleteTarget(null)
+    }
+  }
+
+  const handleTogglePinned = async (sub: Subscription) => {
+    try {
+      await togglePinned(sub.id)
+      toast.success(sub.is_pinned ? 'Subscription unpinned' : 'Subscription pinned', {
+        description: `${sub.name} has been ${sub.is_pinned ? 'unpinned' : 'pinned'}.`,
+      })
+    } catch {
+      toast.error('Error', { description: 'Failed to toggle pin status.' })
     }
   }
 
@@ -419,6 +435,7 @@ export function Subscriptions() {
             onEdit={(sub) => openSubscriptionDialog(sub.id)}
             onDelete={setDeleteTarget}
             onToggleActive={handleToggleActive}
+            onTogglePinned={handleTogglePinned}
             onMarkAsPaid={handleMarkAsPaid}
             canMarkAsPaid={canMarkAsPaid}
           />
@@ -431,6 +448,7 @@ export function Subscriptions() {
             onEdit={(sub) => openSubscriptionDialog(sub.id)}
             onDelete={setDeleteTarget}
             onToggleActive={handleToggleActive}
+            onTogglePinned={handleTogglePinned}
           />
         )}
       </div>
