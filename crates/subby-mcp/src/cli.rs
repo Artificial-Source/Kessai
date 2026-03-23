@@ -295,6 +295,7 @@ fn cmd_update(
             status: None,
             trial_end_date: None,
             shared_count: None,
+            last_reviewed_at: None,
         },
     )?;
 

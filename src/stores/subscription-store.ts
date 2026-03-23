@@ -4,6 +4,7 @@ import type { Subscription, NewSubscription, SubscriptionStatus } from '@/types/
 
 type SubscriptionState = {
   subscriptions: Subscription[]
+  needingReview: Subscription[]
   isLoading: boolean
   error: string | null
 
@@ -13,6 +14,8 @@ type SubscriptionState = {
   remove: (id: string) => Promise<void>
   toggleActive: (id: string) => Promise<void>
   transitionStatus: (id: string, status: SubscriptionStatus) => Promise<void>
+  markReviewed: (id: string) => Promise<void>
+  fetchNeedingReview: (days?: number) => Promise<void>
 }
 
 const sortByPaymentDate = (a: Subscription, b: Subscription) => {
@@ -24,6 +27,7 @@ const sortByPaymentDate = (a: Subscription, b: Subscription) => {
 
 export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
   subscriptions: [],
+  needingReview: [],
   isLoading: false,
   error: null,
 
@@ -59,6 +63,7 @@ export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
       trial_end_date: sub.trial_end_date ?? null,
       status_changed_at: now,
       shared_count: sub.shared_count ?? 1,
+      last_reviewed_at: null,
       created_at: now,
       updated_at: now,
     }
@@ -170,6 +175,30 @@ export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
       set({ subscriptions: previousSubscriptions })
       console.error('Failed to transition status:', error)
       throw error
+    }
+  },
+
+  markReviewed: async (id) => {
+    try {
+      const updated = await invoke<Subscription>('mark_subscription_reviewed', { id })
+      set((state) => ({
+        subscriptions: state.subscriptions
+          .map((s) => (s.id === id ? updated : s))
+          .sort(sortByPaymentDate),
+        needingReview: state.needingReview.filter((s) => s.id !== id),
+      }))
+    } catch (error) {
+      console.error('Failed to mark subscription as reviewed:', error)
+      throw error
+    }
+  },
+
+  fetchNeedingReview: async (days = 30) => {
+    try {
+      const subs = await invoke<Subscription[]>('list_subscriptions_needing_review', { days })
+      set({ needingReview: subs })
+    } catch (error) {
+      console.error('Failed to fetch subscriptions needing review:', error)
     }
   },
 }))

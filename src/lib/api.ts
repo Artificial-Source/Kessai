@@ -54,6 +54,14 @@ const API_MAP: Record<
     method: 'GET',
     path: (a) => `/api/trials/expiring?days=${(a.days as number | undefined) ?? 7}`,
   },
+  mark_subscription_reviewed: {
+    method: 'POST',
+    path: (a) => `/api/subscriptions/${a.id}/review`,
+  },
+  list_subscriptions_needing_review: {
+    method: 'GET',
+    path: (a) => `/api/subscriptions/needs-review?days=${(a.days as number | undefined) ?? 30}`,
+  },
 
   // Categories
   list_categories: { method: 'GET', path: () => '/api/categories' },
