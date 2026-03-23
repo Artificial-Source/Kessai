@@ -101,6 +101,24 @@ const API_MAP: Record<
     path: (a) => `/api/price-history/recent?days=${(a.days as number | undefined) ?? 90}`,
   },
 
+  // Tags
+  list_tags: { method: 'GET', path: () => '/api/tags' },
+  create_tag: { method: 'POST', path: () => '/api/tags', bodyKey: 'data' },
+  update_tag: { method: 'PUT', path: (a) => `/api/tags/${a.id}`, bodyKey: 'data' },
+  delete_tag: { method: 'DELETE', path: (a) => `/api/tags/${a.id}` },
+  list_subscription_tags: {
+    method: 'GET',
+    path: (a) => `/api/subscriptions/${a.subscriptionId}/tags`,
+  },
+  add_subscription_tag: {
+    method: 'POST',
+    path: (a) => `/api/subscriptions/${a.subscriptionId}/tags`,
+  },
+  remove_subscription_tag: {
+    method: 'DELETE',
+    path: (a) => `/api/subscriptions/${a.subscriptionId}/tags/${a.tagId}`,
+  },
+
   // Data Management
   export_data: { method: 'GET', path: () => '/api/export' },
   import_data: { method: 'POST', path: () => '/api/import' },

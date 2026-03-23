@@ -8,7 +8,7 @@ type SubscriptionState = {
   error: string | null
 
   fetch: () => Promise<void>
-  add: (sub: NewSubscription) => Promise<void>
+  add: (sub: NewSubscription) => Promise<Subscription>
   update: (id: string, data: Partial<Subscription>) => Promise<void>
   remove: (id: string) => Promise<void>
   toggleActive: (id: string) => Promise<void>
@@ -75,6 +75,7 @@ export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
           .map((s) => (s.id === optimisticId ? created : s))
           .sort(sortByPaymentDate),
       }))
+      return created
     } catch (error) {
       // Rollback
       set((state) => ({

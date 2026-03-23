@@ -11,7 +11,7 @@ use db::DbPool;
 use error::Result;
 use services::{
     CategoryService, DataManagementService, PaymentCardService, PaymentService,
-    PriceHistoryService, SettingsService, SubscriptionService,
+    PriceHistoryService, SettingsService, SubscriptionService, TagService,
 };
 
 /// Top-level API for the Subby core library.
@@ -63,6 +63,10 @@ impl SubbyCore {
 
     pub fn price_history(&self) -> PriceHistoryService {
         PriceHistoryService::new(self.pool.clone())
+    }
+
+    pub fn tags(&self) -> TagService {
+        TagService::new(self.pool.clone())
     }
 
     pub fn data_management(&self) -> DataManagementService {

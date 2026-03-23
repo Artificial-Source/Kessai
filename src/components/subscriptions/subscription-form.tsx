@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo, useRef } from 'react'
+import { useEffect, useState, useMemo, useRef, useCallback } from 'react'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import dayjs from 'dayjs'
@@ -33,12 +33,14 @@ import { BILLING_CYCLE_LABELS } from '@/lib/constants'
 import { getCurrencyOptions, formatCurrency, type CurrencyCode } from '@/lib/currency'
 import { convertCurrencyCached } from '@/lib/exchange-rates'
 import { cn } from '@/lib/utils'
+import { TagPicker } from '@/components/tags/tag-picker'
+import { useTagStore } from '@/stores/tag-store'
 import type { SubscriptionTemplate } from '@/data/subscription-templates'
 
 type SubscriptionFormProps = {
   subscription?: Subscription | null
   template?: SubscriptionTemplate | null
-  onSubmit: (data: SubscriptionFormData) => Promise<void>
+  onSubmit: (data: SubscriptionFormData, tagIds?: string[]) => Promise<void>
   onCancel: () => void
   isLoading?: boolean
 }
@@ -59,6 +61,18 @@ export function SubscriptionForm({
   )
   const globalCurrency = (useSettingsStore((s) => s.settings)?.currency || 'USD') as CurrencyCode
   const isEditing = Boolean(subscription)
+  const [selectedTagIds, setSelectedTagIds] = useState<string[]>([])
+  const fetchForSubscription = useTagStore((s) => s.fetchForSubscription)
+
+  // Load existing tags when editing a subscription
+  useEffect(() => {
+    if (subscription?.id) {
+      fetchForSubscription(subscription.id).then((tags) => {
+        setSelectedTagIds(tags.map((t) => t.id))
+      })
+    }
+  }, [subscription?.id, fetchForSubscription])
+
   const [logoPreview, setLogoPreview] = useState<string | null>(null)
   const [isLoadingLogo, setIsLoadingLogo] = useState(Boolean(subscription?.logo_url))
   const [isUploadingLogo, setIsUploadingLogo] = useState(false)
@@ -213,13 +227,16 @@ export function SubscriptionForm({
     return () => sub.unsubscribe()
   }, [form, fetchLogo, logoPreview])
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    const isValid = await form.trigger()
-    if (isValid) {
-      await onSubmit(form.getValues())
-    }
-  }
+  const handleSubmit = useCallback(
+    async (e: React.FormEvent) => {
+      e.preventDefault()
+      const isValid = await form.trigger()
+      if (isValid) {
+        await onSubmit(form.getValues(), selectedTagIds)
+      }
+    },
+    [form, onSubmit, selectedTagIds]
+  )
 
   const currencyOptions = useMemo(() => getCurrencyOptions(), [])
 
@@ -358,6 +375,12 @@ export function SubscriptionForm({
             )}
           />
         </div>
+
+        <TagPicker
+          subscriptionId={subscription?.id}
+          selectedTagIds={selectedTagIds}
+          onChange={setSelectedTagIds}
+        />
 
         {/* ── Advanced ──────────────────────────────────────── */}
         <div className="border-border border-t pt-4 mt-4" />

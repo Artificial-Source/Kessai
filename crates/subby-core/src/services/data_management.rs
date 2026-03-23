@@ -3,12 +3,13 @@ use rusqlite::params;
 use crate::db::DbPool;
 use crate::error::{Result, SubbyCoreError};
 use crate::models::settings::Theme;
-use crate::models::stats::{BackupData, BackupSettings, ImportResult};
+use crate::models::stats::{BackupData, BackupSettings, BackupSubscriptionTag, ImportResult};
 use crate::services::category::CategoryService;
 use crate::services::payment::PaymentService;
 use crate::services::price_history::PriceHistoryService;
 use crate::services::settings::SettingsService;
 use crate::services::subscription::SubscriptionService;
+use crate::services::tag::TagService;
 
 pub struct DataManagementService {
     pool: DbPool,
@@ -25,7 +26,11 @@ impl DataManagementService {
         let cats = CategoryService::new(self.pool.clone()).list()?;
         let payments = PaymentService::new(self.pool.clone()).list()?;
         let price_history = PriceHistoryService::new(self.pool.clone()).list()?;
+        let tags = TagService::new(self.pool.clone()).list()?;
         let settings = SettingsService::new(self.pool.clone()).get()?;
+
+        // Export subscription_tags mappings
+        let subscription_tags = self.export_subscription_tags()?;
 
         Ok(BackupData {
             version: "1.1.0".to_string(),
@@ -34,8 +39,25 @@ impl DataManagementService {
             categories: cats,
             payments,
             price_history,
+            tags,
+            subscription_tags,
             settings: BackupSettings::from(&settings),
         })
+    }
+
+    /// Export all subscription_tags rows.
+    fn export_subscription_tags(&self) -> Result<Vec<BackupSubscriptionTag>> {
+        let conn = self.pool.get()?;
+        let mut stmt = conn.prepare(
+            "SELECT subscription_id, tag_id FROM subscription_tags",
+        )?;
+        let rows = stmt.query_map([], |row| {
+            Ok(BackupSubscriptionTag {
+                subscription_id: row.get(0)?,
+                tag_id: row.get(1)?,
+            })
+        })?;
+        Ok(rows.collect::<std::result::Result<Vec<_>, _>>()?)
     }
 
     /// Validate that a BackupData is structurally valid.
@@ -48,6 +70,8 @@ impl DataManagementService {
             || data.categories.len() > 1000
             || data.payments.len() > 100000
             || data.price_history.len() > 50000
+            || data.tags.len() > 1000
+            || data.subscription_tags.len() > 50000
         {
             return false;
         }
@@ -71,7 +95,9 @@ impl DataManagementService {
         let result = (|| -> Result<ImportResult> {
             if clear_existing {
                 tx.execute_batch(
-                    "DELETE FROM price_history;
+                    "DELETE FROM subscription_tags;
+                     DELETE FROM tags;
+                     DELETE FROM price_history;
                      DELETE FROM payments;
                      DELETE FROM subscriptions;
                      DELETE FROM categories WHERE is_default = 0;",
@@ -166,6 +192,24 @@ impl DataManagementService {
                 )?;
             }
 
+            // Import tags
+            for tag in &data.tags {
+                tx.execute(
+                    "INSERT OR REPLACE INTO tags (id, name, color, created_at)
+                     VALUES (?1, ?2, ?3, ?4)",
+                    params![tag.id, tag.name, tag.color, tag.created_at],
+                )?;
+            }
+
+            // Import subscription_tags
+            for st in &data.subscription_tags {
+                tx.execute(
+                    "INSERT OR IGNORE INTO subscription_tags (subscription_id, tag_id)
+                     VALUES (?1, ?2)",
+                    params![st.subscription_id, st.tag_id],
+                )?;
+            }
+
             // Update settings
             let theme = Theme::from_str(&data.settings.theme)
                 .unwrap_or(Theme::Dark)
@@ -195,11 +239,12 @@ impl DataManagementService {
             let cat_count = non_default_cats.len();
             let pay_count = data.payments.len();
             let price_count = data.price_history.len();
+            let tag_count = data.tags.len();
 
             Ok(ImportResult {
                 success: true,
                 message: format!(
-                    "Imported {sub_count} subscriptions, {cat_count} categories, {pay_count} payments, and {price_count} price changes"
+                    "Imported {sub_count} subscriptions, {cat_count} categories, {pay_count} payments, {price_count} price changes, and {tag_count} tags"
                 ),
             })
         })();

@@ -12,6 +12,8 @@ import type { BadgeVariant } from '@/components/ui/badge'
 import type { CurrencyCode } from '@/lib/currency'
 import type { Subscription } from '@/types/subscription'
 import type { Category } from '@/types/category'
+import type { Tag } from '@/types/tag'
+import { TagBadge } from '@/components/tags/tag-badge'
 
 interface SubscriptionsGridViewProps {
   subscriptions: Subscription[]
@@ -22,6 +24,8 @@ interface SubscriptionsGridViewProps {
   onToggleActive: (sub: Subscription) => void
   onMarkAsPaid: (sub: Subscription) => void
   canMarkAsPaid: (sub: Subscription) => boolean
+  allTags?: Tag[]
+  subscriptionTagMap?: Record<string, string[]>
 }
 
 function getCategoryVariant(categoryName?: string): BadgeVariant {
@@ -38,6 +42,8 @@ export const SubscriptionsGridView = memo(function SubscriptionsGridView({
   onToggleActive,
   onMarkAsPaid,
   canMarkAsPaid,
+  allTags = [],
+  subscriptionTagMap = {},
 }: SubscriptionsGridViewProps) {
   return (
     <div className="stagger-children grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3">
@@ -104,6 +110,14 @@ export const SubscriptionsGridView = memo(function SubscriptionsGridView({
                   )}
                   <PriceHistoryBadge subscriptionId={sub.id} currency={currency} />
                 </div>
+                {(subscriptionTagMap[sub.id] || []).length > 0 && (
+                  <div className="flex flex-wrap gap-1">
+                    {(subscriptionTagMap[sub.id] || []).map((tagId) => {
+                      const tag = allTags.find((t) => t.id === tagId)
+                      return tag ? <TagBadge key={tag.id} tag={tag} /> : null
+                    })}
+                  </div>
+                )}
               </div>
 
               <div className="mt-auto flex items-end justify-between">

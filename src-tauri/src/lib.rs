@@ -6,9 +6,9 @@ use image::ImageReader;
 use tauri::Manager;
 
 use subby_core::models::{
-    BackupData, NewCategory, NewPayment, NewPaymentCard, NewSubscription, PaymentWithSubscription,
-    PriceChange, SubscriptionStatus, UpdateCategory, UpdatePayment, UpdatePaymentCard,
-    UpdateSettings, UpdateSubscription,
+    BackupData, NewCategory, NewPayment, NewPaymentCard, NewSubscription, NewTag,
+    PaymentWithSubscription, PriceChange, SubscriptionStatus, Tag, UpdateCategory, UpdatePayment,
+    UpdatePaymentCard, UpdateSettings, UpdateSubscription, UpdateTag,
 };
 use subby_core::{
     models::{Category, ImportResult, Payment, PaymentCard, Settings, Subscription},
@@ -419,6 +419,64 @@ fn get_recent_price_changes(
         .map_err(|e| e.to_string())
 }
 
+// ── Tag commands ──────────────────────────────────────────────────────────
+
+#[tauri::command]
+fn list_tags(core: tauri::State<'_, SubbyCore>) -> Result<Vec<Tag>, String> {
+    core.tags().list().map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn create_tag(core: tauri::State<'_, SubbyCore>, data: NewTag) -> Result<Tag, String> {
+    core.tags().create(data).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn update_tag(
+    core: tauri::State<'_, SubbyCore>,
+    id: String,
+    data: UpdateTag,
+) -> Result<Tag, String> {
+    core.tags().update(&id, data).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn delete_tag(core: tauri::State<'_, SubbyCore>, id: String) -> Result<(), String> {
+    core.tags().delete(&id).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn add_subscription_tag(
+    core: tauri::State<'_, SubbyCore>,
+    subscription_id: String,
+    tag_id: String,
+) -> Result<(), String> {
+    core.tags()
+        .add_to_subscription(&subscription_id, &tag_id)
+        .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn remove_subscription_tag(
+    core: tauri::State<'_, SubbyCore>,
+    subscription_id: String,
+    tag_id: String,
+) -> Result<(), String> {
+    core.tags()
+        .remove_from_subscription(&subscription_id, &tag_id)
+        .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn list_subscription_tags(
+    core: tauri::State<'_, SubbyCore>,
+    subscription_id: String,
+) -> Result<Vec<Tag>, String> {
+    core.tags()
+        .list_for_subscription(&subscription_id)
+        .map_err(|e| e.to_string())
+}
+
 // ── Settings commands ──────────────────────────────────────────────────────
 
 #[tauri::command]
@@ -516,6 +574,14 @@ pub fn run() {
             create_payment_card,
             update_payment_card,
             delete_payment_card,
+            // Tags
+            list_tags,
+            create_tag,
+            update_tag,
+            delete_tag,
+            add_subscription_tag,
+            remove_subscription_tag,
+            list_subscription_tags,
             // Settings
             get_settings,
             update_settings,

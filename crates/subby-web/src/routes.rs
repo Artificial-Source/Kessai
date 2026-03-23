@@ -7,8 +7,9 @@ use axum::routing::{delete, get, post, put};
 use axum::{Json, Router};
 use serde::Deserialize;
 use subby_core::models::{
-    BackupData, NewCategory, NewPayment, NewPaymentCard, NewSubscription, SubscriptionStatus,
-    UpdateCategory, UpdatePayment, UpdatePaymentCard, UpdateSettings, UpdateSubscription,
+    BackupData, NewCategory, NewPayment, NewPaymentCard, NewSubscription, NewTag,
+    SubscriptionStatus, UpdateCategory, UpdatePayment, UpdatePaymentCard, UpdateSettings,
+    UpdateSubscription, UpdateTag,
 };
 
 use crate::AppState;
@@ -77,6 +78,14 @@ pub fn api_router(state: Arc<AppState>) -> Router {
         .route("/cards", post(create_payment_card))
         .route("/cards/{id}", put(update_payment_card))
         .route("/cards/{id}", delete(delete_payment_card))
+        // Tags
+        .route("/tags", get(list_tags))
+        .route("/tags", post(create_tag))
+        .route("/tags/{id}", put(update_tag))
+        .route("/tags/{id}", delete(delete_tag))
+        .route("/subscriptions/{id}/tags", get(list_subscription_tags))
+        .route("/subscriptions/{id}/tags", post(add_subscription_tag))
+        .route("/subscriptions/{id}/tags/{tag_id}", delete(remove_subscription_tag))
         // Settings
         .route("/settings", get(get_settings))
         .route("/settings", put(update_settings))
@@ -327,6 +336,68 @@ async fn delete_payment_card(
     Path(id): Path<String>,
 ) -> Result<impl IntoResponse> {
     state.core.payment_cards().delete(&id)?;
+    Ok(StatusCode::NO_CONTENT)
+}
+
+// ── Tag handlers ────────────────────────────────────────────────────────────
+
+async fn list_tags(State(state): State<Arc<AppState>>) -> Result<impl IntoResponse> {
+    let tags = state.core.tags().list()?;
+    Ok(Json(tags))
+}
+
+async fn create_tag(
+    State(state): State<Arc<AppState>>,
+    Json(data): Json<NewTag>,
+) -> Result<impl IntoResponse> {
+    let tag = state.core.tags().create(data)?;
+    Ok((StatusCode::CREATED, Json(tag)))
+}
+
+async fn update_tag(
+    State(state): State<Arc<AppState>>,
+    Path(id): Path<String>,
+    Json(data): Json<UpdateTag>,
+) -> Result<impl IntoResponse> {
+    let tag = state.core.tags().update(&id, data)?;
+    Ok(Json(tag))
+}
+
+async fn delete_tag(
+    State(state): State<Arc<AppState>>,
+    Path(id): Path<String>,
+) -> Result<impl IntoResponse> {
+    state.core.tags().delete(&id)?;
+    Ok(StatusCode::NO_CONTENT)
+}
+
+async fn list_subscription_tags(
+    State(state): State<Arc<AppState>>,
+    Path(id): Path<String>,
+) -> Result<impl IntoResponse> {
+    let tags = state.core.tags().list_for_subscription(&id)?;
+    Ok(Json(tags))
+}
+
+#[derive(Deserialize)]
+struct AddTagBody {
+    tag_id: String,
+}
+
+async fn add_subscription_tag(
+    State(state): State<Arc<AppState>>,
+    Path(id): Path<String>,
+    Json(body): Json<AddTagBody>,
+) -> Result<impl IntoResponse> {
+    state.core.tags().add_to_subscription(&id, &body.tag_id)?;
+    Ok(StatusCode::CREATED)
+}
+
+async fn remove_subscription_tag(
+    State(state): State<Arc<AppState>>,
+    Path((id, tag_id)): Path<(String, String)>,
+) -> Result<impl IntoResponse> {
+    state.core.tags().remove_from_subscription(&id, &tag_id)?;
     Ok(StatusCode::NO_CONTENT)
 }
 
