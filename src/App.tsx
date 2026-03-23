@@ -9,6 +9,7 @@ import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { useSettingsStore } from '@/stores/settings-store'
 import { useSubscriptionStore } from '@/stores/subscription-store'
 import { useUpdateStore } from '@/stores/update-store'
+import { useTrayBadge } from '@/hooks/use-tray-badge'
 import { preloadRates } from '@/lib/exchange-rates'
 import type { CurrencyCode } from '@/lib/currency'
 import '@/styles/globals.css'
@@ -27,6 +28,9 @@ const SettingsPage = lazy(() =>
 export default function App() {
   const initializeUpdater = useUpdateStore((state) => state.initialize)
   const checkForUpdates = useUpdateStore((state) => state.checkForUpdates)
+
+  // Keep system tray badge in sync with subscriptions
+  useTrayBadge()
 
   // Preload exchange rates on startup for multi-currency support
   useEffect(() => {
