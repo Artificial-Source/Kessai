@@ -50,7 +50,7 @@ export const TagFilter = memo(function TagFilter({
   }
 
   return (
-    <div className="flex flex-wrap items-center gap-2">
+    <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Filter by tag">
       {tagsWithSubs.map((tag) => {
         const isSelected = selectedTagIds.includes(tag.id)
         const count = tagCounts[tag.id] || 0

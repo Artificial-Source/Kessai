@@ -245,7 +245,7 @@ export const SubscriptionsListView = memo(function SubscriptionsListView({
         </table>
       </div>
       <div className="border-border mt-auto border-t bg-[var(--color-subtle-overlay)] px-4 py-3">
-        <p className="text-muted-foreground font-[family-name:var(--font-mono)] text-[11px]">
+        <p className="text-muted-foreground font-[family-name:var(--font-mono)] text-[11px]" aria-live="polite">
           {subscriptions.length} of {totalCount} subscriptions
         </p>
       </div>

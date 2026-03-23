@@ -78,6 +78,7 @@ export function CancelDialog({
                 key={preset}
                 type="button"
                 onClick={() => setReason(preset)}
+                aria-pressed={reason === preset}
                 className={`rounded-none border px-3 py-1.5 font-[family-name:var(--font-mono)] text-[10px] tracking-wider uppercase transition-colors ${
                   reason === preset
                     ? 'border-primary bg-primary/10 text-primary'

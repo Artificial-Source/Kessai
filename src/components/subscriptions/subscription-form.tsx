@@ -536,6 +536,7 @@ export function SubscriptionForm({
                     form.setValue('logo_url', null)
                     clearFetchedLogo()
                   }}
+                  aria-label="Remove logo"
                   className="bg-destructive text-destructive-foreground absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full"
                 >
                   <X className="h-3 w-3" />
@@ -770,6 +771,7 @@ function LogoLibraryPicker({ onSelect }: { onSelect: (domain: string, name: stri
             placeholder="Search logos..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
+            aria-label="Search logo library"
             className="border-border bg-input text-foreground placeholder-muted-foreground focus:border-primary focus:ring-primary h-8 w-full rounded-lg border px-3 font-[family-name:var(--font-sans)] text-xs focus:ring-1 focus:outline-none"
           />
           <div className="grid grid-cols-6 gap-1.5 sm:grid-cols-8">
@@ -778,6 +780,7 @@ function LogoLibraryPicker({ onSelect }: { onSelect: (domain: string, name: stri
                 key={logo.domain}
                 type="button"
                 title={logo.name}
+                aria-label={`Select ${logo.name} logo`}
                 onClick={() => {
                   onSelect(logo.domain, logo.name)
                   setOpen(false)

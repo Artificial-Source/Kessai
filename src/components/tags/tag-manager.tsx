@@ -97,8 +97,9 @@ export function TagManager() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-8">
-        <div className="border-primary h-6 w-6 animate-spin rounded-full border-2 border-t-transparent" />
+      <div className="flex items-center justify-center py-8" role="status" aria-live="polite">
+        <div className="border-primary h-6 w-6 animate-spin rounded-full border-2 border-t-transparent" aria-hidden="true" />
+        <span className="sr-only">Loading tags</span>
       </div>
     )
   }
@@ -132,6 +133,7 @@ export function TagManager() {
               onChange={(e) => setNewName(e.target.value)}
               className="border-border bg-muted/50 h-8 text-sm"
               maxLength={30}
+              aria-label="New tag name"
               // eslint-disable-next-line jsx-a11y/no-autofocus
               autoFocus
               onKeyDown={(e) => {
@@ -203,6 +205,7 @@ export function TagManager() {
                     onChange={(e) => setEditName(e.target.value)}
                     className="border-border bg-muted/50 h-7 flex-1 text-sm"
                     maxLength={30}
+                    aria-label="Edit tag name"
                     // eslint-disable-next-line jsx-a11y/no-autofocus
                     autoFocus
                     onKeyDown={(e) => {
@@ -219,6 +222,8 @@ export function TagManager() {
                         key={color}
                         type="button"
                         onClick={() => setEditColor(color)}
+                        aria-label={`Color ${color}`}
+                        aria-pressed={editColor === color}
                         className="h-4 w-4 rounded-full"
                         style={{
                           backgroundColor: color,

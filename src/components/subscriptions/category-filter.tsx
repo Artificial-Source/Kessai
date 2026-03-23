@@ -34,7 +34,7 @@ export const CategoryFilter = memo(function CategoryFilter({
   }
 
   return (
-    <div className="flex flex-wrap items-center gap-2">
+    <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Filter by category">
       {/* All button */}
       <button
         onClick={handleClearAll}

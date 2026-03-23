@@ -20,7 +20,7 @@ export function CostNormalizationToggle() {
       value={costNormalization}
       onValueChange={(v) => setCostNormalization(v as NormalizationPeriod)}
     >
-      <SelectTrigger className="h-10 w-full gap-2 rounded-lg font-[family-name:var(--font-mono)] text-[11px] tracking-wider sm:w-[160px]">
+      <SelectTrigger className="h-10 w-full gap-2 rounded-lg font-[family-name:var(--font-mono)] text-[11px] tracking-wider sm:w-[160px]" aria-label="Cost display period">
         <SelectValue />
       </SelectTrigger>
       <SelectContent>

@@ -2,68 +2,34 @@ import { useState, useEffect, useMemo, lazy, Suspense } from 'react'
 import { toast } from 'sonner'
 import dayjs from 'dayjs'
 import isSameOrBefore from 'dayjs/plugin/isSameOrBefore'
-import {
-  Plus,
-  Search,
-  LayoutGrid,
-  List,
-  Grid3x3,
-  ArrowUpDown,
-  ChevronDown,
-  Ban,
-  Trash2,
-} from 'lucide-react'
+import { Plus, Search } from 'lucide-react'
 import { useSubscriptions } from '@/hooks/use-subscriptions'
 import { useSubscriptionStore } from '@/stores/subscription-store'
 import { useCategoryStore } from '@/stores/category-store'
 import { useUiStore } from '@/stores/ui-store'
 import { useSettingsStore } from '@/stores/settings-store'
 import { usePaymentStore } from '@/stores/payment-store'
-import { formatCurrency } from '@/lib/currency'
 import { convertCurrencyCached } from '@/lib/exchange-rates'
 import { calculateNextPaymentDate, formatPaymentDate } from '@/lib/date-utils'
 import { Button } from '@/components/ui/button'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import { SubscriptionBento } from '@/components/subscriptions/subscription-bento'
 import { SubscriptionsGridView } from '@/components/subscriptions/subscriptions-grid-view'
 import { SubscriptionsListView } from '@/components/subscriptions/subscriptions-list-view'
-import { CategoryFilter } from '@/components/subscriptions/category-filter'
-import { CostNormalizationToggle } from '@/components/subscriptions/cost-normalization-toggle'
-import { TagFilter } from '@/components/tags/tag-filter'
+import { SubscriptionsHeader } from '@/components/subscriptions/subscriptions-header'
+import {
+  SubscriptionsToolbar,
+  SORT_LABELS,
+} from '@/components/subscriptions/subscriptions-toolbar'
+import type { SortOption } from '@/components/subscriptions/subscriptions-toolbar'
+import { CancelledSubscriptionsSection } from '@/components/subscriptions/cancelled-subscriptions-section'
 import { useTagStore } from '@/stores/tag-store'
 import { SubscriptionsSkeleton } from '@/components/subscriptions/subscriptions-skeleton'
 import type { CurrencyCode } from '@/lib/currency'
 import {
   isBillableStatus,
   calculateNormalizedAmount,
-  NORMALIZATION_SUFFIXES,
 } from '@/types/subscription'
 import type { Subscription } from '@/types/subscription'
-
-type SortOption =
-  | 'name-asc'
-  | 'name-desc'
-  | 'price-asc'
-  | 'price-desc'
-  | 'date-asc'
-  | 'date-desc'
-  | 'category'
-
-const SORT_LABELS: Record<SortOption, string> = {
-  'name-asc': 'Name (A-Z)',
-  'name-desc': 'Name (Z-A)',
-  'price-asc': 'Price (Low-High)',
-  'price-desc': 'Price (High-Low)',
-  'date-asc': 'Next billing (Soonest)',
-  'date-desc': 'Next billing (Latest)',
-  category: 'Category',
-}
 
 dayjs.extend(isSameOrBefore)
 
@@ -116,7 +82,6 @@ export function Subscriptions() {
   const [isDeleting, setIsDeleting] = useState(false)
   const [cancelTarget, setCancelTarget] = useState<Subscription | null>(null)
   const [isCancelling, setIsCancelling] = useState(false)
-  const [showCancelled, setShowCancelled] = useState(false)
 
   useEffect(() => {
     fetchSettings()
@@ -384,143 +349,31 @@ export function Subscriptions() {
   return (
     <>
       <div className="animate-fade-in-up flex h-full flex-col space-y-6">
-        <header className="flex flex-wrap items-end justify-between gap-4">
-          <div className="flex flex-col gap-2">
-            <h1 className="text-2xl font-bold tracking-tight">My Subscriptions</h1>
-            <div className="flex flex-wrap items-center gap-3">
-              {costNormalization !== 'as-is' && normalizedTotal !== null ? (
-                <div className="flex items-center gap-3">
-                  <span className="text-muted-foreground font-[family-name:var(--font-mono)] text-[11px] tracking-wider uppercase">
-                    Total:
-                  </span>
-                  <span className="bg-primary/10 text-primary rounded px-2.5 py-1 font-[family-name:var(--font-mono)] text-[11px] font-bold">
-                    {formatCurrency(normalizedTotal, currency)}
-                    {NORMALIZATION_SUFFIXES[costNormalization]}
-                  </span>
-                </div>
-              ) : (
-                <>
-                  {monthlySubsTotal > 0 && (
-                    <div className="flex items-center gap-3">
-                      <span className="text-muted-foreground font-[family-name:var(--font-mono)] text-[11px] tracking-wider uppercase">
-                        Monthly:
-                      </span>
-                      <span className="bg-primary/10 text-primary rounded px-2.5 py-1 font-[family-name:var(--font-mono)] text-[11px] font-bold">
-                        {formatCurrency(monthlySubsTotal, currency)}/mo
-                      </span>
-                    </div>
-                  )}
-                  {yearlySubsTotal > 0 && (
-                    <div className="flex items-center gap-3">
-                      <span className="text-muted-foreground font-[family-name:var(--font-mono)] text-[11px] tracking-wider uppercase">
-                        Yearly:
-                      </span>
-                      <span className="bg-accent-cyan/10 text-accent-cyan rounded px-2.5 py-1 font-[family-name:var(--font-mono)] text-[11px] font-bold">
-                        {formatCurrency(yearlySubsTotal, currency)}/yr
-                      </span>
-                    </div>
-                  )}
-                </>
-              )}
-            </div>
-          </div>
-          <Button variant="glow" onClick={() => openSubscriptionDialog()} className="gap-2">
-            <Plus className="h-4 w-4" />
-            Add Subscription
-          </Button>
-        </header>
+        <SubscriptionsHeader
+          costNormalization={costNormalization}
+          normalizedTotal={normalizedTotal}
+          monthlySubsTotal={monthlySubsTotal}
+          yearlySubsTotal={yearlySubsTotal}
+          currency={currency}
+          openSubscriptionDialog={() => openSubscriptionDialog()}
+        />
 
         {activeSubscriptions.length > 0 && (
-          <div className="flex flex-col gap-4">
-            <div className="flex flex-wrap items-center justify-between gap-4">
-              <div className="flex flex-wrap items-center gap-3">
-                <div className="relative w-full sm:w-[280px]">
-                  <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
-                  <input
-                    type="text"
-                    placeholder="Search subscriptions..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    aria-label="Search subscriptions"
-                    className="border-border bg-input text-foreground placeholder-muted-foreground focus:border-primary focus:ring-primary h-10 w-full rounded-lg border pr-4 pl-10 font-[family-name:var(--font-sans)] text-sm focus:ring-1 focus:outline-none"
-                  />
-                </div>
-                <Select value={sortOption} onValueChange={(v) => setSortOption(v as SortOption)}>
-                  <SelectTrigger className="h-10 w-full gap-2 rounded-lg font-[family-name:var(--font-mono)] text-[11px] tracking-wider sm:w-[200px]">
-                    <ArrowUpDown className="h-3.5 w-3.5 shrink-0 opacity-50" />
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {(Object.entries(SORT_LABELS) as [SortOption, string][]).map(
-                      ([value, label]) => (
-                        <SelectItem
-                          key={value}
-                          value={value}
-                          className="font-[family-name:var(--font-mono)] text-[11px] tracking-wider"
-                        >
-                          {label}
-                        </SelectItem>
-                      )
-                    )}
-                  </SelectContent>
-                </Select>
-                <CostNormalizationToggle />
-              </div>
-              <div
-                className="border-border flex rounded-lg border bg-[var(--color-surface-elevated)] p-1"
-                role="group"
-                aria-label="View mode"
-              >
-                <button
-                  onClick={() => setViewMode('grid')}
-                  aria-pressed={viewMode === 'grid'}
-                  className={`flex h-7 w-8 items-center justify-center rounded-md ${
-                    viewMode === 'grid'
-                      ? 'bg-primary text-primary-foreground'
-                      : 'text-muted-foreground hover:text-foreground'
-                  }`}
-                  aria-label="Grid view"
-                >
-                  <LayoutGrid className="h-3.5 w-3.5" />
-                </button>
-                <button
-                  onClick={() => setViewMode('list')}
-                  aria-pressed={viewMode === 'list'}
-                  className={`flex h-7 w-8 items-center justify-center rounded-md ${
-                    viewMode === 'list'
-                      ? 'bg-primary text-primary-foreground'
-                      : 'text-muted-foreground hover:text-foreground'
-                  }`}
-                  aria-label="List view"
-                >
-                  <List className="h-3.5 w-3.5" />
-                </button>
-                <button
-                  onClick={() => setViewMode('bento')}
-                  aria-pressed={viewMode === 'bento'}
-                  className={`flex h-7 w-8 items-center justify-center rounded-md ${
-                    viewMode === 'bento'
-                      ? 'bg-primary text-primary-foreground'
-                      : 'text-muted-foreground hover:text-foreground'
-                  }`}
-                  aria-label="Bento view"
-                >
-                  <Grid3x3 className="h-3.5 w-3.5" />
-                </button>
-              </div>
-            </div>
-            <CategoryFilter
-              categories={categories}
-              selectedIds={selectedCategories}
-              onChange={setSelectedCategories}
-              subscriptionCounts={subscriptionCounts}
-            />
-            <TagFilter
-              selectedTagIds={selectedTags}
-              onChange={setSelectedTags}
-              subscriptionTagMap={subscriptionTagMap}
-            />
-          </div>
+          <SubscriptionsToolbar
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+            sortOption={sortOption}
+            setSortOption={setSortOption}
+            viewMode={viewMode}
+            setViewMode={setViewMode}
+            categories={categories}
+            selectedCategories={selectedCategories}
+            setSelectedCategories={setSelectedCategories}
+            selectedTags={selectedTags}
+            setSelectedTags={setSelectedTags}
+            subscriptionCounts={subscriptionCounts}
+            subscriptionTagMap={subscriptionTagMap}
+          />
         )}
 
         {activeSubscriptions.length === 0 && cancelledSubscriptions.length === 0 ? (
@@ -596,73 +449,12 @@ export function Subscriptions() {
           />
         )}
 
-        {/* Cancelled subscriptions section */}
-        {cancelledSubscriptions.length > 0 && (
-          <div className="mt-2">
-            <button
-              onClick={() => setShowCancelled((prev) => !prev)}
-              className="text-muted-foreground hover:text-foreground flex items-center gap-2 py-2 transition-colors"
-            >
-              <ChevronDown
-                className={`h-4 w-4 transition-transform ${showCancelled ? 'rotate-0' : '-rotate-90'}`}
-              />
-              <span className="font-[family-name:var(--font-mono)] text-[11px] tracking-wider uppercase">
-                Cancelled ({cancelledSubscriptions.length})
-              </span>
-            </button>
-            {showCancelled && (
-              <div className="animate-fade-in-up mt-2 space-y-2">
-                {cancelledSubscriptions.map((sub) => {
-                  const category = getCategory(sub.category_id)
-                  return (
-                    <div
-                      key={sub.id}
-                      className="glass-card flex items-center justify-between gap-4 rounded-xl px-4 py-3 opacity-60"
-                    >
-                      <div className="flex items-center gap-3 overflow-hidden">
-                        <Ban className="text-destructive h-4 w-4 shrink-0" />
-                        <div className="min-w-0">
-                          <p className="text-foreground truncate text-sm font-medium">{sub.name}</p>
-                          <div className="text-muted-foreground flex items-center gap-2 font-[family-name:var(--font-mono)] text-[10px]">
-                            {sub.cancelled_at && (
-                              <span>Cancelled {dayjs(sub.cancelled_at).format('MMM D, YYYY')}</span>
-                            )}
-                            {sub.cancellation_reason && (
-                              <>
-                                <span className="text-border">|</span>
-                                <span className="truncate" title={sub.cancellation_reason}>
-                                  {sub.cancellation_reason}
-                                </span>
-                              </>
-                            )}
-                            {category && (
-                              <>
-                                <span className="text-border">|</span>
-                                <span>{category.name}</span>
-                              </>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                      <div className="flex shrink-0 items-center gap-2">
-                        <span className="text-muted-foreground font-[family-name:var(--font-mono)] text-xs">
-                          {formatCurrency(sub.amount, (sub.currency || currency) as CurrencyCode)}
-                        </span>
-                        <button
-                          onClick={() => setDeleteTarget(sub)}
-                          aria-label={`Delete ${sub.name}`}
-                          className="text-muted-foreground hover:bg-destructive/15 hover:text-destructive rounded-lg p-1.5 transition-colors"
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </button>
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-            )}
-          </div>
-        )}
+        <CancelledSubscriptionsSection
+          cancelledSubscriptions={cancelledSubscriptions}
+          getCategory={getCategory}
+          currency={currency}
+          setDeleteTarget={setDeleteTarget}
+        />
       </div>
 
       <Suspense fallback={null}>

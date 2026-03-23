@@ -89,6 +89,7 @@ export function TagPicker({ selectedTagIds, onChange }: TagPickerProps) {
                 key={tag.id}
                 type="button"
                 onClick={() => handleToggle(tag.id)}
+                aria-pressed={isSelected}
                 className="flex items-center gap-1.5 rounded-none border px-2.5 py-1 font-[family-name:var(--font-mono)] text-[10px] tracking-wider uppercase transition-colors"
                 style={{
                   borderColor: isSelected ? tag.color : 'var(--color-border)',
@@ -117,6 +118,7 @@ export function TagPicker({ selectedTagIds, onChange }: TagPickerProps) {
             onChange={(e) => setNewTagName(e.target.value)}
             className="border-border bg-muted/50 h-8 text-sm"
             maxLength={30}
+            aria-label="New tag name"
             onKeyDown={(e) => {
               if (e.key === 'Enter') {
                 e.preventDefault()

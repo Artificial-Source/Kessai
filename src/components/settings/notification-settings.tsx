@@ -153,6 +153,8 @@ export function NotificationSettings({
                     key={day}
                     type="button"
                     onClick={() => handleDayToggle(day)}
+                    aria-pressed={isActive}
+                    aria-label={`Remind ${day} day${day !== 1 ? 's' : ''} before`}
                     className={`border px-3 py-1.5 font-[family-name:var(--font-mono)] text-xs transition-colors ${
                       isActive
                         ? 'bg-primary text-primary-foreground border-primary'
@@ -173,10 +175,11 @@ export function NotificationSettings({
 
           {/* Time picker */}
           <div className="flex flex-col gap-3">
-            <span className="text-muted-foreground font-[family-name:var(--font-mono)] text-[10px] tracking-widest uppercase">
+            <label htmlFor="notification-time" className="text-muted-foreground font-[family-name:var(--font-mono)] text-[10px] tracking-widest uppercase">
               Notification Time
-            </span>
+            </label>
             <Input
+              id="notification-time"
               type="time"
               value={settings.notification_time}
               onChange={handleTimeChange}

@@ -105,6 +105,7 @@ export function Sidebar() {
             isCollapsed ? 'justify-center px-0' : 'px-2.5'
           )}
           title="Search (⌘K)"
+          aria-label="Search (⌘K)"
         >
           <Search size={14} className="shrink-0" />
           {!isCollapsed && (
