@@ -175,7 +175,10 @@ export function NotificationSettings({
 
           {/* Time picker */}
           <div className="flex flex-col gap-3">
-            <label htmlFor="notification-time" className="text-muted-foreground font-[family-name:var(--font-mono)] text-[10px] tracking-widest uppercase">
+            <label
+              htmlFor="notification-time"
+              className="text-muted-foreground font-[family-name:var(--font-mono)] text-[10px] tracking-widest uppercase"
+            >
               Notification Time
             </label>
             <Input

@@ -293,7 +293,11 @@ export function CSVImportWizard({ open, onOpenChange, onDataChanged }: CSVImport
             {step === 'results' && 'Import complete.'}
           </DialogDescription>
           {/* Step indicator */}
-          <div className="flex items-center gap-1 pt-2" role="group" aria-label={`Step ${stepNumber} of 4`}>
+          <div
+            className="flex items-center gap-1 pt-2"
+            role="group"
+            aria-label={`Step ${stepNumber} of 4`}
+          >
             {[1, 2, 3, 4].map((s) => (
               <div key={`step-indicator-${s}`} className="flex items-center gap-1">
                 <div
@@ -673,7 +677,9 @@ function ReviewStep({
                 <th className="w-10 px-3 py-2.5">
                   <button
                     onClick={onToggleAll}
-                    aria-label={allIncluded ? 'Deselect all subscriptions' : 'Select all subscriptions'}
+                    aria-label={
+                      allIncluded ? 'Deselect all subscriptions' : 'Select all subscriptions'
+                    }
                     aria-pressed={allIncluded}
                     className={`flex h-4 w-4 items-center justify-center rounded border transition-colors ${
                       allIncluded

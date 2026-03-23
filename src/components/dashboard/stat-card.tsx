@@ -20,7 +20,11 @@ export const StatCard = memo(function StatCard({
   iconColor,
 }: StatCardProps) {
   return (
-    <div className="glass-card hover-lift group p-5 transition-colors hover:border-[var(--color-border-hover)]" role="status" aria-label={`${label}: ${value}`}>
+    <div
+      className="glass-card hover-lift group p-5 transition-colors hover:border-[var(--color-border-hover)]"
+      role="status"
+      aria-label={`${label}: ${value}`}
+    >
       <div className="mb-4 flex items-start justify-between">
         <p className="text-muted-foreground font-[family-name:var(--font-mono)] text-[11px] font-normal tracking-wider uppercase">
           {label}

@@ -98,7 +98,10 @@ export function TagManager() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-8" role="status" aria-live="polite">
-        <div className="border-primary h-6 w-6 animate-spin rounded-full border-2 border-t-transparent" aria-hidden="true" />
+        <div
+          className="border-primary h-6 w-6 animate-spin rounded-full border-2 border-t-transparent"
+          aria-hidden="true"
+        />
         <span className="sr-only">Loading tags</span>
       </div>
     )

@@ -23,10 +23,7 @@ import { CancelledSubscriptionsSection } from '@/components/subscriptions/cancel
 import { useTagStore } from '@/stores/tag-store'
 import { SubscriptionsSkeleton } from '@/components/subscriptions/subscriptions-skeleton'
 import type { CurrencyCode } from '@/lib/currency'
-import {
-  isBillableStatus,
-  calculateNormalizedAmount,
-} from '@/types/subscription'
+import { isBillableStatus, calculateNormalizedAmount } from '@/types/subscription'
 import type { Subscription } from '@/types/subscription'
 
 dayjs.extend(isSameOrBefore)

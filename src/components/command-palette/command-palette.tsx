@@ -154,7 +154,11 @@ export function CommandPalette() {
               role="combobox"
               aria-expanded={flatResults.length > 0}
               aria-controls="command-palette-results"
-              aria-activedescendant={flatResults[selectedIndex] ? `command-result-${flatResults[selectedIndex].id}` : undefined}
+              aria-activedescendant={
+                flatResults[selectedIndex]
+                  ? `command-result-${flatResults[selectedIndex].id}`
+                  : undefined
+              }
             />
             <kbd className="text-muted-foreground hidden shrink-0 rounded border border-[var(--color-border)] bg-[var(--color-input)] px-1.5 py-0.5 font-[family-name:var(--font-mono)] text-[10px] tracking-widest uppercase sm:inline-block">
               ESC
@@ -162,7 +166,13 @@ export function CommandPalette() {
           </div>
 
           {/* Results */}
-          <div ref={listRef} id="command-palette-results" role="listbox" aria-label="Search results" className="max-h-72 overflow-y-auto p-2">
+          <div
+            ref={listRef}
+            id="command-palette-results"
+            role="listbox"
+            aria-label="Search results"
+            className="max-h-72 overflow-y-auto p-2"
+          >
             {flatResults.length === 0 && query.trim() !== '' && (
               <div className="text-muted-foreground py-8 text-center text-sm">
                 No results found for &ldquo;{query}&rdquo;

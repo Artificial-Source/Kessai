@@ -36,7 +36,7 @@ export function useAnalytics(year: number, months: number = 12) {
       ])
 
       const errors: string[] = []
-      const getValue = <T,>(result: PromiseSettledResult<T>, fallback: T): T => {
+      const getValue = <T>(result: PromiseSettledResult<T>, fallback: T): T => {
         if (result.status === 'fulfilled') return result.value
         errors.push(String(result.reason))
         return fallback

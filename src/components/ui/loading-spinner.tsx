@@ -2,7 +2,11 @@ import { cn } from '@/lib/utils'
 
 export function LoadingSpinner({ className }: { className?: string }) {
   return (
-    <div className="flex h-full w-full items-center justify-center" role="status" aria-live="polite">
+    <div
+      className="flex h-full w-full items-center justify-center"
+      role="status"
+      aria-live="polite"
+    >
       <div
         aria-hidden="true"
         className={cn(
