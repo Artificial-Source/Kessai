@@ -3,13 +3,7 @@ import { toast } from 'sonner'
 import { Bell, BellOff, Send } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+import { ReminderPreview } from '@/components/settings/reminder-preview'
 import type { Settings } from '@/types/settings'
 import {
   isPermissionGranted,
@@ -20,23 +14,16 @@ import {
 interface NotificationSettingsProps {
   settings: Settings
   onToggle: (enabled: boolean) => Promise<void>
-  onAdvanceDaysChange: (days: number) => Promise<void>
+  onDaysBeforeChange: (days: number[]) => Promise<void>
   onTimeChange: (time: string) => Promise<void>
 }
 
-const ADVANCE_OPTIONS = [
-  { value: '1', label: '1 day before' },
-  { value: '2', label: '2 days before' },
-  { value: '3', label: '3 days before' },
-  { value: '5', label: '5 days before' },
-  { value: '7', label: '7 days before' },
-  { value: '14', label: '14 days before' },
-]
+const ADVANCE_DAY_OPTIONS = [1, 3, 7, 14, 30] as const
 
 export function NotificationSettings({
   settings,
   onToggle,
-  onAdvanceDaysChange,
+  onDaysBeforeChange,
   onTimeChange,
 }: NotificationSettingsProps) {
   const [isSendingTest, setIsSendingTest] = useState(false)
@@ -69,9 +56,18 @@ export function NotificationSettings({
     }
   }
 
-  const handleAdvanceDaysChange = async (value: string) => {
+  const handleDayToggle = async (day: number) => {
+    const current = settings.notification_days_before ?? []
+    let updated: number[]
+
+    if (current.includes(day)) {
+      updated = current.filter((d) => d !== day)
+    } else {
+      updated = [...current, day].sort((a, b) => a - b)
+    }
+
     try {
-      await onAdvanceDaysChange(parseInt(value, 10))
+      await onDaysBeforeChange(updated)
     } catch {
       toast.error('Failed to update advance notice')
     }
@@ -114,6 +110,8 @@ export function NotificationSettings({
     }
   }
 
+  const activeDays = settings.notification_days_before ?? []
+
   return (
     <div className="flex flex-col gap-6">
       {/* Master toggle */}
@@ -142,28 +140,34 @@ export function NotificationSettings({
 
       {settings.notification_enabled && (
         <>
-          {/* Advance notice selector */}
+          {/* Advance notice — multi-select chips */}
           <div className="flex flex-col gap-3">
             <span className="text-muted-foreground font-[family-name:var(--font-mono)] text-[10px] tracking-widest uppercase">
-              Advance Notice
+              Remind Me Before
             </span>
-            <Select
-              value={String(settings.notification_advance_days)}
-              onValueChange={handleAdvanceDaysChange}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select advance notice" />
-              </SelectTrigger>
-              <SelectContent>
-                {ADVANCE_OPTIONS.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="flex flex-wrap gap-2">
+              {ADVANCE_DAY_OPTIONS.map((day) => {
+                const isActive = activeDays.includes(day)
+                return (
+                  <button
+                    key={day}
+                    type="button"
+                    onClick={() => handleDayToggle(day)}
+                    className={`font-[family-name:var(--font-mono)] text-xs px-3 py-1.5 border transition-colors ${
+                      isActive
+                        ? 'bg-primary text-primary-foreground border-primary'
+                        : 'bg-muted/30 text-muted-foreground border-border hover:text-foreground hover:border-foreground/20'
+                    }`}
+                  >
+                    {day}d
+                  </button>
+                )
+              })}
+            </div>
             <p className="text-muted-foreground text-xs">
-              How far in advance to notify you about upcoming renewals
+              {activeDays.length === 0
+                ? 'Select when to be reminded before renewals'
+                : `Reminders ${activeDays.map((d) => `${d} day${d !== 1 ? 's' : ''}`).join(', ')} before`}
             </p>
           </div>
 
@@ -181,6 +185,14 @@ export function NotificationSettings({
             <p className="text-muted-foreground text-xs">
               When to check and send daily renewal reminders
             </p>
+          </div>
+
+          {/* Upcoming reminders preview */}
+          <div className="flex flex-col gap-3">
+            <span className="text-muted-foreground font-[family-name:var(--font-mono)] text-[10px] tracking-widest uppercase">
+              Upcoming Reminders
+            </span>
+            <ReminderPreview daysBefore={activeDays} />
           </div>
 
           {/* Test notification */}

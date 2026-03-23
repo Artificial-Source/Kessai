@@ -12,6 +12,7 @@ export function useSettings() {
     setCurrency,
     setNotifications,
     setNotificationAdvanceDays,
+    setNotificationDaysBefore,
     setNotificationTime,
   } = useSettingsStore()
 
@@ -28,6 +29,7 @@ export function useSettings() {
     setCurrency,
     setNotifications,
     setNotificationAdvanceDays,
+    setNotificationDaysBefore,
     setNotificationTime,
     refresh: fetch,
   }

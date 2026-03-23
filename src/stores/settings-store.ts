@@ -14,6 +14,7 @@ type SettingsState = {
   setCurrency: (currency: string) => Promise<void>
   setNotifications: (enabled: boolean, daysBefore?: number[]) => Promise<void>
   setNotificationAdvanceDays: (days: number) => Promise<void>
+  setNotificationDaysBefore: (days: number[]) => Promise<void>
   setNotificationTime: (time: string) => Promise<void>
   setBudget: (budget: number | null) => Promise<void>
   setReduceMotion: (enabled: boolean) => Promise<void>
@@ -96,6 +97,10 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
 
   setNotificationAdvanceDays: async (days) => {
     await get().update({ notification_advance_days: days })
+  },
+
+  setNotificationDaysBefore: async (days) => {
+    await get().update({ notification_days_before: days })
   },
 
   setNotificationTime: async (time) => {
