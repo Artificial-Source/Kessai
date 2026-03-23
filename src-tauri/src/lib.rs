@@ -254,6 +254,26 @@ fn cancel_subscription(
         .map_err(|e| e.to_string())
 }
 
+#[tauri::command]
+fn mark_subscription_reviewed(
+    core: tauri::State<'_, SubbyCore>,
+    id: String,
+) -> Result<Subscription, String> {
+    core.subscriptions()
+        .mark_reviewed(&id)
+        .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn list_subscriptions_needing_review(
+    core: tauri::State<'_, SubbyCore>,
+    days: i64,
+) -> Result<Vec<Subscription>, String> {
+    core.subscriptions()
+        .list_needing_review(days)
+        .map_err(|e| e.to_string())
+}
+
 
 // ── Category commands ──────────────────────────────────────────────────────
 
@@ -736,6 +756,8 @@ pub fn run() {
             transition_subscription_status,
             cancel_subscription,
             get_expiring_trials,
+            mark_subscription_reviewed,
+            list_subscriptions_needing_review,
             // Categories
             list_categories,
             create_category,

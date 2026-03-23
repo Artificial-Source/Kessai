@@ -60,6 +60,8 @@ pub fn api_router(state: Arc<AppState>) -> Router {
         .route("/subscriptions/{id}/pin", post(toggle_subscription_pinned))
         .route("/subscriptions/{id}/status", post(transition_subscription_status))
         .route("/subscriptions/{id}/cancel", post(cancel_subscription))
+        .route("/subscriptions/{id}/review", post(mark_subscription_reviewed))
+        .route("/subscriptions/needs-review", get(list_subscriptions_needing_review))
         // Categories
         .route("/categories", get(list_categories))
         .route("/categories", post(create_category))
@@ -209,6 +211,31 @@ async fn cancel_subscription(
         .cancel_with_reason(&id, body.reason.as_deref())?;
     Ok(Json(sub))
 }
+
+async fn mark_subscription_reviewed(
+    State(state): State<Arc<AppState>>,
+    Path(id): Path<String>,
+) -> Result<impl IntoResponse> {
+    let sub = state.core.subscriptions().mark_reviewed(&id)?;
+    Ok(Json(sub))
+}
+
+#[derive(Deserialize)]
+struct NeedsReviewQuery {
+    days: Option<i64>,
+}
+
+async fn list_subscriptions_needing_review(
+    State(state): State<Arc<AppState>>,
+    Query(query): Query<NeedsReviewQuery>,
+) -> Result<impl IntoResponse> {
+    let subs = state
+        .core
+        .subscriptions()
+        .list_needing_review(query.days.unwrap_or(30))?;
+    Ok(Json(subs))
+}
+
 
 // ── Category handlers ───────────────────────────────────────────────────────
 

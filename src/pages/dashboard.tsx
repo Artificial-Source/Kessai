@@ -19,6 +19,7 @@ import { BudgetWidget } from '@/components/dashboard/budget-widget'
 import { TrialAlertCard } from '@/components/dashboard/trial-alert-card'
 import { PriceChangesCard } from '@/components/dashboard/price-changes-card'
 import { DashboardSkeleton } from '@/components/dashboard/dashboard-skeleton'
+import { ReviewNudgeCard } from '@/components/dashboard/review-nudge-card'
 import { Button } from '@/components/ui/button'
 import { calculateNormalizedAmount, NORMALIZATION_SUFFIXES } from '@/types/subscription'
 import type { CurrencyCode } from '@/lib/currency'
@@ -35,11 +36,13 @@ export function Dashboard() {
     subscriptions,
     isLoading,
     fetch: fetchSubscriptions,
+    fetchNeedingReview,
   } = useSubscriptionStore(
     useShallow((state) => ({
       subscriptions: state.subscriptions,
       isLoading: state.isLoading,
       fetch: state.fetch,
+      fetchNeedingReview: state.fetchNeedingReview,
     }))
   )
   const fetchCategories = useCategoryStore((state) => state.fetch)
@@ -102,7 +105,8 @@ export function Dashboard() {
     fetchSubscriptions()
     fetchCategories()
     fetchSettings()
-  }, [fetchSubscriptions, fetchCategories, fetchSettings])
+    fetchNeedingReview(30)
+  }, [fetchSubscriptions, fetchCategories, fetchSettings, fetchNeedingReview])
 
   if (isLoading) {
     return <DashboardSkeleton />
@@ -184,6 +188,9 @@ export function Dashboard() {
 
       {/* Trials Widget */}
       <TrialsWidget expiringTrials={expiringTrials} trialCount={trialCount} />
+
+      {/* Review Nudges */}
+      <ReviewNudgeCard />
 
       {/* Category Breakdown */}
       {categorySpending.length > 0 && (

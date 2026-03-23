@@ -4,6 +4,7 @@ import type { Subscription, NewSubscription, SubscriptionStatus } from '@/types/
 
 type SubscriptionState = {
   subscriptions: Subscription[]
+  needingReview: Subscription[]
   isLoading: boolean
   error: string | null
 
@@ -15,6 +16,8 @@ type SubscriptionState = {
   togglePinned: (id: string) => Promise<void>
   transitionStatus: (id: string, status: SubscriptionStatus) => Promise<void>
   cancel: (id: string, reason?: string) => Promise<void>
+  markReviewed: (id: string) => Promise<void>
+  fetchNeedingReview: (days?: number) => Promise<void>
 }
 
 const sortByPaymentDate = (a: Subscription, b: Subscription) => {
@@ -30,6 +33,7 @@ const sortByPaymentDate = (a: Subscription, b: Subscription) => {
 
 export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
   subscriptions: [],
+  needingReview: [],
   isLoading: false,
   error: null,
 
@@ -66,6 +70,7 @@ export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
       status_changed_at: now,
       shared_count: sub.shared_count ?? 1,
       is_pinned: sub.is_pinned ?? false,
+      last_reviewed_at: null,
       created_at: now,
       updated_at: now,
     }
@@ -207,6 +212,7 @@ export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
     }
   },
 
+
   cancel: async (id, reason) => {
     const previousSubscriptions = get().subscriptions
     const now = new Date().toISOString()
@@ -238,6 +244,30 @@ export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
       set({ subscriptions: previousSubscriptions })
       console.error('Failed to cancel subscription:', error)
       throw error
+    }
+  },
+
+  markReviewed: async (id) => {
+    try {
+      const updated = await invoke<Subscription>('mark_subscription_reviewed', { id })
+      set((state) => ({
+        subscriptions: state.subscriptions
+          .map((s) => (s.id === id ? updated : s))
+          .sort(sortByPaymentDate),
+        needingReview: state.needingReview.filter((s) => s.id !== id),
+      }))
+    } catch (error) {
+      console.error('Failed to mark subscription as reviewed:', error)
+      throw error
+    }
+  },
+
+  fetchNeedingReview: async (days = 30) => {
+    try {
+      const subs = await invoke<Subscription[]>('list_subscriptions_needing_review', { days })
+      set({ needingReview: subs })
+    } catch (error) {
+      console.error('Failed to fetch subscriptions needing review:', error)
     }
   },
 }))

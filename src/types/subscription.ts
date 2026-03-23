@@ -35,6 +35,7 @@ export const subscriptionSchema = z.object({
   is_pinned: z.boolean().default(false),
   cancellation_reason: z.string().nullable().optional(),
   cancelled_at: z.string().nullable().optional(),
+  last_reviewed_at: z.string().nullable().optional(),
   created_at: z.string(),
   updated_at: z.string(),
 })

@@ -213,6 +213,13 @@ const MIGRATIONS: &[Migration] = &[
             CREATE INDEX IF NOT EXISTS idx_subscription_tags_tag ON subscription_tags(tag_id);
         "#,
     },
+    Migration {
+        version: 15,
+        description: "add_last_reviewed_at_to_subscriptions",
+        sql: r#"
+            ALTER TABLE subscriptions ADD COLUMN last_reviewed_at TEXT;
+        "#,
+    },
 ];
 
 /// Runs all pending migrations on the database connection.
@@ -289,6 +296,7 @@ fn should_skip_migration(conn: &Connection, version: u32) -> bool {
         12 => column_exists(conn, "subscriptions", "is_pinned"),
         13 => column_exists(conn, "subscriptions", "cancellation_reason"),
         14 => table_exists(conn, "tags"),
+        15 => column_exists(conn, "subscriptions", "last_reviewed_at"),
         _ => false,
     }
 }
@@ -374,6 +382,6 @@ mod tests {
         let count: i64 = conn
             .query_row("SELECT COUNT(*) FROM _subby_migrations", [], |r| r.get(0))
             .unwrap();
-        assert_eq!(count, 14);
+        assert_eq!(count, 15);
     }
 }

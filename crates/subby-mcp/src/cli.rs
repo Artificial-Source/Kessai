@@ -299,6 +299,7 @@ fn cmd_update(
             is_pinned: None,
             cancellation_reason: None,
             cancelled_at: None,
+            last_reviewed_at: None,
         },
     )?;
 
