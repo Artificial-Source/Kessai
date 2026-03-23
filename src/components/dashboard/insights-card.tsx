@@ -18,7 +18,7 @@ export const InsightsCard = memo(function InsightsCard({
   sharingSavingsMonthly = 0,
 }: InsightsCardProps) {
   return (
-    <div className="glass-card border-primary/20 flex w-full flex-col p-6 lg:w-[320px] xl:w-[360px] lg:shrink-0">
+    <div className="glass-card border-primary/20 flex w-full flex-col p-6 lg:w-[320px] lg:shrink-0 xl:w-[360px]">
       <div className="mb-5 flex items-center gap-3">
         <div className="bg-primary/15 text-primary flex h-8 w-8 items-center justify-center rounded-lg">
           <Lightbulb className="h-4 w-4" />

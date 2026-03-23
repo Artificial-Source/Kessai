@@ -239,7 +239,7 @@ export function SubscriptionForm({
           )}
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div className="space-y-2">
             <Label htmlFor="amount">Amount *</Label>
             <Input
@@ -286,9 +286,9 @@ export function SubscriptionForm({
         )}
 
         {/* ── Billing ───────────────────────────────────────── */}
-        <div className="border-border border-t pt-4 mt-4" />
+        <div className="border-border mt-4 border-t pt-4" />
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div className="space-y-2">
             <Label htmlFor="billing_cycle">Billing Cycle *</Label>
             <Controller
@@ -360,7 +360,7 @@ export function SubscriptionForm({
         </div>
 
         {/* ── Advanced ──────────────────────────────────────── */}
-        <div className="border-border border-t pt-4 mt-4" />
+        <div className="border-border mt-4 border-t pt-4" />
 
         {/* Free Trial Toggle */}
         <div className="border-border rounded-lg border bg-[var(--color-subtle-overlay)] p-4">
@@ -516,7 +516,11 @@ export function SubscriptionForm({
                 }}
               >
                 <Upload className="h-3.5 w-3.5" />
-                {isUploadingLogo ? 'Uploading...' : logoPreview ? 'Change Logo' : 'Upload Custom Logo'}
+                {isUploadingLogo
+                  ? 'Uploading...'
+                  : logoPreview
+                    ? 'Change Logo'
+                    : 'Upload Custom Logo'}
               </Button>
             </div>
           </div>
@@ -672,11 +676,7 @@ const LOGO_LIBRARY = SUBSCRIPTION_TEMPLATES.filter((t) => t.domain).map((t) => (
   color: t.color,
 }))
 
-function LogoLibraryPicker({
-  onSelect,
-}: {
-  onSelect: (domain: string, name: string) => void
-}) {
+function LogoLibraryPicker({ onSelect }: { onSelect: (domain: string, name: string) => void }) {
   const [open, setOpen] = useState(false)
   const [search, setSearch] = useState('')
 
@@ -695,9 +695,7 @@ function LogoLibraryPicker({
         onClick={() => setOpen(!open)}
         className="text-muted-foreground hover:text-foreground flex items-center gap-1.5 font-[family-name:var(--font-mono)] text-[11px] tracking-wider uppercase transition-colors"
       >
-        <ChevronDown
-          className={cn('h-3 w-3 transition-transform', open && 'rotate-180')}
-        />
+        <ChevronDown className={cn('h-3 w-3 transition-transform', open && 'rotate-180')} />
         Pick from library
       </button>
       {open && (

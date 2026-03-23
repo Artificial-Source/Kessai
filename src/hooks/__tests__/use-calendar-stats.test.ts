@@ -288,9 +288,7 @@ describe('useCalendarStats', () => {
 
     // Weekly payments should appear on all Wednesdays in February 2024
     // Feb 7, 14, 21, 28 are Wednesdays
-    const daysWithPayments = result.current.calendarDays.filter(
-      (d) => d.payments.length > 0
-    )
+    const daysWithPayments = result.current.calendarDays.filter((d) => d.payments.length > 0)
     expect(daysWithPayments.length).toBeGreaterThanOrEqual(1)
   })
 

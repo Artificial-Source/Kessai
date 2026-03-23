@@ -117,7 +117,7 @@ export function CardManager({ currency }: CardManagerProps) {
             </Button>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="card-name">Card Name *</Label>
               <Input
@@ -145,7 +145,7 @@ export function CardManager({ currency }: CardManagerProps) {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="last-four">Last 4 Digits</Label>
               <Input

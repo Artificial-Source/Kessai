@@ -4,6 +4,8 @@ import { formatCurrency } from '@/lib/currency'
 import { convertCurrencyCached } from '@/lib/exchange-rates'
 import { formatPaymentDate } from '@/lib/date-utils'
 import { BILLING_CYCLE_SHORT, CATEGORY_BADGE_VARIANTS } from '@/lib/constants'
+import { calculateNormalizedAmount, NORMALIZATION_SUFFIXES } from '@/types/subscription'
+import type { NormalizationPeriod } from '@/types/subscription'
 import { Badge } from '@/components/ui/badge'
 import { SubscriptionLogo } from '@/components/ui/subscription-logo'
 import { TrialBadge } from '@/components/subscriptions/trial-badge'
@@ -17,6 +19,7 @@ interface SubscriptionsListViewProps {
   subscriptions: Subscription[]
   totalCount: number
   currency: CurrencyCode
+  costNormalization: NormalizationPeriod
   getCategory: (categoryId: string | null) => Category | undefined
   onEdit: (sub: Subscription) => void
   onDelete: (sub: Subscription) => void
@@ -32,11 +35,13 @@ export const SubscriptionsListView = memo(function SubscriptionsListView({
   subscriptions,
   totalCount,
   currency,
+  costNormalization,
   getCategory,
   onEdit,
   onDelete,
   onToggleActive,
 }: SubscriptionsListViewProps) {
+  const isNormalized = costNormalization !== 'as-is'
   return (
     <div className="glass-card flex flex-1 flex-col overflow-hidden rounded-xl">
       <div className="overflow-x-auto">
@@ -94,6 +99,34 @@ export const SubscriptionsListView = memo(function SubscriptionsListView({
                       const converted = isDifferent
                         ? convertCurrencyCached(sub.amount, subCurrency, currency)
                         : null
+
+                      if (isNormalized) {
+                        const baseAmount =
+                          isDifferent && converted !== null ? converted : sub.amount
+                        const displayCur =
+                          isDifferent && converted !== null ? currency : subCurrency
+                        const normalizedAmount = calculateNormalizedAmount(
+                          baseAmount,
+                          sub.billing_cycle,
+                          costNormalization
+                        )
+                        return (
+                          <>
+                            <div className="flex items-baseline gap-1.5">
+                              <p className="text-foreground font-[family-name:var(--font-heading)] font-semibold">
+                                {formatCurrency(normalizedAmount, displayCur)}
+                              </p>
+                              <span className="text-muted-foreground font-[family-name:var(--font-mono)] text-[10px] tracking-wider">
+                                {displayCur}
+                              </span>
+                            </div>
+                            <p className="text-muted-foreground font-[family-name:var(--font-mono)] text-[10px] tracking-wider uppercase">
+                              {NORMALIZATION_SUFFIXES[costNormalization]}
+                            </p>
+                          </>
+                        )
+                      }
+
                       return (
                         <>
                           <div className="flex items-baseline gap-1.5">

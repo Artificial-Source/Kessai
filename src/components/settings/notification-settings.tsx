@@ -184,7 +184,7 @@ export function NotificationSettings({
           </div>
 
           {/* Test notification */}
-          <div className="border-border flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-t pt-4">
+          <div className="border-border flex flex-col justify-between gap-3 border-t pt-4 sm:flex-row sm:items-center">
             <div>
               <p className="text-foreground font-[family-name:var(--font-sans)] text-sm font-medium">
                 Test Notification
@@ -197,7 +197,7 @@ export function NotificationSettings({
               variant="outline"
               onClick={handleTestNotification}
               disabled={isSendingTest}
-              className="gap-2 shrink-0"
+              className="shrink-0 gap-2"
             >
               <Send className="h-4 w-4" />
               {isSendingTest ? 'Sending...' : 'Test'}

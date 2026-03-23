@@ -276,7 +276,7 @@ export function ImportDialog({ open, onOpenChange, onDataChanged }: ImportDialog
 
         {step === 'preview' && parseResult && (
           <DialogFooter className="border-border flex-shrink-0 border-t pt-4">
-            <div className="flex w-full flex-col sm:flex-row items-center justify-between gap-2">
+            <div className="flex w-full flex-col items-center justify-between gap-2 sm:flex-row">
               <Button variant="outline" onClick={() => setStep('upload')}>
                 Back
               </Button>
@@ -414,8 +414,11 @@ function MappingStep({
 
       <div className="flex flex-col gap-3">
         {MAPPABLE_FIELDS.map((field) => (
-          <div key={field.key} className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4">
-            <label className="text-foreground sm:min-w-[100px] text-sm">
+          <div
+            key={field.key}
+            className="flex flex-col justify-between gap-2 sm:flex-row sm:items-center sm:gap-4"
+          >
+            <label className="text-foreground text-sm sm:min-w-[100px]">
               {field.label}
               {field.required && <span className="text-destructive ml-1">*</span>}
             </label>
@@ -503,7 +506,10 @@ function PreviewStep({
           </p>
           <div className="max-h-20 overflow-y-auto">
             {result.errors.slice(0, 5).map((err, i) => (
-              <p key={`error-${i}-${err.slice(0, 20)}`} className="text-muted-foreground text-[11px]">
+              <p
+                key={`error-${i}-${err.slice(0, 20)}`}
+                className="text-muted-foreground text-[11px]"
+              >
                 {err}
               </p>
             ))}

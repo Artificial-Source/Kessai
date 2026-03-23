@@ -238,9 +238,7 @@ describe('usePaymentCardStore', () => {
     it('rolls back on remove failure', async () => {
       mockInvoke.mockRejectedValue(new Error('Delete failed'))
 
-      await expect(usePaymentCardStore.getState().remove('card-1')).rejects.toThrow(
-        'Delete failed'
-      )
+      await expect(usePaymentCardStore.getState().remove('card-1')).rejects.toThrow('Delete failed')
 
       expect(usePaymentCardStore.getState().cards).toHaveLength(2)
       expect(usePaymentCardStore.getState().cards.some((c) => c.id === 'card-1')).toBe(true)

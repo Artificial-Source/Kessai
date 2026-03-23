@@ -143,7 +143,7 @@ F,6,unknown`
   })
 
   it('handles Windows-style line endings', () => {
-    const csv = "name,amount\r\nNetflix,15.99\r\nSpotify,9.99"
+    const csv = 'name,amount\r\nNetflix,15.99\r\nSpotify,9.99'
 
     const result = parseCSV(csv)
 
@@ -250,9 +250,7 @@ describe('parseSubbyJSON', () => {
     const backup = {
       version: '1.0',
       exportedAt: '2025-06-01',
-      subscriptions: [
-        { name: 'Test', amount: 10, currency: 'USD', billing_cycle: 'biweekly' },
-      ],
+      subscriptions: [{ name: 'Test', amount: 10, currency: 'USD', billing_cycle: 'biweekly' }],
     }
 
     const result = parseSubbyJSON(backup)
@@ -264,9 +262,7 @@ describe('parseSubbyJSON', () => {
     const backup = {
       version: '1.0',
       exportedAt: '2025-06-01',
-      subscriptions: [
-        { name: 'Test', amount: 10, currency: '', billing_cycle: 'monthly' },
-      ],
+      subscriptions: [{ name: 'Test', amount: 10, currency: '', billing_cycle: 'monthly' }],
     }
 
     const result = parseSubbyJSON(backup)

@@ -53,11 +53,7 @@ export class RouteErrorBoundary extends Component<Props, State> {
                 </pre>
               </details>
             )}
-            <Button
-              variant="default"
-              onClick={this.handleReset}
-              className="gap-2"
-            >
+            <Button variant="default" onClick={this.handleReset} className="gap-2">
               <RefreshCw className="h-4 w-4" />
               Try Again
             </Button>

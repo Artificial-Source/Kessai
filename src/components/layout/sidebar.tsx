@@ -51,7 +51,8 @@ export function Sidebar() {
       style={{
         width: isCollapsed ? SIDEBAR_COLLAPSED_WIDTH : SIDEBAR_WIDTH,
         minWidth: isCollapsed ? SIDEBAR_COLLAPSED_WIDTH : SIDEBAR_WIDTH,
-        transition: 'width 0.25s cubic-bezier(0.4, 0, 0.2, 1), min-width 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+        transition:
+          'width 0.25s cubic-bezier(0.4, 0, 0.2, 1), min-width 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
       }}
     >
       {/* Header */}
@@ -115,9 +116,7 @@ export function Sidebar() {
             >
               {label}
             </span>
-            {isCollapsed && (
-              <span className="sidebar-tooltip">{label}</span>
-            )}
+            {isCollapsed && <span className="sidebar-tooltip">{label}</span>}
           </NavLink>
         ))}
       </nav>

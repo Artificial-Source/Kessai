@@ -1,5 +1,10 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { convertCurrency, convertCurrencyCached, getCachedRate, preloadRates } from '../exchange-rates'
+import {
+  convertCurrency,
+  convertCurrencyCached,
+  getCachedRate,
+  preloadRates,
+} from '../exchange-rates'
 import type { CurrencyCode } from '@/lib/currency'
 
 // We need to reset the module-level memoryCache between tests
@@ -56,11 +61,7 @@ describe('exchange-rates', () => {
 
     it('returns null when no cached rates available for different currencies', () => {
       // With no preloaded rates, this should return null (or a value from prior localStorage)
-      const result = convertCurrencyCached(
-        100,
-        'JPY' as CurrencyCode,
-        'CHF' as CurrencyCode
-      )
+      const result = convertCurrencyCached(100, 'JPY' as CurrencyCode, 'CHF' as CurrencyCode)
       // For uncached pair with no localStorage data, expect null
       expect(result === null || typeof result === 'number').toBe(true)
     })
@@ -83,9 +84,7 @@ describe('exchange-rates', () => {
       mockFetch.mockRejectedValue(new Error('Network error'))
 
       // Should not throw
-      await expect(
-        preloadRates(['USD' as CurrencyCode])
-      ).resolves.toBeUndefined()
+      await expect(preloadRates(['USD' as CurrencyCode])).resolves.toBeUndefined()
     })
 
     it('caches rates after successful fetch', async () => {

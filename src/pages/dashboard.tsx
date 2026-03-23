@@ -5,6 +5,7 @@ import { CalendarDays, Calendar, CalendarClock, CreditCard, FlaskConical } from 
 import { useSubscriptionStore } from '@/stores/subscription-store'
 import { useCategoryStore } from '@/stores/category-store'
 import { useSettingsStore } from '@/stores/settings-store'
+import { useUiStore } from '@/stores/ui-store'
 import { useDashboardStats } from '@/hooks/use-dashboard-stats'
 import { formatCurrency } from '@/lib/currency'
 import { getUpcomingPayments } from '@/lib/date-utils'
@@ -19,6 +20,7 @@ import { TrialAlertCard } from '@/components/dashboard/trial-alert-card'
 import { PriceChangesCard } from '@/components/dashboard/price-changes-card'
 import { DashboardSkeleton } from '@/components/dashboard/dashboard-skeleton'
 import { Button } from '@/components/ui/button'
+import { calculateNormalizedAmount, NORMALIZATION_SUFFIXES } from '@/types/subscription'
 import type { CurrencyCode } from '@/lib/currency'
 
 const WhatIfSimulator = lazy(() =>
@@ -57,8 +59,31 @@ export function Dashboard() {
     yearlySubsCount,
   } = useDashboardStats()
 
+  const costNormalization = useUiStore((s) => s.costNormalization)
   const [whatIfOpen, setWhatIfOpen] = useState(false)
   const currency = (settings?.currency || 'USD') as CurrencyCode
+  const isNormalized = costNormalization !== 'as-is'
+
+  // Helper to convert totals-by-cycle to normalized amounts
+  const normalizedMonthlyLabel = useMemo(() => {
+    if (!isNormalized) return null
+    // monthlySubsTotal is raw total of monthly-billed subs; convert to target
+    const fromMonthly = calculateNormalizedAmount(monthlySubsTotal, 'monthly', costNormalization)
+    return fromMonthly
+  }, [isNormalized, monthlySubsTotal, costNormalization])
+
+  const normalizedYearlyLabel = useMemo(() => {
+    if (!isNormalized) return null
+    const fromYearly = calculateNormalizedAmount(yearlySubsTotal, 'yearly', costNormalization)
+    return fromYearly
+  }, [isNormalized, yearlySubsTotal, costNormalization])
+
+  const normalizedTotalMonthly = useMemo(() => {
+    if (!isNormalized) return null
+    return calculateNormalizedAmount(totalMonthly, 'monthly', costNormalization)
+  }, [isNormalized, totalMonthly, costNormalization])
+
+  const normSuffix = isNormalized ? NORMALIZATION_SUFFIXES[costNormalization] : ''
 
   // Trial stats for TrialsWidget
   const { trialCount, expiringTrials } = useMemo(() => {
@@ -100,16 +125,26 @@ export function Dashboard() {
 
       <section className="stagger-children grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-5 lg:grid-cols-4 xl:gap-6">
         <StatCard
-          label="Monthly Subscriptions"
-          value={formatCurrency(monthlySubsTotal, currency)}
+          label={isNormalized ? `Monthly Subs (${normSuffix})` : 'Monthly Subscriptions'}
+          value={formatCurrency(
+            isNormalized && normalizedMonthlyLabel !== null
+              ? normalizedMonthlyLabel
+              : monthlySubsTotal,
+            currency
+          )}
           subtitle={`${monthlySubsCount} subscription${monthlySubsCount !== 1 ? 's' : ''}`}
           icon={CalendarDays}
           iconBg="bg-primary/10"
           iconColor="text-primary"
         />
         <StatCard
-          label="Yearly Subscriptions"
-          value={formatCurrency(yearlySubsTotal, currency)}
+          label={isNormalized ? `Yearly Subs (${normSuffix})` : 'Yearly Subscriptions'}
+          value={formatCurrency(
+            isNormalized && normalizedYearlyLabel !== null
+              ? normalizedYearlyLabel
+              : yearlySubsTotal,
+            currency
+          )}
           subtitle={`${yearlySubsCount} subscription${yearlySubsCount !== 1 ? 's' : ''}`}
           icon={Calendar}
           iconBg="bg-accent-cyan/10"
@@ -131,7 +166,11 @@ export function Dashboard() {
         <StatCard
           label="Active Subscriptions"
           value={activeCount.toString()}
-          subtitle={`${formatCurrency(totalMonthly, currency)}/mo total`}
+          subtitle={
+            isNormalized && normalizedTotalMonthly !== null
+              ? `${formatCurrency(normalizedTotalMonthly, currency)}${normSuffix} total`
+              : `${formatCurrency(totalMonthly, currency)}/mo total`
+          }
           icon={CreditCard}
           iconBg="bg-muted"
           iconColor="text-muted-foreground"

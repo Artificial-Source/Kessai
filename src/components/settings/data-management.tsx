@@ -93,7 +93,7 @@ export function DataManagement({ onDataChanged }: DataManagementProps) {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
         <div>
           <p className="text-foreground font-[family-name:var(--font-sans)] text-sm font-medium">
             Export Data
@@ -102,13 +102,18 @@ export function DataManagement({ onDataChanged }: DataManagementProps) {
             Download all your subscriptions as a backup
           </p>
         </div>
-        <Button variant="outline" onClick={handleExport} disabled={isExporting} className="gap-2 shrink-0">
+        <Button
+          variant="outline"
+          onClick={handleExport}
+          disabled={isExporting}
+          className="shrink-0 gap-2"
+        >
           <Download className="h-4 w-4" />
           {isExporting ? 'Exporting...' : 'Export'}
         </Button>
       </div>
 
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
         <div>
           <p className="text-foreground font-[family-name:var(--font-sans)] text-sm font-medium">
             Import Data
@@ -119,7 +124,7 @@ export function DataManagement({ onDataChanged }: DataManagementProps) {
           variant="outline"
           onClick={handleImportClick}
           disabled={isImporting}
-          className="gap-2 shrink-0"
+          className="shrink-0 gap-2"
         >
           <Upload className="h-4 w-4" />
           {isImporting ? 'Importing...' : 'Import'}
@@ -134,7 +139,7 @@ export function DataManagement({ onDataChanged }: DataManagementProps) {
       </div>
 
       <div className="border-border border-t pt-6">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
           <div>
             <p className="text-foreground font-[family-name:var(--font-sans)] text-sm font-medium">
               Import from CSV / Other Apps
@@ -143,7 +148,11 @@ export function DataManagement({ onDataChanged }: DataManagementProps) {
               Import from CSV, Wallos, or other formats
             </p>
           </div>
-          <Button variant="outline" onClick={() => setShowImportDialog(true)} className="gap-2 shrink-0">
+          <Button
+            variant="outline"
+            onClick={() => setShowImportDialog(true)}
+            className="shrink-0 gap-2"
+          >
             <FileUp className="h-4 w-4" />
             Import
           </Button>

@@ -162,7 +162,7 @@ export function CalendarPage() {
             ))}
           </div>
 
-          <div className="grid flex-1 grid-cols-7 auto-rows-fr overflow-y-auto">
+          <div className="grid flex-1 auto-rows-fr grid-cols-7 overflow-y-auto">
             {Array.from({ length: firstDayOffset }).map((_, i) => (
               <div
                 key={`empty-${i}`}
@@ -198,10 +198,12 @@ export function CalendarPage() {
           onClick={() => setSelectedDate(null)}
         />
       )}
-      <div className={cn(
-        'fixed inset-y-0 right-0 z-50 w-full max-w-[380px] transition-transform duration-300 lg:static lg:z-auto lg:translate-x-0 lg:transition-none',
-        selectedDate !== null ? 'translate-x-0' : 'translate-x-full lg:hidden'
-      )}>
+      <div
+        className={cn(
+          'fixed inset-y-0 right-0 z-50 w-full max-w-[380px] transition-transform duration-300 lg:static lg:z-auto lg:translate-x-0 lg:transition-none',
+          selectedDate !== null ? 'translate-x-0' : 'translate-x-full lg:hidden'
+        )}
+      >
         <CalendarDayPanel
           isOpen={selectedDate !== null}
           selectedDate={selectedDate}

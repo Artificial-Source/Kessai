@@ -48,7 +48,7 @@ export const PriceChangesCard = memo(function PriceChangesCard({
               key={change.id}
               className="border-border flex items-center justify-between rounded-lg border bg-[var(--color-subtle-overlay)] px-4 py-3"
             >
-              <div className="min-w-0 flex flex-col gap-1">
+              <div className="flex min-w-0 flex-col gap-1">
                 <span className="text-foreground truncate text-sm font-medium">
                   {getSubName(change.subscription_id)}
                 </span>

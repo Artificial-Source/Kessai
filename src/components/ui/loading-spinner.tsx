@@ -7,7 +7,7 @@ export function LoadingSpinner({ className }: { className?: string }) {
         role="status"
         aria-label="Loading"
         className={cn(
-          'h-8 w-8 animate-spin rounded-full border-2 border-primary/20 border-t-primary',
+          'border-primary/20 border-t-primary h-8 w-8 animate-spin rounded-full border-2',
           className
         )}
       />

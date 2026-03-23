@@ -66,9 +66,7 @@ describe('SubscriptionLogo', () => {
   })
 
   it('uses provided color as background', () => {
-    const { container } = render(
-      <SubscriptionLogo logoUrl={null} name="Netflix" color="#ff0000" />
-    )
+    const { container } = render(<SubscriptionLogo logoUrl={null} name="Netflix" color="#ff0000" />)
 
     const el = container.firstChild as HTMLElement
     expect(el).toHaveStyle({ backgroundColor: '#ff0000' })
@@ -97,9 +95,7 @@ describe('SubscriptionLogo', () => {
     // Make getLogoDataUrl hang (never resolve)
     mockGetLogoDataUrl.mockReturnValue(new Promise(() => {}))
 
-    const { container } = render(
-      <SubscriptionLogo logoUrl="logos/spotify.png" name="Spotify" />
-    )
+    const { container } = render(<SubscriptionLogo logoUrl="logos/spotify.png" name="Spotify" />)
 
     const el = container.firstChild as HTMLElement
     expect(el).toHaveClass('animate-pulse')
@@ -118,18 +114,14 @@ describe('SubscriptionLogo', () => {
   it('renders logo image with correct size class', async () => {
     mockGetLogoDataUrl.mockResolvedValue('data:image/png;base64,xyz')
 
-    render(
-      <SubscriptionLogo logoUrl="logos/test.png" name="Test" size="lg" />
-    )
+    render(<SubscriptionLogo logoUrl="logos/test.png" name="Test" size="lg" />)
 
     const img = await waitFor(() => screen.getByRole('img'))
     expect(img).toHaveClass('h-12', 'w-12')
   })
 
   it('uses default primary color when no color provided', () => {
-    const { container } = render(
-      <SubscriptionLogo logoUrl={null} name="Netflix" />
-    )
+    const { container } = render(<SubscriptionLogo logoUrl={null} name="Netflix" />)
 
     const el = container.firstChild as HTMLElement
     expect(el).toHaveStyle({ backgroundColor: '#bf5af2' })

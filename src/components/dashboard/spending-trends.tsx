@@ -187,7 +187,7 @@ export const SpendingTrends = memo(function SpendingTrends({ currency }: Spendin
         </div>
       </div>
 
-      <div className="h-[180px] sm:h-[240px] w-full">
+      <div className="h-[180px] w-full sm:h-[240px]">
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={data} margin={{ top: 4, right: 4, bottom: 0, left: -12 }}>
             <defs>

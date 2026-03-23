@@ -70,8 +70,12 @@ describe('Settings schema', () => {
   })
 
   it('accepts notification_advance_days at boundaries (1 and 30)', () => {
-    expect(settingsSchema.safeParse({ ...validSettings, notification_advance_days: 1 }).success).toBe(true)
-    expect(settingsSchema.safeParse({ ...validSettings, notification_advance_days: 30 }).success).toBe(true)
+    expect(
+      settingsSchema.safeParse({ ...validSettings, notification_advance_days: 1 }).success
+    ).toBe(true)
+    expect(
+      settingsSchema.safeParse({ ...validSettings, notification_advance_days: 30 }).success
+    ).toBe(true)
   })
 
   it('rejects invalid notification_time format', () => {

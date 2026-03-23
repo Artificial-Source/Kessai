@@ -3,6 +3,12 @@ import { Pencil, Trash2, Power } from 'lucide-react'
 import { formatCurrency } from '@/lib/currency'
 import { convertCurrencyCached } from '@/lib/exchange-rates'
 import { BILLING_CYCLE_LABELS, CATEGORY_BADGE_VARIANTS } from '@/lib/constants'
+import {
+  calculateNormalizedAmount,
+  NORMALIZATION_LABELS,
+  NORMALIZATION_SUFFIXES,
+} from '@/types/subscription'
+import type { NormalizationPeriod } from '@/types/subscription'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { SubscriptionLogo } from '@/components/ui/subscription-logo'
@@ -16,6 +22,7 @@ import type { Category } from '@/types/category'
 interface SubscriptionsGridViewProps {
   subscriptions: Subscription[]
   currency: CurrencyCode
+  costNormalization: NormalizationPeriod
   getCategory: (categoryId: string | null) => Category | undefined
   onEdit: (sub: Subscription) => void
   onDelete: (sub: Subscription) => void
@@ -32,6 +39,7 @@ function getCategoryVariant(categoryName?: string): BadgeVariant {
 export const SubscriptionsGridView = memo(function SubscriptionsGridView({
   subscriptions,
   currency,
+  costNormalization,
   getCategory,
   onEdit,
   onDelete,
@@ -39,6 +47,7 @@ export const SubscriptionsGridView = memo(function SubscriptionsGridView({
   onMarkAsPaid,
   canMarkAsPaid,
 }: SubscriptionsGridViewProps) {
+  const isNormalized = costNormalization !== 'as-is'
   return (
     <div className="stagger-children grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3">
       {subscriptions.map((sub) => {
@@ -97,7 +106,9 @@ export const SubscriptionsGridView = memo(function SubscriptionsGridView({
                 </h3>
                 <div className="flex flex-wrap items-center gap-1.5">
                   <p className="text-muted-foreground font-[family-name:var(--font-mono)] text-[10px] tracking-wider uppercase">
-                    {BILLING_CYCLE_LABELS[sub.billing_cycle]}
+                    {isNormalized
+                      ? NORMALIZATION_LABELS[costNormalization]
+                      : BILLING_CYCLE_LABELS[sub.billing_cycle]}
                   </p>
                   {sub.status === 'trial' && (
                     <TrialBadge trialEndDate={sub.trial_end_date ?? null} />
@@ -108,24 +119,55 @@ export const SubscriptionsGridView = memo(function SubscriptionsGridView({
 
               <div className="mt-auto flex items-end justify-between">
                 <div className="flex flex-col gap-0.5">
-                  <div className="flex items-baseline gap-1">
-                    <p className="text-foreground font-[family-name:var(--font-heading)] text-[28px] leading-none font-bold">
-                      {formatCurrency(sub.amount, (sub.currency || currency) as CurrencyCode)}
-                    </p>
-                    <span className="text-muted-foreground font-[family-name:var(--font-mono)] text-xs">
-                      {(sub.currency || currency).toUpperCase()}
-                      <span className="ml-0.5">/{sub.billing_cycle === 'yearly' ? 'yr' : 'mo'}</span>
-                    </span>
-                  </div>
                   {(() => {
                     const subCurrency = (sub.currency || currency) as CurrencyCode
-                    if (subCurrency === currency) return null
-                    const converted = convertCurrencyCached(sub.amount, subCurrency, currency)
-                    if (converted === null) return null
+                    const isDifferent = subCurrency !== currency
+                    const converted = isDifferent
+                      ? convertCurrencyCached(sub.amount, subCurrency, currency)
+                      : null
+
+                    if (isNormalized) {
+                      const baseAmount = isDifferent && converted !== null ? converted : sub.amount
+                      const displayCur = isDifferent && converted !== null ? currency : subCurrency
+                      const normalizedAmount = calculateNormalizedAmount(
+                        baseAmount,
+                        sub.billing_cycle,
+                        costNormalization
+                      )
+                      return (
+                        <div className="flex items-baseline gap-1">
+                          <p className="text-foreground font-[family-name:var(--font-heading)] text-[28px] leading-none font-bold">
+                            {formatCurrency(normalizedAmount, displayCur)}
+                          </p>
+                          <span className="text-muted-foreground font-[family-name:var(--font-mono)] text-xs">
+                            {displayCur.toUpperCase()}
+                            <span className="ml-0.5">
+                              {NORMALIZATION_SUFFIXES[costNormalization]}
+                            </span>
+                          </span>
+                        </div>
+                      )
+                    }
+
                     return (
-                      <p className="text-muted-foreground font-[family-name:var(--font-mono)] text-[10px]">
-                        ≈ {formatCurrency(converted, currency)} {currency}
-                      </p>
+                      <>
+                        <div className="flex items-baseline gap-1">
+                          <p className="text-foreground font-[family-name:var(--font-heading)] text-[28px] leading-none font-bold">
+                            {formatCurrency(sub.amount, subCurrency)}
+                          </p>
+                          <span className="text-muted-foreground font-[family-name:var(--font-mono)] text-xs">
+                            {subCurrency.toUpperCase()}
+                            <span className="ml-0.5">
+                              /{sub.billing_cycle === 'yearly' ? 'yr' : 'mo'}
+                            </span>
+                          </span>
+                        </div>
+                        {isDifferent && converted !== null && (
+                          <p className="text-muted-foreground font-[family-name:var(--font-mono)] text-[10px]">
+                            ≈ {formatCurrency(converted, currency)} {currency}
+                          </p>
+                        )}
+                      </>
                     )
                   })()}
                 </div>

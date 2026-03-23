@@ -45,7 +45,7 @@ export const WhatIfSimulator = memo(function WhatIfSimulator({
         </DialogHeader>
 
         {/* Summary cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
           <SummaryCard
             label="Current Annual"
             value={formatCurrency(currentAnnual, currency)}

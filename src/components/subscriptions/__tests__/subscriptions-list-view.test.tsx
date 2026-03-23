@@ -43,6 +43,7 @@ const mockCategory: Category = {
 
 const defaultProps = {
   currency: 'USD' as const,
+  costNormalization: 'as-is' as const,
   onEdit: vi.fn(),
   onDelete: vi.fn(),
   onToggleActive: vi.fn(),

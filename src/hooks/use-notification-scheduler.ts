@@ -84,9 +84,7 @@ async function sendRenewalNotifications(
 
   if (!isTauri()) return
 
-  const { isPermissionGranted, sendNotification } = await import(
-    '@tauri-apps/plugin-notification'
-  )
+  const { isPermissionGranted, sendNotification } = await import('@tauri-apps/plugin-notification')
 
   const granted = await isPermissionGranted()
   if (!granted) return

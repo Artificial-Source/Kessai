@@ -24,9 +24,14 @@ import { SubscriptionBento } from '@/components/subscriptions/subscription-bento
 import { SubscriptionsGridView } from '@/components/subscriptions/subscriptions-grid-view'
 import { SubscriptionsListView } from '@/components/subscriptions/subscriptions-list-view'
 import { CategoryFilter } from '@/components/subscriptions/category-filter'
+import { CostNormalizationToggle } from '@/components/subscriptions/cost-normalization-toggle'
 import { SubscriptionsSkeleton } from '@/components/subscriptions/subscriptions-skeleton'
 import type { CurrencyCode } from '@/lib/currency'
-import { isBillableStatus } from '@/types/subscription'
+import {
+  isBillableStatus,
+  calculateNormalizedAmount,
+  NORMALIZATION_SUFFIXES,
+} from '@/types/subscription'
 import type { Subscription } from '@/types/subscription'
 
 type SortOption =
@@ -63,7 +68,7 @@ const ConfirmDialog = lazy(() =>
 export function Subscriptions() {
   const { subscriptions, isLoading, remove, toggleActive, getCategory } = useSubscriptions()
   const categories = useCategoryStore((state) => state.categories)
-  const { openSubscriptionDialog } = useUiStore()
+  const { openSubscriptionDialog, costNormalization } = useUiStore()
   const { settings, fetch: fetchSettings } = useSettingsStore()
   const { markAsPaid } = usePaymentStore()
   const currency = (settings?.currency || 'USD') as CurrencyCode
@@ -192,6 +197,24 @@ export function Subscriptions() {
       }, 0)
   }, [subscriptions, currency])
 
+  // Normalized total across all billable subscriptions
+  const normalizedTotal = useMemo(() => {
+    if (costNormalization === 'as-is') return null
+    return subscriptions
+      .filter((sub) => isBillableStatus(sub.status))
+      .reduce((total, sub) => {
+        const amount = sub.amount / Math.max(sub.shared_count, 1)
+        const subCurrency = (sub.currency || currency) as CurrencyCode
+        const convertedAmount =
+          subCurrency === currency
+            ? amount
+            : (convertCurrencyCached(amount, subCurrency, currency) ?? amount)
+        return (
+          total + calculateNormalizedAmount(convertedAmount, sub.billing_cycle, costNormalization)
+        )
+      }, 0)
+  }, [subscriptions, currency, costNormalization])
+
   const handleMarkAsPaid = async (sub: Subscription) => {
     if (!sub.next_payment_date) return
     try {
@@ -258,25 +281,39 @@ export function Subscriptions() {
           <div className="flex flex-col gap-2">
             <h1 className="text-2xl font-bold tracking-tight">My Subscriptions</h1>
             <div className="flex flex-wrap items-center gap-3">
-              {monthlySubsTotal > 0 && (
+              {costNormalization !== 'as-is' && normalizedTotal !== null ? (
                 <div className="flex items-center gap-3">
                   <span className="text-muted-foreground font-[family-name:var(--font-mono)] text-[11px] tracking-wider uppercase">
-                    Monthly:
+                    Total:
                   </span>
                   <span className="bg-primary/10 text-primary rounded px-2.5 py-1 font-[family-name:var(--font-mono)] text-[11px] font-bold">
-                    {formatCurrency(monthlySubsTotal, currency)}/mo
+                    {formatCurrency(normalizedTotal, currency)}
+                    {NORMALIZATION_SUFFIXES[costNormalization]}
                   </span>
                 </div>
-              )}
-              {yearlySubsTotal > 0 && (
-                <div className="flex items-center gap-3">
-                  <span className="text-muted-foreground font-[family-name:var(--font-mono)] text-[11px] tracking-wider uppercase">
-                    Yearly:
-                  </span>
-                  <span className="bg-accent-cyan/10 text-accent-cyan rounded px-2.5 py-1 font-[family-name:var(--font-mono)] text-[11px] font-bold">
-                    {formatCurrency(yearlySubsTotal, currency)}/yr
-                  </span>
-                </div>
+              ) : (
+                <>
+                  {monthlySubsTotal > 0 && (
+                    <div className="flex items-center gap-3">
+                      <span className="text-muted-foreground font-[family-name:var(--font-mono)] text-[11px] tracking-wider uppercase">
+                        Monthly:
+                      </span>
+                      <span className="bg-primary/10 text-primary rounded px-2.5 py-1 font-[family-name:var(--font-mono)] text-[11px] font-bold">
+                        {formatCurrency(monthlySubsTotal, currency)}/mo
+                      </span>
+                    </div>
+                  )}
+                  {yearlySubsTotal > 0 && (
+                    <div className="flex items-center gap-3">
+                      <span className="text-muted-foreground font-[family-name:var(--font-mono)] text-[11px] tracking-wider uppercase">
+                        Yearly:
+                      </span>
+                      <span className="bg-accent-cyan/10 text-accent-cyan rounded px-2.5 py-1 font-[family-name:var(--font-mono)] text-[11px] font-bold">
+                        {formatCurrency(yearlySubsTotal, currency)}/yr
+                      </span>
+                    </div>
+                  )}
+                </>
               )}
             </div>
           </div>
@@ -320,6 +357,7 @@ export function Subscriptions() {
                     )}
                   </SelectContent>
                 </Select>
+                <CostNormalizationToggle />
               </div>
               <div
                 className="border-border flex rounded-lg border bg-[var(--color-surface-elevated)] p-1"
@@ -409,12 +447,14 @@ export function Subscriptions() {
             subscriptions={filteredSubscriptions}
             categories={categories}
             currency={currency}
+            costNormalization={costNormalization}
             onEdit={(sub) => openSubscriptionDialog(sub.id)}
           />
         ) : viewMode === 'grid' ? (
           <SubscriptionsGridView
             subscriptions={filteredSubscriptions}
             currency={currency}
+            costNormalization={costNormalization}
             getCategory={getCategory}
             onEdit={(sub) => openSubscriptionDialog(sub.id)}
             onDelete={setDeleteTarget}
@@ -427,6 +467,7 @@ export function Subscriptions() {
             subscriptions={filteredSubscriptions}
             totalCount={subscriptions.length}
             currency={currency}
+            costNormalization={costNormalization}
             getCategory={getCategory}
             onEdit={(sub) => openSubscriptionDialog(sub.id)}
             onDelete={setDeleteTarget}

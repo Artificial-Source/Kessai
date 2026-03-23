@@ -73,12 +73,7 @@ describe('CalendarDay', () => {
     const payments = [makePayment()]
 
     render(
-      <CalendarDay
-        {...defaultProps}
-        dayOfMonth={15}
-        payments={payments}
-        totalAmount={15.99}
-      />
+      <CalendarDay {...defaultProps} dayOfMonth={15} payments={payments} totalAmount={15.99} />
     )
 
     expect(screen.getByText('Netflix')).toBeInTheDocument()
@@ -102,17 +97,13 @@ describe('CalendarDay', () => {
   it('shows multiple payments', () => {
     const payments = [
       makePayment({ subscription: makeSub({ id: 'sub-1', name: 'Netflix' }) }),
-      makePayment({ subscription: makeSub({ id: 'sub-2', name: 'Spotify' }), dueDate: '2026-03-15' }),
+      makePayment({
+        subscription: makeSub({ id: 'sub-2', name: 'Spotify' }),
+        dueDate: '2026-03-15',
+      }),
     ]
 
-    render(
-      <CalendarDay
-        {...defaultProps}
-        dayOfMonth={15}
-        payments={payments}
-        totalAmount={30}
-      />
-    )
+    render(<CalendarDay {...defaultProps} dayOfMonth={15} payments={payments} totalAmount={30} />)
 
     expect(screen.getByText('Netflix')).toBeInTheDocument()
     expect(screen.getByText('Spotify')).toBeInTheDocument()
@@ -126,14 +117,7 @@ describe('CalendarDay', () => {
       makePayment({ subscription: makeSub({ id: 'sub-4', name: 'Sub4' }), dueDate: '2026-03-18' }),
     ]
 
-    render(
-      <CalendarDay
-        {...defaultProps}
-        dayOfMonth={15}
-        payments={payments}
-        totalAmount={60}
-      />
-    )
+    render(<CalendarDay {...defaultProps} dayOfMonth={15} payments={payments} totalAmount={60} />)
 
     expect(screen.getByText('+1 more')).toBeInTheDocument()
   })
@@ -142,12 +126,7 @@ describe('CalendarDay', () => {
     const payments = [makePayment()]
 
     render(
-      <CalendarDay
-        {...defaultProps}
-        dayOfMonth={15}
-        payments={payments}
-        totalAmount={15.99}
-      />
+      <CalendarDay {...defaultProps} dayOfMonth={15} payments={payments} totalAmount={15.99} />
     )
 
     expect(screen.getByRole('button', { name: /15, 1 payment/ })).toBeInTheDocument()

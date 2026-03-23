@@ -20,9 +20,7 @@ describe('PriceHistoryBadge', () => {
   })
 
   it('renders nothing when no price change exists', async () => {
-    const { container } = render(
-      <PriceHistoryBadge subscriptionId="sub-1" currency="USD" />
-    )
+    const { container } = render(<PriceHistoryBadge subscriptionId="sub-1" currency="USD" />)
 
     // Wait for the useEffect to resolve
     await waitFor(() => {

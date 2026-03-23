@@ -59,13 +59,7 @@ export function SubscriptionLogo({
 
   if (isLoading) {
     return (
-      <div
-        className={cn(
-          sizeClass,
-          'animate-pulse bg-[var(--color-subtle-overlay)]',
-          className
-        )}
-      />
+      <div className={cn(sizeClass, 'animate-pulse bg-[var(--color-subtle-overlay)]', className)} />
     )
   }
 
@@ -83,11 +77,7 @@ export function SubscriptionLogo({
 
   return (
     <div
-      className={cn(
-        sizeClass,
-        'flex items-center justify-center font-bold text-white',
-        className
-      )}
+      className={cn(sizeClass, 'flex items-center justify-center font-bold text-white', className)}
       style={{ backgroundColor: color || '#bf5af2' }}
     >
       {name.charAt(0).toUpperCase()}

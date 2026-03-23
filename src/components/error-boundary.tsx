@@ -62,18 +62,10 @@ export class ErrorBoundary extends Component<Props, State> {
               </details>
             )}
             <div className="flex gap-3">
-              <Button
-                variant="secondary"
-                onClick={this.handleReset}
-                className="flex-1"
-              >
+              <Button variant="secondary" onClick={this.handleReset} className="flex-1">
                 Try Again
               </Button>
-              <Button
-                variant="default"
-                onClick={this.handleReload}
-                className="flex-1 gap-2"
-              >
+              <Button variant="default" onClick={this.handleReload} className="flex-1 gap-2">
                 <RefreshCw className="h-4 w-4" />
                 Reload
               </Button>

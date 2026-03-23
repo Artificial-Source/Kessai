@@ -1,9 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import {
-  BILLING_CYCLE_LABELS,
-  BILLING_CYCLE_SHORT,
-  CATEGORY_BADGE_VARIANTS,
-} from '../constants'
+import { BILLING_CYCLE_LABELS, BILLING_CYCLE_SHORT, CATEGORY_BADGE_VARIANTS } from '../constants'
 
 describe('BILLING_CYCLE_LABELS', () => {
   it('has all expected billing cycle keys', () => {

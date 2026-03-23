@@ -142,3 +142,47 @@ export function calculateUserYearlyAmount(
 ): number {
   return calculateYearlyAmount(amount, cycle) / Math.max(sharedCount, 1)
 }
+
+export type NormalizationPeriod = 'as-is' | 'daily' | 'weekly' | 'monthly' | 'yearly'
+
+export const NORMALIZATION_LABELS: Record<NormalizationPeriod, string> = {
+  'as-is': 'As billed',
+  daily: 'Daily',
+  weekly: 'Weekly',
+  monthly: 'Monthly',
+  yearly: 'Yearly',
+}
+
+export const NORMALIZATION_SUFFIXES: Record<Exclude<NormalizationPeriod, 'as-is'>, string> = {
+  daily: '/day',
+  weekly: '/wk',
+  monthly: '/mo',
+  yearly: '/yr',
+}
+
+/**
+ * Convert an amount from any billing cycle to a target normalization period.
+ * First normalizes to monthly, then converts to the target period.
+ */
+export function calculateNormalizedAmount(
+  amount: number,
+  billingCycle: BillingCycle,
+  targetPeriod: NormalizationPeriod
+): number {
+  if (targetPeriod === 'as-is') return amount
+
+  // Step 1: Normalize to monthly
+  const monthly = calculateMonthlyAmount(amount, billingCycle)
+
+  // Step 2: Convert from monthly to target period
+  switch (targetPeriod) {
+    case 'daily':
+      return monthly / 30.44
+    case 'weekly':
+      return monthly / 4.33
+    case 'monthly':
+      return monthly
+    case 'yearly':
+      return monthly * 12
+  }
+}

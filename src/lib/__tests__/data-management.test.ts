@@ -4,7 +4,13 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 // @ts-expect-error -- setting Tauri flag for tests
 window.__TAURI__ = true
 
-import { validateBackupData, readFileAsJson, exportData, importData, saveBackupToFile } from '../data-management'
+import {
+  validateBackupData,
+  readFileAsJson,
+  exportData,
+  importData,
+  saveBackupToFile,
+} from '../data-management'
 
 const mockInvoke = vi.fn()
 
@@ -31,7 +37,18 @@ describe('validateBackupData', () => {
     subscriptions: [],
     categories: [],
     payments: [],
-    settings: { theme: 'dark', currency: 'USD', notification_enabled: true, notification_days_before: [1, 3, 7], notification_advance_days: 1, notification_time: '09:00', reduce_motion: false, enable_transitions: true, enable_hover_effects: true, animation_speed: 'normal' },
+    settings: {
+      theme: 'dark',
+      currency: 'USD',
+      notification_enabled: true,
+      notification_days_before: [1, 3, 7],
+      notification_advance_days: 1,
+      notification_time: '09:00',
+      reduce_motion: false,
+      enable_transitions: true,
+      enable_hover_effects: true,
+      animation_speed: 'normal',
+    },
   }
 
   it('accepts valid backup data', () => {
@@ -145,7 +162,18 @@ describe('exportData', () => {
       subscriptions: [],
       categories: [],
       payments: [],
-      settings: { theme: 'dark', currency: 'USD', notification_enabled: true, notification_days_before: [1, 3, 7], notification_advance_days: 1, notification_time: '09:00', reduce_motion: false, enable_transitions: true, enable_hover_effects: true, animation_speed: 'normal' },
+      settings: {
+        theme: 'dark',
+        currency: 'USD',
+        notification_enabled: true,
+        notification_days_before: [1, 3, 7],
+        notification_advance_days: 1,
+        notification_time: '09:00',
+        reduce_motion: false,
+        enable_transitions: true,
+        enable_hover_effects: true,
+        animation_speed: 'normal',
+      },
     }
     mockInvoke.mockResolvedValue(mockBackup)
 
@@ -168,7 +196,18 @@ describe('importData', () => {
       subscriptions: [],
       categories: [],
       payments: [],
-      settings: { theme: 'dark', currency: 'USD', notification_enabled: true, notification_days_before: [1, 3, 7], notification_advance_days: 1, notification_time: '09:00', reduce_motion: false, enable_transitions: true, enable_hover_effects: true, animation_speed: 'normal' },
+      settings: {
+        theme: 'dark',
+        currency: 'USD',
+        notification_enabled: true,
+        notification_days_before: [1, 3, 7],
+        notification_advance_days: 1,
+        notification_time: '09:00',
+        reduce_motion: false,
+        enable_transitions: true,
+        enable_hover_effects: true,
+        animation_speed: 'normal',
+      },
     }
     mockInvoke.mockResolvedValue({ success: true, message: 'Imported successfully' })
 
@@ -188,7 +227,18 @@ describe('importData', () => {
       subscriptions: [],
       categories: [],
       payments: [],
-      settings: { theme: 'dark', currency: 'USD', notification_enabled: true, notification_days_before: [1, 3, 7], notification_advance_days: 1, notification_time: '09:00', reduce_motion: false, enable_transitions: true, enable_hover_effects: true, animation_speed: 'normal' },
+      settings: {
+        theme: 'dark',
+        currency: 'USD',
+        notification_enabled: true,
+        notification_days_before: [1, 3, 7],
+        notification_advance_days: 1,
+        notification_time: '09:00',
+        reduce_motion: false,
+        enable_transitions: true,
+        enable_hover_effects: true,
+        animation_speed: 'normal',
+      },
     }
     mockInvoke.mockResolvedValue({ success: true, message: 'OK' })
 
@@ -207,7 +257,18 @@ describe('importData', () => {
       subscriptions: [],
       categories: [],
       payments: [],
-      settings: { theme: 'dark', currency: 'USD', notification_enabled: true, notification_days_before: [1, 3, 7], notification_advance_days: 1, notification_time: '09:00', reduce_motion: false, enable_transitions: true, enable_hover_effects: true, animation_speed: 'normal' },
+      settings: {
+        theme: 'dark',
+        currency: 'USD',
+        notification_enabled: true,
+        notification_days_before: [1, 3, 7],
+        notification_advance_days: 1,
+        notification_time: '09:00',
+        reduce_motion: false,
+        enable_transitions: true,
+        enable_hover_effects: true,
+        animation_speed: 'normal',
+      },
     }
     mockInvoke.mockRejectedValue(new Error('DB error'))
 
@@ -224,7 +285,18 @@ describe('importData', () => {
       subscriptions: [],
       categories: [],
       payments: [],
-      settings: { theme: 'dark', currency: 'USD', notification_enabled: true, notification_days_before: [1, 3, 7], notification_advance_days: 1, notification_time: '09:00', reduce_motion: false, enable_transitions: true, enable_hover_effects: true, animation_speed: 'normal' },
+      settings: {
+        theme: 'dark',
+        currency: 'USD',
+        notification_enabled: true,
+        notification_days_before: [1, 3, 7],
+        notification_advance_days: 1,
+        notification_time: '09:00',
+        reduce_motion: false,
+        enable_transitions: true,
+        enable_hover_effects: true,
+        animation_speed: 'normal',
+      },
     }
     mockInvoke.mockRejectedValue('string error')
 
@@ -249,7 +321,18 @@ describe('saveBackupToFile', () => {
       subscriptions: [],
       categories: [],
       payments: [],
-      settings: { theme: 'dark', currency: 'USD', notification_enabled: true, notification_days_before: [1, 3, 7], notification_advance_days: 1, notification_time: '09:00', reduce_motion: false, enable_transitions: true, enable_hover_effects: true, animation_speed: 'normal' },
+      settings: {
+        theme: 'dark',
+        currency: 'USD',
+        notification_enabled: true,
+        notification_days_before: [1, 3, 7],
+        notification_advance_days: 1,
+        notification_time: '09:00',
+        reduce_motion: false,
+        enable_transitions: true,
+        enable_hover_effects: true,
+        animation_speed: 'normal',
+      },
     }
 
     const result = await saveBackupToFile(data as Parameters<typeof saveBackupToFile>[0])
@@ -268,16 +351,24 @@ describe('saveBackupToFile', () => {
       subscriptions: [],
       categories: [],
       payments: [],
-      settings: { theme: 'dark', currency: 'USD', notification_enabled: true, notification_days_before: [1, 3, 7], notification_advance_days: 1, notification_time: '09:00', reduce_motion: false, enable_transitions: true, enable_hover_effects: true, animation_speed: 'normal' },
+      settings: {
+        theme: 'dark',
+        currency: 'USD',
+        notification_enabled: true,
+        notification_days_before: [1, 3, 7],
+        notification_advance_days: 1,
+        notification_time: '09:00',
+        reduce_motion: false,
+        enable_transitions: true,
+        enable_hover_effects: true,
+        animation_speed: 'normal',
+      },
     }
 
     const result = await saveBackupToFile(data as Parameters<typeof saveBackupToFile>[0])
 
     expect(result).toBe(true)
-    expect(mockWriteTextFile).toHaveBeenCalledWith(
-      '/home/user/backup.json',
-      expect.any(String)
-    )
+    expect(mockWriteTextFile).toHaveBeenCalledWith('/home/user/backup.json', expect.any(String))
   })
 })
 
