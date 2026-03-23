@@ -226,6 +226,16 @@ fn toggle_subscription_active(
         .map_err(|e| e.to_string())
 }
 
+#[tauri::command]
+fn toggle_subscription_pinned(
+    core: tauri::State<'_, SubbyCore>,
+    id: String,
+) -> Result<Subscription, String> {
+    core.subscriptions()
+        .toggle_pinned(&id)
+        .map_err(|e| e.to_string())
+}
+
 // ── Category commands ──────────────────────────────────────────────────────
 
 #[tauri::command]
@@ -491,6 +501,7 @@ pub fn run() {
             update_subscription,
             delete_subscription,
             toggle_subscription_active,
+            toggle_subscription_pinned,
             transition_subscription_status,
             get_expiring_trials,
             // Categories

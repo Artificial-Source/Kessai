@@ -40,6 +40,10 @@ const API_MAP: Record<
     method: 'POST',
     path: (a) => `/api/subscriptions/${a.id}/toggle`,
   },
+  toggle_subscription_pinned: {
+    method: 'POST',
+    path: (a) => `/api/subscriptions/${a.id}/pin`,
+  },
   transition_subscription_status: {
     method: 'POST',
     path: (a) => `/api/subscriptions/${a.id}/status`,

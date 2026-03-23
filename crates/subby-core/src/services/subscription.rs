@@ -15,16 +15,17 @@ impl SubscriptionService {
         Self { pool }
     }
 
-    /// List all subscriptions, sorted by next_payment_date ASC (nulls last).
+    /// List all subscriptions, sorted by pinned first, then next_payment_date ASC (nulls last).
     pub fn list(&self) -> Result<Vec<Subscription>> {
         let conn = self.pool.get()?;
         let mut stmt = conn.prepare(
             "SELECT id, name, amount, currency, billing_cycle, billing_day, category_id,
                     card_id, color, logo_url, notes, is_active, next_payment_date,
                     status, trial_end_date, status_changed_at, shared_count,
-                    created_at, updated_at
+                    is_pinned, created_at, updated_at
              FROM subscriptions
              ORDER BY
+                is_pinned DESC,
                 CASE WHEN next_payment_date IS NULL THEN 1 ELSE 0 END,
                 next_payment_date ASC",
         )?;
@@ -48,8 +49,9 @@ impl SubscriptionService {
                 trial_end_date: row.get(14)?,
                 status_changed_at: row.get(15)?,
                 shared_count: row.get::<_, i32>(16).unwrap_or(1),
-                created_at: row.get(17)?,
-                updated_at: row.get(18)?,
+                is_pinned: row.get::<_, i32>(17).unwrap_or(0) != 0,
+                created_at: row.get(18)?,
+                updated_at: row.get(19)?,
             })
         })?;
 
@@ -63,7 +65,7 @@ impl SubscriptionService {
             "SELECT id, name, amount, currency, billing_cycle, billing_day, category_id,
                     card_id, color, logo_url, notes, is_active, next_payment_date,
                     status, trial_end_date, status_changed_at, shared_count,
-                    created_at, updated_at
+                    is_pinned, created_at, updated_at
              FROM subscriptions WHERE id = ?1",
             params![id],
             |row| {
@@ -85,8 +87,9 @@ impl SubscriptionService {
                     trial_end_date: row.get(14)?,
                     status_changed_at: row.get(15)?,
                     shared_count: row.get::<_, i32>(16).unwrap_or(1),
-                    created_at: row.get(17)?,
-                    updated_at: row.get(18)?,
+                    is_pinned: row.get::<_, i32>(17).unwrap_or(0) != 0,
+                    created_at: row.get(18)?,
+                    updated_at: row.get(19)?,
                 })
             },
         )
@@ -111,9 +114,9 @@ impl SubscriptionService {
             "INSERT INTO subscriptions
              (id, name, amount, currency, billing_cycle, billing_day, category_id,
               card_id, color, logo_url, notes, is_active, next_payment_date,
-              status, trial_end_date, status_changed_at, shared_count,
+              status, trial_end_date, status_changed_at, shared_count, is_pinned,
               created_at, updated_at)
-             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19)",
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19, ?20)",
             params![
                 id,
                 data.name,
@@ -132,6 +135,7 @@ impl SubscriptionService {
                 data.trial_end_date,
                 now,
                 data.shared_count.max(1),
+                if data.is_pinned { 1i32 } else { 0 },
                 now,
                 now,
             ],
@@ -213,6 +217,10 @@ impl SubscriptionService {
             sets.push("shared_count = ?");
             values.push(Box::new(shared_count.max(1)));
         }
+        if let Some(is_pinned) = data.is_pinned {
+            sets.push("is_pinned = ?");
+            values.push(Box::new(if is_pinned { 1i32 } else { 0 }));
+        }
 
         if sets.is_empty() {
             return self.get(id);
@@ -255,6 +263,18 @@ impl SubscriptionService {
             id,
             UpdateSubscription {
                 status: Some(new_status),
+                ..Default::default()
+            },
+        )
+    }
+
+    /// Toggle the pinned status of a subscription.
+    pub fn toggle_pinned(&self, id: &str) -> Result<Subscription> {
+        let sub = self.get(id)?;
+        self.update(
+            id,
+            UpdateSubscription {
+                is_pinned: Some(!sub.is_pinned),
                 ..Default::default()
             },
         )

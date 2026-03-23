@@ -1,5 +1,5 @@
 import { memo } from 'react'
-import { Pencil, Trash2, Power } from 'lucide-react'
+import { Pencil, Trash2, Power, Pin } from 'lucide-react'
 import { formatCurrency } from '@/lib/currency'
 import { convertCurrencyCached } from '@/lib/exchange-rates'
 import { BILLING_CYCLE_LABELS, CATEGORY_BADGE_VARIANTS } from '@/lib/constants'
@@ -22,6 +22,7 @@ interface SubscriptionsGridViewProps {
   onToggleActive: (sub: Subscription) => void
   onMarkAsPaid: (sub: Subscription) => void
   canMarkAsPaid: (sub: Subscription) => boolean
+  onTogglePinned: (sub: Subscription) => void
 }
 
 function getCategoryVariant(categoryName?: string): BadgeVariant {
@@ -38,6 +39,7 @@ export const SubscriptionsGridView = memo(function SubscriptionsGridView({
   onToggleActive,
   onMarkAsPaid,
   canMarkAsPaid,
+  onTogglePinned,
 }: SubscriptionsGridViewProps) {
   return (
     <div className="stagger-children grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3">
@@ -48,7 +50,23 @@ export const SubscriptionsGridView = memo(function SubscriptionsGridView({
             key={sub.id}
             className={`glass-card hover-lift group relative ${!sub.is_active ? 'opacity-60' : ''}`}
           >
+            {sub.is_pinned && (
+              <div className="absolute top-2 left-2 z-10">
+                <Pin className="h-3.5 w-3.5 fill-[var(--color-primary)] text-[var(--color-primary)]" />
+              </div>
+            )}
             <div className="absolute top-2 right-2 z-10 flex gap-1 rounded-lg bg-[var(--color-surface-elevated)] p-1 opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100">
+              <button
+                onClick={() => onTogglePinned(sub)}
+                aria-label={sub.is_pinned ? `Unpin ${sub.name}` : `Pin ${sub.name}`}
+                className={`rounded-md p-1.5 ${
+                  sub.is_pinned
+                    ? 'text-[var(--color-primary)] hover:bg-[var(--color-primary)]/15'
+                    : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                }`}
+              >
+                <Pin className={`h-3.5 w-3.5 ${sub.is_pinned ? 'fill-current' : ''}`} />
+              </button>
               <button
                 onClick={() => onEdit(sub)}
                 aria-label={`Edit ${sub.name}`}

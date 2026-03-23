@@ -56,6 +56,7 @@ pub fn api_router(state: Arc<AppState>) -> Router {
         .route("/subscriptions/{id}", put(update_subscription))
         .route("/subscriptions/{id}", delete(delete_subscription))
         .route("/subscriptions/{id}/toggle", post(toggle_subscription_active))
+        .route("/subscriptions/{id}/pin", post(toggle_subscription_pinned))
         .route("/subscriptions/{id}/status", post(transition_subscription_status))
         // Categories
         .route("/categories", get(list_categories))
@@ -155,6 +156,14 @@ async fn toggle_subscription_active(
     Path(id): Path<String>,
 ) -> Result<impl IntoResponse> {
     let sub = state.core.subscriptions().toggle_active(&id)?;
+    Ok(Json(sub))
+}
+
+async fn toggle_subscription_pinned(
+    State(state): State<Arc<AppState>>,
+    Path(id): Path<String>,
+) -> Result<impl IntoResponse> {
+    let sub = state.core.subscriptions().toggle_pinned(&id)?;
     Ok(Json(sub))
 }
 

@@ -27,6 +27,7 @@ const makeSub = (overrides: Partial<Subscription> = {}): Subscription => ({
   trial_end_date: null,
   status_changed_at: null,
   shared_count: 1,
+  is_pinned: false,
   created_at: '2026-01-01T00:00:00.000Z',
   updated_at: '2026-01-01T00:00:00.000Z',
   ...overrides,
@@ -46,6 +47,7 @@ const defaultProps = {
   onEdit: vi.fn(),
   onDelete: vi.fn(),
   onToggleActive: vi.fn(),
+  onTogglePinned: vi.fn(),
 }
 
 describe('SubscriptionsListView', () => {

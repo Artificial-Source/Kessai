@@ -11,7 +11,7 @@ import { useLogoFetch } from '@/hooks/use-logo-fetch'
 import { usePriceHistory } from '@/hooks/use-price-history'
 import { pickAndSaveLogo, getLogoDataUrl } from '@/lib/logo-storage'
 import { SUBSCRIPTION_TEMPLATES, getTemplateLogo } from '@/data/subscription-templates'
-import { CreditCard, Upload, X, Loader2, Users, Check, Globe, ChevronDown } from 'lucide-react'
+import { CreditCard, Upload, X, Loader2, Users, Check, Globe, ChevronDown, Pin } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -116,6 +116,7 @@ export function SubscriptionForm({
         is_trial: subscription.status === 'trial',
         trial_end_date: subscription.trial_end_date ?? null,
         shared_count: subscription.shared_count ?? 1,
+        is_pinned: subscription.is_pinned ?? false,
       }
     }
 
@@ -141,6 +142,7 @@ export function SubscriptionForm({
         is_trial: false,
         trial_end_date: null,
         shared_count: 1,
+        is_pinned: false,
       }
     }
 
@@ -159,6 +161,7 @@ export function SubscriptionForm({
       is_trial: false,
       trial_end_date: null,
       shared_count: 1,
+      is_pinned: false,
     }
   }, [subscription, template, categories, globalCurrency])
 
@@ -406,6 +409,45 @@ export function SubscriptionForm({
               />
             </div>
           )}
+        </div>
+
+        {/* Pin Subscription Toggle */}
+        <div className="border-border rounded-lg border bg-[var(--color-subtle-overlay)] p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Pin className="text-muted-foreground h-4 w-4" />
+              <Label htmlFor="is_pinned" className="cursor-pointer">
+                Pin this subscription
+              </Label>
+            </div>
+            <Controller
+              control={form.control}
+              name="is_pinned"
+              render={({ field }) => (
+                <button
+                  type="button"
+                  role="switch"
+                  id="is_pinned"
+                  aria-checked={field.value}
+                  onClick={() => field.onChange(!field.value)}
+                  className={cn(
+                    'relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full transition-colors',
+                    field.value ? 'bg-[var(--color-primary)]' : 'bg-muted'
+                  )}
+                >
+                  <span
+                    className={cn(
+                      'pointer-events-none block h-3.5 w-3.5 rounded-full bg-white shadow-sm transition-transform',
+                      field.value ? 'translate-x-4.5' : 'translate-x-0.5'
+                    )}
+                  />
+                </button>
+              )}
+            />
+          </div>
+          <p className="text-muted-foreground mt-1 text-xs">
+            Pinned subscriptions appear at the top of all lists.
+          </p>
         </div>
 
         {/* Shared Subscription */}

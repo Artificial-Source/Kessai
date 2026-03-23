@@ -199,6 +199,7 @@ impl SubbyMcp {
                 status,
                 trial_end_date: p.trial_end_date,
                 shared_count: p.shared_count.unwrap_or(1),
+                is_pinned: false,
             })
             .map_err(|e| mcp_err(e.to_string()))?;
 
@@ -227,6 +228,7 @@ impl SubbyMcp {
             status: p.status.and_then(|s| SubscriptionStatus::from_str(&s)),
             trial_end_date: p.trial_end_date.map(Some),
             shared_count: p.shared_count,
+            is_pinned: None,
         };
 
         let sub = self

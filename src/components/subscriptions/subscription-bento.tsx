@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useCallback, useRef, memo } from 'react'
+import { Pin } from 'lucide-react'
 import { formatCurrency, type CurrencyCode } from '@/lib/currency'
 import { convertCurrencyCached } from '@/lib/exchange-rates'
 import { getLogoDataUrl } from '@/lib/logo-storage'
@@ -246,6 +247,14 @@ const BentoTile = memo(function BentoTile({
               <p className="mt-0.5 truncate text-xs text-white/50">{category.name}</p>
             )}
           </div>
+
+          {subscription.is_pinned && (
+            <Pin
+              className={`flex-shrink-0 fill-white/80 text-white/80 ${
+                isLarge ? 'h-4 w-4' : isMedium ? 'h-3.5 w-3.5' : 'h-3 w-3'
+              }`}
+            />
+          )}
 
           {logoSrc && (
             <img

@@ -12,10 +12,15 @@ type SubscriptionState = {
   update: (id: string, data: Partial<Subscription>) => Promise<void>
   remove: (id: string) => Promise<void>
   toggleActive: (id: string) => Promise<void>
+  togglePinned: (id: string) => Promise<void>
   transitionStatus: (id: string, status: SubscriptionStatus) => Promise<void>
 }
 
 const sortByPaymentDate = (a: Subscription, b: Subscription) => {
+  // Pinned subscriptions always come first
+  if (a.is_pinned && !b.is_pinned) return -1
+  if (!a.is_pinned && b.is_pinned) return 1
+
   if (!a.next_payment_date && !b.next_payment_date) return 0
   if (!a.next_payment_date) return 1
   if (!b.next_payment_date) return -1
@@ -59,6 +64,7 @@ export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
       trial_end_date: sub.trial_end_date ?? null,
       status_changed_at: now,
       shared_count: sub.shared_count ?? 1,
+      is_pinned: sub.is_pinned ?? false,
       created_at: now,
       updated_at: now,
     }
@@ -147,6 +153,32 @@ export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
     } catch (error) {
       set({ subscriptions: previousSubscriptions })
       console.error('Failed to toggle subscription:', error)
+      throw error
+    }
+  },
+
+  togglePinned: async (id) => {
+    const previousSubscriptions = get().subscriptions
+    const sub = previousSubscriptions.find((s) => s.id === id)
+    if (!sub) return
+
+    // Optimistic toggle
+    set((state) => ({
+      subscriptions: state.subscriptions
+        .map((s) => (s.id === id ? { ...s, is_pinned: !s.is_pinned } : s))
+        .sort(sortByPaymentDate),
+    }))
+
+    try {
+      const updated = await invoke<Subscription>('toggle_subscription_pinned', { id })
+      set((state) => ({
+        subscriptions: state.subscriptions
+          .map((s) => (s.id === id ? updated : s))
+          .sort(sortByPaymentDate),
+      }))
+    } catch (error) {
+      set({ subscriptions: previousSubscriptions })
+      console.error('Failed to toggle pinned:', error)
       throw error
     }
   },
