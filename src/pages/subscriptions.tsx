@@ -25,6 +25,8 @@ import { SubscriptionsGridView } from '@/components/subscriptions/subscriptions-
 import { SubscriptionsListView } from '@/components/subscriptions/subscriptions-list-view'
 import { CategoryFilter } from '@/components/subscriptions/category-filter'
 import { CostNormalizationToggle } from '@/components/subscriptions/cost-normalization-toggle'
+import { TagFilter } from '@/components/tags/tag-filter'
+import { useTagStore } from '@/stores/tag-store'
 import { SubscriptionsSkeleton } from '@/components/subscriptions/subscriptions-skeleton'
 import type { CurrencyCode } from '@/lib/currency'
 import {
@@ -88,6 +90,9 @@ export function Subscriptions() {
   })
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategories, setSelectedCategories] = useState<string[]>([])
+  const [selectedTags, setSelectedTags] = useState<string[]>([])
+  const { tags: allTags, fetch: fetchTags, fetchForSubscription } = useTagStore()
+  const [subscriptionTagMap, setSubscriptionTagMap] = useState<Record<string, string[]>>({})
   const [sortOption, setSortOption] = useState<SortOption>(() => {
     try {
       const saved = localStorage.getItem('subby-sort-option')
@@ -106,6 +111,31 @@ export function Subscriptions() {
   useEffect(() => {
     fetchSettings()
   }, [fetchSettings])
+
+  // Load tags for all subscriptions
+  useEffect(() => {
+    fetchTags()
+  }, [fetchTags])
+
+  useEffect(() => {
+    if (subscriptions.length === 0) return
+    let cancelled = false
+
+    const loadTagMap = async () => {
+      const map: Record<string, string[]> = {}
+      for (const sub of subscriptions) {
+        const tags = await fetchForSubscription(sub.id)
+        if (cancelled) return
+        map[sub.id] = tags.map((t) => t.id)
+      }
+      if (!cancelled) setSubscriptionTagMap(map)
+    }
+
+    loadTagMap()
+    return () => {
+      cancelled = true
+    }
+  }, [subscriptions, fetchForSubscription])
 
   useEffect(() => {
     try {
@@ -159,7 +189,10 @@ export function Subscriptions() {
       const matchesCategory =
         selectedCategories.length === 0 ||
         (sub.category_id && selectedCategories.includes(sub.category_id))
-      return matchesSearch && matchesCategory
+      const matchesTags =
+        selectedTags.length === 0 ||
+        selectedTags.some((tagId) => (subscriptionTagMap[sub.id] || []).includes(tagId))
+      return matchesSearch && matchesCategory && matchesTags
     })
 
     return filtered.sort((a, b) => {
@@ -199,7 +232,7 @@ export function Subscriptions() {
           return 0
       }
     })
-  }, [activeSubscriptions, searchQuery, selectedCategories, sortOption, getCategory])
+  }, [activeSubscriptions, searchQuery, selectedCategories, selectedTags, subscriptionTagMap, sortOption, getCategory])
 
   // Separate totals by billing cycle (converted to display currency)
   const monthlySubsTotal = useMemo(() => {
@@ -465,6 +498,11 @@ export function Subscriptions() {
               onChange={setSelectedCategories}
               subscriptionCounts={subscriptionCounts}
             />
+            <TagFilter
+              selectedTagIds={selectedTags}
+              onChange={setSelectedTags}
+              subscriptionTagMap={subscriptionTagMap}
+            />
           </div>
         )}
 
@@ -487,10 +525,11 @@ export function Subscriptions() {
             <p className="text-muted-foreground">
               No subscriptions match {searchQuery ? `"${searchQuery}"` : 'your filters'}
             </p>
-            {(selectedCategories.length > 0 || searchQuery) && (
+            {(selectedCategories.length > 0 || selectedTags.length > 0 || searchQuery) && (
               <button
                 onClick={() => {
                   setSelectedCategories([])
+                  setSelectedTags([])
                   setSearchQuery('')
                 }}
                 className="text-primary mt-2 text-sm hover:underline"
@@ -520,6 +559,8 @@ export function Subscriptions() {
             onTogglePinned={handleTogglePinned}
             onMarkAsPaid={handleMarkAsPaid}
             canMarkAsPaid={canMarkAsPaid}
+            allTags={allTags}
+            subscriptionTagMap={subscriptionTagMap}
           />
         ) : (
           <SubscriptionsListView
@@ -533,6 +574,8 @@ export function Subscriptions() {
             onCancel={setCancelTarget}
             onToggleActive={handleToggleActive}
             onTogglePinned={handleTogglePinned}
+            allTags={allTags}
+            subscriptionTagMap={subscriptionTagMap}
           />
         )}
 

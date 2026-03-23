@@ -18,6 +18,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { CategoryManager } from '@/components/categories/category-manager'
+import { TagManager } from '@/components/tags/tag-manager'
 import { DataManagement } from '@/components/settings/data-management'
 import { CardManager } from '@/components/settings/card-manager'
 import { NotificationSettings } from '@/components/settings/notification-settings'
@@ -288,6 +289,10 @@ export function SettingsPage() {
 
         <div className="glass-card flex flex-col gap-6 p-6">
           <CategoryManager />
+        </div>
+
+        <div className="glass-card flex flex-col gap-6 p-6">
+          <TagManager />
         </div>
       </div>
     </div>

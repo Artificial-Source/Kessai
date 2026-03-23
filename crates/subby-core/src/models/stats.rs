@@ -5,6 +5,7 @@ use super::payment::Payment;
 use super::price_history::PriceChange;
 use super::settings::Settings;
 use super::subscription::Subscription;
+use super::tag::Tag;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CategorySpending {
@@ -35,7 +36,18 @@ pub struct BackupData {
     pub payments: Vec<Payment>,
     #[serde(default)]
     pub price_history: Vec<PriceChange>,
+    #[serde(default)]
+    pub tags: Vec<Tag>,
+    #[serde(default)]
+    pub subscription_tags: Vec<BackupSubscriptionTag>,
     pub settings: BackupSettings,
+}
+
+/// A subscription-tag mapping as stored in backup.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct BackupSubscriptionTag {
+    pub subscription_id: String,
+    pub tag_id: String,
 }
 
 /// Settings as stored in backup (without the 'id' field)

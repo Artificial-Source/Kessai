@@ -13,6 +13,7 @@ import { SubscriptionForm } from './subscription-form'
 import { TemplatePicker } from './template-picker'
 import { useSubscriptionStore } from '@/stores/subscription-store'
 import { useCategoryStore } from '@/stores/category-store'
+import { useTagStore } from '@/stores/tag-store'
 import { useUiStore } from '@/stores/ui-store'
 import type { SubscriptionFormData } from '@/types/subscription'
 import type { SubscriptionTemplate } from '@/data/subscription-templates'
@@ -32,6 +33,13 @@ export function SubscriptionDialog() {
     }))
   )
   const categories = useCategoryStore((state) => state.categories)
+  const { addToSubscription, removeFromSubscription, fetchForSubscription } = useTagStore(
+    useShallow((state) => ({
+      addToSubscription: state.addToSubscription,
+      removeFromSubscription: state.removeFromSubscription,
+      fetchForSubscription: state.fetchForSubscription,
+    }))
+  )
   const { subscriptionDialogOpen, editingSubscriptionId, closeSubscriptionDialog } = useUiStore(
     useShallow((state) => ({
       subscriptionDialogOpen: state.subscriptionDialogOpen,
@@ -77,7 +85,27 @@ export function SubscriptionDialog() {
     setPhase('picker')
   }, [])
 
-  const handleSubmit = async (data: SubscriptionFormData) => {
+  const syncTags = async (subId: string, newTagIds: string[]) => {
+    // Get current tags for this subscription
+    const currentTags = await fetchForSubscription(subId)
+    const currentTagIds = currentTags.map((t) => t.id)
+
+    // Remove tags that were deselected
+    for (const tagId of currentTagIds) {
+      if (!newTagIds.includes(tagId)) {
+        await removeFromSubscription(subId, tagId)
+      }
+    }
+
+    // Add tags that were newly selected
+    for (const tagId of newTagIds) {
+      if (!currentTagIds.includes(tagId)) {
+        await addToSubscription(subId, tagId)
+      }
+    }
+  }
+
+  const handleSubmit = async (data: SubscriptionFormData, tagIds?: string[]) => {
     setIsLoading(true)
     try {
       if (isEditing && editingSubscriptionId) {
@@ -98,11 +126,16 @@ export function SubscriptionDialog() {
           shared_count: data.shared_count,
           is_pinned: data.is_pinned,
         })
+
+        if (tagIds) {
+          await syncTags(editingSubscriptionId, tagIds)
+        }
+
         toast.success('Subscription updated', {
           description: `${data.name} has been updated successfully.`,
         })
       } else {
-        await add({
+        const created = await add({
           name: data.name,
           amount: data.amount,
           currency: data.currency,
@@ -120,6 +153,13 @@ export function SubscriptionDialog() {
           shared_count: data.shared_count,
           is_pinned: data.is_pinned,
         })
+
+        if (tagIds && tagIds.length > 0 && created) {
+          for (const tagId of tagIds) {
+            await addToSubscription(created.id, tagId)
+          }
+        }
+
         toast.success('Subscription added', {
           description: `${data.name} has been added to your subscriptions.`,
         })

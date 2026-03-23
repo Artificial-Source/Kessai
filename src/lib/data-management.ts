@@ -3,6 +3,7 @@ import type { Subscription } from '@/types/subscription'
 import type { Category } from '@/types/category'
 import type { Payment } from '@/types/payment'
 import type { PriceChange } from '@/types/price-history'
+import type { Tag } from '@/types/tag'
 import type { Settings } from '@/types/settings'
 
 function isTauri(): boolean {
@@ -16,6 +17,8 @@ interface BackupData {
   categories: Category[]
   payments: Payment[]
   price_history?: PriceChange[]
+  tags?: Tag[]
+  subscription_tags?: { subscription_id: string; tag_id: string }[]
   settings: Omit<Settings, 'id'>
 }
 

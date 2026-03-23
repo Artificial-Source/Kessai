@@ -14,6 +14,8 @@ import type { BadgeVariant } from '@/components/ui/badge'
 import type { CurrencyCode } from '@/lib/currency'
 import type { Subscription } from '@/types/subscription'
 import type { Category } from '@/types/category'
+import type { Tag } from '@/types/tag'
+import { TagBadge } from '@/components/tags/tag-badge'
 
 interface SubscriptionsListViewProps {
   subscriptions: Subscription[]
@@ -26,6 +28,8 @@ interface SubscriptionsListViewProps {
   onCancel: (sub: Subscription) => void
   onToggleActive: (sub: Subscription) => void
   onTogglePinned: (sub: Subscription) => void
+  allTags?: Tag[]
+  subscriptionTagMap?: Record<string, string[]>
 }
 
 function getCategoryVariant(categoryName?: string): BadgeVariant {
@@ -44,6 +48,8 @@ export const SubscriptionsListView = memo(function SubscriptionsListView({
   onCancel,
   onToggleActive,
   onTogglePinned,
+  allTags = [],
+  subscriptionTagMap = {},
 }: SubscriptionsListViewProps) {
   const isNormalized = costNormalization !== 'as-is'
   return (
@@ -93,11 +99,17 @@ export const SubscriptionsListView = memo(function SubscriptionsListView({
                             <Pin className="h-3 w-3 shrink-0 fill-[var(--color-primary)] text-[var(--color-primary)]" />
                           )}
                         </div>
-                        {category && (
-                          <Badge variant={getCategoryVariant(category.name)} size="sm">
-                            {category.name}
-                          </Badge>
-                        )}
+                        <div className="flex flex-wrap items-center gap-1">
+                          {category && (
+                            <Badge variant={getCategoryVariant(category.name)} size="sm">
+                              {category.name}
+                            </Badge>
+                          )}
+                          {(subscriptionTagMap[sub.id] || []).map((tagId) => {
+                            const tag = allTags.find((t) => t.id === tagId)
+                            return tag ? <TagBadge key={tag.id} tag={tag} /> : null
+                          })}
+                        </div>
                       </div>
                     </div>
                   </td>
