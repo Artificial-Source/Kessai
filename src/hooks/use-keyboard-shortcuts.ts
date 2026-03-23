@@ -27,15 +27,34 @@ export function useKeyboardShortcuts() {
     shortcutsDialogOpen,
     openShortcutsDialog,
     closeShortcutsDialog,
+    commandPaletteOpen,
+    openCommandPalette,
+    closeCommandPalette,
   } = useUiStore()
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
+      // Cmd/Ctrl+K — Open command palette (must be before modifier key early return)
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault()
+        if (commandPaletteOpen) {
+          closeCommandPalette()
+        } else {
+          openCommandPalette()
+        }
+        return
+      }
+
       // Never intercept when modifier keys are held (except Shift for ?)
       if (e.ctrlKey || e.metaKey || e.altKey) return
 
       // Escape always works, even in inputs
       if (e.key === 'Escape') {
+        if (commandPaletteOpen) {
+          closeCommandPalette()
+          e.preventDefault()
+          return
+        }
         if (shortcutsDialogOpen) {
           closeShortcutsDialog()
           e.preventDefault()
@@ -104,6 +123,9 @@ export function useKeyboardShortcuts() {
       shortcutsDialogOpen,
       openShortcutsDialog,
       closeShortcutsDialog,
+      commandPaletteOpen,
+      openCommandPalette,
+      closeCommandPalette,
     ]
   )
 

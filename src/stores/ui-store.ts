@@ -5,6 +5,7 @@ type UiState = {
   subscriptionDialogOpen: boolean
   editingSubscriptionId: string | null
   shortcutsDialogOpen: boolean
+  commandPaletteOpen: boolean
 
   toggleSidebar: () => void
   setSidebarCollapsed: (collapsed: boolean) => void
@@ -12,6 +13,8 @@ type UiState = {
   closeSubscriptionDialog: () => void
   openShortcutsDialog: () => void
   closeShortcutsDialog: () => void
+  openCommandPalette: () => void
+  closeCommandPalette: () => void
 }
 
 export const useUiStore = create<UiState>((set) => ({
@@ -19,6 +22,7 @@ export const useUiStore = create<UiState>((set) => ({
   subscriptionDialogOpen: false,
   editingSubscriptionId: null,
   shortcutsDialogOpen: false,
+  commandPaletteOpen: false,
 
   toggleSidebar: () => set((state) => ({ sidebarCollapsed: !state.sidebarCollapsed })),
 
@@ -39,4 +43,8 @@ export const useUiStore = create<UiState>((set) => ({
   openShortcutsDialog: () => set({ shortcutsDialogOpen: true }),
 
   closeShortcutsDialog: () => set({ shortcutsDialogOpen: false }),
+
+  openCommandPalette: () => set({ commandPaletteOpen: true }),
+
+  closeCommandPalette: () => set({ commandPaletteOpen: false }),
 }))

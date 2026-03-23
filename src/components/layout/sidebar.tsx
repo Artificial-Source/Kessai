@@ -8,8 +8,10 @@ import {
   PanelLeftClose,
   PanelLeft,
 } from 'lucide-react'
+import { Search } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useMediaQuery } from '@/hooks/use-media-query'
+import { useUiStore } from '@/stores/ui-store'
 
 const SIDEBAR_WIDTH = 240
 const SIDEBAR_COLLAPSED_WIDTH = 60
@@ -24,6 +26,7 @@ const navItems = [
 const SIDEBAR_KEY = 'subby-sidebar-collapsed'
 
 export function Sidebar() {
+  const openCommandPalette = useUiStore((s) => s.openCommandPalette)
   const [collapsed, setCollapsed] = useState(() => {
     try {
       return localStorage.getItem(SIDEBAR_KEY) === 'true'
@@ -88,6 +91,28 @@ export function Sidebar() {
             {collapsed ? <PanelLeft size={18} /> : <PanelLeftClose size={18} />}
           </button>
         )}
+      </div>
+
+      {/* Search hint */}
+      <div className="px-2 pt-1 pb-0">
+        <button
+          onClick={openCommandPalette}
+          className={cn(
+            'text-muted-foreground hover:text-foreground flex w-full items-center gap-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-input)] py-1.5 text-xs transition-colors hover:border-[var(--color-border)]',
+            isCollapsed ? 'justify-center px-0' : 'px-2.5'
+          )}
+          title="Search (⌘K)"
+        >
+          <Search size={14} className="shrink-0" />
+          {!isCollapsed && (
+            <>
+              <span className="font-[family-name:var(--font-sans)] flex-1 text-left">Search...</span>
+              <kbd className="font-[family-name:var(--font-mono)] text-muted-foreground rounded border border-[var(--color-border)] bg-[var(--color-surface)] px-1 py-0.5 text-[10px] tracking-widest">
+                ⌘K
+              </kbd>
+            </>
+          )}
+        </button>
       </div>
 
       {/* Navigation */}
