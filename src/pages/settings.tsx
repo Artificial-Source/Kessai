@@ -4,6 +4,7 @@ import { useTheme } from '@/components/theme-provider'
 import { useSubscriptionStore } from '@/stores/subscription-store'
 import { useCategoryStore } from '@/stores/category-store'
 import { useSettingsStore } from '@/stores/settings-store'
+import { useUpdateStore } from '@/stores/update-store'
 import { getCurrencyOptions } from '@/lib/currency'
 import { Moon, Sun, Monitor, Wallet, Zap, X, Check } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -22,6 +23,7 @@ import { CardManager } from '@/components/settings/card-manager'
 import { NotificationSettings } from '@/components/settings/notification-settings'
 import { MotionSettings } from '@/components/settings/motion-settings'
 import { SettingsSkeleton } from '@/components/settings/settings-skeleton'
+import { UpdateSettings } from '@/components/settings/update-settings'
 import type { Theme } from '@/types/settings'
 import type { CurrencyCode } from '@/lib/currency'
 
@@ -39,6 +41,7 @@ export function SettingsPage() {
   const { fetch: refetchSubscriptions } = useSubscriptionStore()
   const { fetch: refetchCategories } = useCategoryStore()
   const { setBudget } = useSettingsStore()
+  const currentVersion = useUpdateStore((state) => state.currentVersion)
   const [budgetInput, setBudgetInput] = useState(settings?.monthly_budget?.toString() ?? '')
   const [budgetSaved, setBudgetSaved] = useState(false)
   const isInitialized = useRef(false)
@@ -237,6 +240,10 @@ export function SettingsPage() {
         </div>
 
         <div className="glass-card flex flex-col gap-6 p-6">
+          <UpdateSettings />
+        </div>
+
+        <div className="glass-card flex flex-col gap-6 p-6">
           <div className="flex flex-col gap-1">
             <h2 className="text-foreground text-lg font-bold">About</h2>
             <p className="text-muted-foreground text-sm">Application information</p>
@@ -248,7 +255,7 @@ export function SettingsPage() {
                 Version
               </span>
               <span className="text-foreground font-[family-name:var(--font-mono)] text-sm font-bold">
-                0.2.0
+                {currentVersion ?? 'Loading...'}
               </span>
             </div>
             <div className="flex items-center justify-between">

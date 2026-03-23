@@ -16,6 +16,8 @@
     "fs:allow-app-read-recursive",
     "fs:allow-app-write-recursive",
     "dialog:default",
-    "dialog:allow-open"
+    "dialog:allow-open",
+    "process:default",
+    "updater:default"
   ]
 }

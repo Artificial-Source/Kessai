@@ -8,6 +8,7 @@ import { AppShell } from '@/components/layout/app-shell'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { useSettingsStore } from '@/stores/settings-store'
 import { useSubscriptionStore } from '@/stores/subscription-store'
+import { useUpdateStore } from '@/stores/update-store'
 import { preloadRates } from '@/lib/exchange-rates'
 import type { CurrencyCode } from '@/lib/currency'
 import '@/styles/globals.css'
@@ -24,6 +25,9 @@ const SettingsPage = lazy(() =>
 )
 
 export default function App() {
+  const initializeUpdater = useUpdateStore((state) => state.initialize)
+  const checkForUpdates = useUpdateStore((state) => state.checkForUpdates)
+
   // Preload exchange rates on startup for multi-currency support
   useEffect(() => {
     const loadRates = () => {
@@ -51,6 +55,10 @@ export default function App() {
       unsubSubs()
     }
   }, [])
+
+  useEffect(() => {
+    void initializeUpdater().then(() => checkForUpdates({ silent: true }))
+  }, [checkForUpdates, initializeUpdater])
 
   return (
     <ThemeProvider defaultTheme="dark" storageKey="subby-theme">

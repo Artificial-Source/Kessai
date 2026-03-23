@@ -7,9 +7,7 @@
     "requireCleanWorkingDir": true
   },
   "github": {
-    "release": true,
-    "releaseName": "Subby v${version}",
-    "draft": true
+    "release": false
   },
   "npm": {
     "publish": false

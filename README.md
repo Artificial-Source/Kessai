@@ -47,14 +47,14 @@
 
 Most subscription trackers are cloud-based, require accounts, and monetize your financial data. Subby takes a different approach:
 
-| | Subby | Cloud Trackers |
-|---|:---:|:---:|
-| **Works offline** | Yes | No |
-| **No account needed** | Yes | No |
-| **Open source** | Yes | Rarely |
-| **Your data stays local** | Yes | No |
-| **Free forever** | Yes | Freemium |
-| **Cross-platform** | Linux, macOS, Windows | Web only |
+|                           |         Subby         | Cloud Trackers |
+| ------------------------- | :-------------------: | :------------: |
+| **Works offline**         |          Yes          |       No       |
+| **No account needed**     |          Yes          |       No       |
+| **Open source**           |          Yes          |     Rarely     |
+| **Your data stays local** |          Yes          |       No       |
+| **Free forever**          |          Yes          |    Freemium    |
+| **Cross-platform**        | Linux, macOS, Windows |    Web only    |
 
 ---
 
@@ -72,6 +72,7 @@ Most subscription trackers are cloud-based, require accounts, and monetize your 
 - **Payment Cards** — Manage cards and assign them to subscriptions
 - **Themes** — Dark, light, and system theme modes with glassmorphic design
 - **Motion Controls** — Configurable animations, transitions, and hover effects (respects prefers-reduced-motion)
+- **Desktop Auto-Updates** — Installed builds can check GitHub Releases and install signed updates in-app
 - **Keyboard Shortcuts** — `N` new subscription, `/` search, `?` shortcuts dialog, `1-4` navigate
 - **Data Portability** — Export/import JSON backups. Import from Wallos, Bobby, or CSV
 - **Discord Bot** — Daily payment reminders and spending summaries
@@ -114,16 +115,18 @@ Most subscription trackers are cloud-based, require accounts, and monetize your 
 
 Grab the latest release from [GitHub Releases](https://github.com/AI-Strategic-Forum/Subby/releases):
 
-| Platform | File | Install |
-|----------|------|---------|
-| **Ubuntu/Debian** | `subby_x.x.x_amd64.deb` | `sudo dpkg -i subby_*.deb` |
-| **Fedora/RHEL** | `subby_x.x.x_amd64.rpm` | `sudo rpm -i subby_*.rpm` |
-| **Any Linux** | `subby_x.x.x_amd64.AppImage` | `chmod +x *.AppImage && ./*.AppImage` |
-| **macOS (Apple Silicon)** | `Subby_x.x.x_aarch64.dmg` | Double-click, drag to Applications |
-| **macOS (Intel)** | `Subby_x.x.x_x64.dmg` | Double-click, drag to Applications |
-| **Windows** | `Subby_x.x.x_x64-setup.exe` | Double-click, follow installer |
+| Platform                  | File                         | Install                               |
+| ------------------------- | ---------------------------- | ------------------------------------- |
+| **Ubuntu/Debian**         | `subby_x.x.x_amd64.deb`      | `sudo dpkg -i subby_*.deb`            |
+| **Fedora/RHEL**           | `subby_x.x.x_amd64.rpm`      | `sudo rpm -i subby_*.rpm`             |
+| **Any Linux**             | `subby_x.x.x_amd64.AppImage` | `chmod +x *.AppImage && ./*.AppImage` |
+| **macOS (Apple Silicon)** | `Subby_x.x.x_aarch64.dmg`    | Double-click, drag to Applications    |
+| **macOS (Intel)**         | `Subby_x.x.x_x64.dmg`        | Double-click, drag to Applications    |
+| **Windows**               | `Subby_x.x.x_x64-setup.exe`  | Double-click, follow installer        |
 
 > **Note:** Unsigned builds may show OS security warnings. Click "More info" > "Run anyway" (Windows) or right-click > "Open" (macOS).
+
+Installed builds can check for new releases from Settings and apply signed updates automatically.
 
 ### Install from Source (Linux)
 
@@ -174,15 +177,15 @@ See the [Discord Bot README](packages/discord-bot/README.md) for setup details.
 
 ## Tech Stack
 
-| Layer | Technology |
-|-------|------------|
-| **Runtime** | [Tauri 2](https://tauri.app/) (Rust backend) |
-| **Frontend** | [React 19](https://react.dev/) + TypeScript + [Vite 7](https://vitejs.dev/) |
-| **Styling** | [Tailwind CSS 4](https://tailwindcss.com/) + [shadcn/ui](https://ui.shadcn.com/) |
-| **State** | [Zustand](https://zustand-demo.pmnd.rs/) |
-| **Database** | SQLite via [rusqlite](https://github.com/rusqlite/rusqlite) |
-| **Forms** | [React Hook Form](https://react-hook-form.com/) + [Zod](https://zod.dev/) |
-| **Testing** | [Vitest](https://vitest.dev/) + [Testing Library](https://testing-library.com/) + [Playwright](https://playwright.dev/) |
+| Layer        | Technology                                                                                                              |
+| ------------ | ----------------------------------------------------------------------------------------------------------------------- |
+| **Runtime**  | [Tauri 2](https://tauri.app/) (Rust backend)                                                                            |
+| **Frontend** | [React 19](https://react.dev/) + TypeScript + [Vite 7](https://vitejs.dev/)                                             |
+| **Styling**  | [Tailwind CSS 4](https://tailwindcss.com/) + [shadcn/ui](https://ui.shadcn.com/)                                        |
+| **State**    | [Zustand](https://zustand-demo.pmnd.rs/)                                                                                |
+| **Database** | SQLite via [rusqlite](https://github.com/rusqlite/rusqlite)                                                             |
+| **Forms**    | [React Hook Form](https://react-hook-form.com/) + [Zod](https://zod.dev/)                                               |
+| **Testing**  | [Vitest](https://vitest.dev/) + [Testing Library](https://testing-library.com/) + [Playwright](https://playwright.dev/) |
 
 ---
 
@@ -208,19 +211,19 @@ pnpm tauri dev
 
 ### Commands
 
-| Command | Description |
-|---------|-------------|
-| `pnpm tauri dev` | Start development app |
-| `pnpm tauri build` | Build production binaries |
-| `pnpm test` | Run tests in watch mode |
-| `pnpm test:run` | Run tests once |
-| `pnpm test:coverage` | Run tests with coverage report |
-| `pnpm test:e2e` | Run Playwright E2E tests |
-| `pnpm lint` | Run ESLint |
-| `pnpm typecheck` | Run TypeScript checks |
-| `pnpm check` | Lint + typecheck + format check |
-| `cargo test --workspace` | Run Rust tests |
-| `cargo clippy --workspace` | Run Rust linter |
+| Command                    | Description                     |
+| -------------------------- | ------------------------------- |
+| `pnpm tauri dev`           | Start development app           |
+| `pnpm tauri build`         | Build production binaries       |
+| `pnpm test`                | Run tests in watch mode         |
+| `pnpm test:run`            | Run tests once                  |
+| `pnpm test:coverage`       | Run tests with coverage report  |
+| `pnpm test:e2e`            | Run Playwright E2E tests        |
+| `pnpm lint`                | Run ESLint                      |
+| `pnpm typecheck`           | Run TypeScript checks           |
+| `pnpm check`               | Lint + typecheck + format check |
+| `cargo test --workspace`   | Run Rust tests                  |
+| `cargo clippy --workspace` | Run Rust linter                 |
 
 ### Project Structure
 
@@ -291,28 +294,28 @@ Add to your `claude_desktop_config.json`:
 
 ### Available Tools
 
-| Tool | Description |
-|------|-------------|
-| `add_subscription` | Add a new subscription |
-| `update_subscription` | Update an existing subscription |
-| `remove_subscription` | Delete a subscription |
-| `toggle_subscription` | Pause/resume a subscription |
-| `mark_payment_paid` | Record a payment as paid |
-| `skip_payment` | Skip a payment |
-| `add_category` | Create a new category |
-| `get_upcoming_payments` | Upcoming payments within N days |
-| `get_spending_by_category` | Spending breakdown |
-| `export_data` / `import_data` | Backup and restore |
+| Tool                          | Description                     |
+| ----------------------------- | ------------------------------- |
+| `add_subscription`            | Add a new subscription          |
+| `update_subscription`         | Update an existing subscription |
+| `remove_subscription`         | Delete a subscription           |
+| `toggle_subscription`         | Pause/resume a subscription     |
+| `mark_payment_paid`           | Record a payment as paid        |
+| `skip_payment`                | Skip a payment                  |
+| `add_category`                | Create a new category           |
+| `get_upcoming_payments`       | Upcoming payments within N days |
+| `get_spending_by_category`    | Spending breakdown              |
+| `export_data` / `import_data` | Backup and restore              |
 
 ### Available Resources
 
-| URI | Description |
-|-----|-------------|
-| `subby://subscriptions` | All subscriptions |
-| `subby://categories` | All categories |
-| `subby://settings` | Current settings |
-| `subby://stats/dashboard` | Spending totals |
-| `subby://payments/{year}/{month}` | Monthly payments |
+| URI                               | Description       |
+| --------------------------------- | ----------------- |
+| `subby://subscriptions`           | All subscriptions |
+| `subby://categories`              | All categories    |
+| `subby://settings`                | Current settings  |
+| `subby://stats/dashboard`         | Spending totals   |
+| `subby://payments/{year}/{month}` | Monthly payments  |
 
 See the [MCP Setup Guide](docs/guides/mcp-setup.md) for detailed configuration.
 
@@ -322,11 +325,11 @@ See the [MCP Setup Guide](docs/guides/mcp-setup.md) for detailed configuration.
 
 Your data stays on your device. No cloud, no telemetry, no analytics.
 
-| Platform | Location |
-|----------|----------|
-| Linux | `~/.local/share/subby/` |
-| macOS | `~/Library/Application Support/subby/` |
-| Windows | `%APPDATA%/subby/` |
+| Platform | Location                               |
+| -------- | -------------------------------------- |
+| Linux    | `~/.local/share/subby/`                |
+| macOS    | `~/Library/Application Support/subby/` |
+| Windows  | `%APPDATA%/subby/`                     |
 
 Data is stored in a plain SQLite database. You can inspect, backup, or migrate it with any SQLite tool.
 
@@ -348,15 +351,15 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines and [CLAUDE.md](C
 
 ## Documentation
 
-| Doc | Description |
-|-----|-------------|
-| [Docs Index](docs/README.md) | Full documentation map |
-| [Getting Started](docs/getting-started/installation.md) | Installation and setup |
-| [Architecture](docs/architecture/overview.md) | System design and data flow |
-| [Database Schema](docs/architecture/database-schema.md) | Tables and migrations |
-| [MCP Setup](docs/guides/mcp-setup.md) | AI integration configuration |
-| [Release Process](docs/guides/release-process.md) | Versioning and releases |
-| [Troubleshooting](docs/troubleshooting.md) | Common issues and solutions |
+| Doc                                                     | Description                  |
+| ------------------------------------------------------- | ---------------------------- |
+| [Docs Index](docs/README.md)                            | Full documentation map       |
+| [Getting Started](docs/getting-started/installation.md) | Installation and setup       |
+| [Architecture](docs/architecture/overview.md)           | System design and data flow  |
+| [Database Schema](docs/architecture/database-schema.md) | Tables and migrations        |
+| [MCP Setup](docs/guides/mcp-setup.md)                   | AI integration configuration |
+| [Release Process](docs/guides/release-process.md)       | Versioning and releases      |
+| [Troubleshooting](docs/troubleshooting.md)              | Common issues and solutions  |
 
 ---
 

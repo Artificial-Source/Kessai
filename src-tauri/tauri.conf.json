@@ -23,12 +23,13 @@
       }
     ],
     "security": {
-      "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'"
+      "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self' https://github.com https://api.github.com https://objects.githubusercontent.com https://release-assets.githubusercontent.com"
     }
   },
   "bundle": {
     "active": true,
     "targets": "all",
+    "createUpdaterArtifacts": true,
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",
@@ -39,5 +40,13 @@
     "category": "Finance",
     "shortDescription": "Know where your money flows",
     "longDescription": "A beautiful, local-first desktop subscription tracker that gives you complete clarity over your recurring subscriptions and spending."
+  },
+  "plugins": {
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEMzQkQwQUU0QjM3MjBCRTcKUldUbkMzS3o1QXE5dzBnYS91V1lORzNFWDRmdjVta25zY0hNSmwrYzNvL2ZISGpYQUJtYlo3WjcK",
+      "endpoints": [
+        "https://github.com/AI-Strategic-Forum/Subby/releases/latest/download/latest.json"
+      ]
+    }
   }
 }

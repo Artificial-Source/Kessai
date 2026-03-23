@@ -2,11 +2,14 @@
 
 This project uses `release-it` with version sync automation.
 
+Desktop binaries and auto-update manifests are built by GitHub Actions from version tags.
+
 ## Prerequisites
 
 - Clean working tree
 - Branch is `main`
-- GitHub auth configured for release creation
+- Git remote push access configured
+- `TAURI_SIGNING_PRIVATE_KEY` GitHub secret set from your updater private key
 
 ## Release Steps
 
@@ -29,6 +32,10 @@ pnpm release:dry
 pnpm release
 ```
 
+4. Wait for the `Release` workflow to finish building installers for each platform.
+
+5. Publish the draft GitHub release after verifying the attached assets.
+
 ## What Happens Automatically
 
 - Version is bumped
@@ -37,12 +44,37 @@ pnpm release
 - `scripts/sync-versions.js` syncs version to:
   - `src-tauri/tauri.conf.json`
   - `src-tauri/Cargo.toml`
-- Draft GitHub release is created
+- Git tag is pushed so the `Release` workflow can create a draft GitHub release
+- `.github/workflows/release.yml` builds installers and updater artifacts from the tag
+- `latest.json` is uploaded to GitHub Releases for in-app auto-updates
+
+## Updater Signing Setup
+
+Generate a Tauri updater keypair once on your machine:
+
+```bash
+pnpm tauri signer generate --ci -w ~/.tauri/subby-updater.key -p ""
+```
+
+Then add these GitHub repository secrets:
+
+- `TAURI_SIGNING_PRIVATE_KEY` - contents of `~/.tauri/subby-updater.key`
+- `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` - leave empty if you generated the key without a password
+
+Optional macOS signing/notarization secrets for smoother installs:
+
+- `APPLE_CERTIFICATE`
+- `APPLE_CERTIFICATE_PASSWORD`
+- `APPLE_SIGNING_IDENTITY`
+- `APPLE_ID`
+- `APPLE_PASSWORD`
+- `APPLE_TEAM_ID`
 
 ## Release Verification Checklist
 
 - Confirm version is consistent across manifests
 - Confirm artifacts build (`pnpm tauri build`)
+- Confirm the release includes `latest.json` and signed updater archives
 - Confirm docs links and install commands are current
 - Confirm changelog entry is user-facing and accurate
 - Confirm release notes include platform artifact names
