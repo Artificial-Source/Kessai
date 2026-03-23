@@ -19,6 +19,7 @@ anyhow = "1"
 dirs = "6"
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+tracing-appender = "0.2"
 schemars = "1"
 comfy-table = "7"
 colored = "3"

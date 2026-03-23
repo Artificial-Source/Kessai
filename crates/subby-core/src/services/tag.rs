@@ -14,6 +14,7 @@ impl TagService {
     }
 
     /// List all tags, sorted by name ASC.
+    #[tracing::instrument(skip(self))]
     pub fn list(&self) -> Result<Vec<Tag>> {
         let conn = self.pool.get()?;
         let mut stmt = conn.prepare(
@@ -30,7 +31,9 @@ impl TagService {
             })
         })?;
 
-        Ok(rows.collect::<std::result::Result<Vec<_>, _>>()?)
+        let results: Vec<Tag> = rows.collect::<std::result::Result<Vec<_>, _>>()?;
+        tracing::debug!("listed {} tags", results.len());
+        Ok(results)
     }
 
     /// Get a single tag by ID.
@@ -58,6 +61,7 @@ impl TagService {
     }
 
     /// Create a new tag.
+    #[tracing::instrument(skip(self, data), fields(name = %data.name))]
     pub fn create(&self, data: NewTag) -> Result<Tag> {
         let conn = self.pool.get()?;
         let id = uuid::Uuid::new_v4().to_string();
@@ -70,10 +74,12 @@ impl TagService {
             params![id, data.name, color, now],
         )?;
 
+        tracing::info!("tag created: {} ({})", data.name, id);
         self.get(&id)
     }
 
     /// Update a tag. Only provided fields are modified.
+    #[tracing::instrument(skip(self, data))]
     pub fn update(&self, id: &str, data: UpdateTag) -> Result<Tag> {
         let conn = self.pool.get()?;
 
@@ -100,10 +106,12 @@ impl TagService {
         let params: Vec<&dyn rusqlite::types::ToSql> = values.iter().map(|v| v.as_ref()).collect();
         conn.execute(&sql, params.as_slice())?;
 
+        tracing::info!("tag updated: {}", id);
         self.get(id)
     }
 
     /// Delete a tag.
+    #[tracing::instrument(skip(self))]
     pub fn delete(&self, id: &str) -> Result<()> {
         // Verify the tag exists
         self.get(id)?;
@@ -111,6 +119,7 @@ impl TagService {
         let conn = self.pool.get()?;
         // subscription_tags rows are deleted via ON DELETE CASCADE
         conn.execute("DELETE FROM tags WHERE id = ?1", params![id])?;
+        tracing::info!("tag deleted: {}", id);
         Ok(())
     }
 
@@ -122,6 +131,7 @@ impl TagService {
              VALUES (?1, ?2)",
             params![subscription_id, tag_id],
         )?;
+        tracing::info!("tag {} added to subscription {}", tag_id, subscription_id);
         Ok(())
     }
 
@@ -133,6 +143,7 @@ impl TagService {
              WHERE subscription_id = ?1 AND tag_id = ?2",
             params![subscription_id, tag_id],
         )?;
+        tracing::info!("tag {} removed from subscription {}", tag_id, subscription_id);
         Ok(())
     }
 

@@ -42,18 +42,42 @@ async fn main() -> anyhow::Result<()> {
     let db_path = resolve_db_path(cli.db_path);
 
     match cli.command {
-        // No subcommand or explicit `serve` → MCP server mode
+        // No subcommand or explicit `serve` -> MCP server mode
         None | Some(cli::Command::Serve) => {
-            // Log to stderr (MCP protocol uses stdout)
-            tracing_subscriber::fmt()
-                .with_env_filter(
-                    tracing_subscriber::EnvFilter::from_default_env()
-                        .add_directive("subby_mcp=info".parse()?),
+            // Set up log directory next to the database
+            let db_dir = db_path.parent().unwrap_or_else(|| std::path::Path::new("."));
+            let logs_dir = db_dir.join("logs");
+            std::fs::create_dir_all(&logs_dir).ok();
+
+            let file_appender = tracing_appender::rolling::daily(&logs_dir, "subby-mcp.log");
+            let (non_blocking, _guard) = tracing_appender::non_blocking(file_appender);
+
+            let env_filter = tracing_subscriber::EnvFilter::try_from_default_env()
+                .unwrap_or_else(|_| {
+                    tracing_subscriber::EnvFilter::new("info")
+                        .add_directive("subby_mcp=info".parse().unwrap())
+                        .add_directive("subby_core=debug".parse().unwrap())
+                });
+
+            use tracing_subscriber::layer::SubscriberExt;
+            use tracing_subscriber::util::SubscriberInitExt;
+
+            // Log to stderr (MCP protocol uses stdout) and to file
+            tracing_subscriber::registry()
+                .with(env_filter)
+                .with(
+                    tracing_subscriber::fmt::layer()
+                        .with_writer(std::io::stderr)
                 )
-                .with_writer(std::io::stderr)
+                .with(
+                    tracing_subscriber::fmt::layer()
+                        .with_writer(non_blocking)
+                        .with_ansi(false)
+                )
                 .init();
 
             tracing::info!("Opening database at: {}", db_path.display());
+            tracing::info!("Logs directory: {}", logs_dir.display());
 
             let core = SubbyCore::new(&db_path)?;
             let service = mcp::SubbyMcp::new(core).serve(stdio()).await?;

@@ -21,6 +21,7 @@ impl DataManagementService {
     }
 
     /// Export all data as a BackupData struct.
+    #[tracing::instrument(skip(self))]
     pub fn export_data(&self) -> Result<BackupData> {
         let subs = SubscriptionService::new(self.pool.clone()).list()?;
         let cats = CategoryService::new(self.pool.clone()).list()?;
@@ -31,6 +32,15 @@ impl DataManagementService {
 
         // Export subscription_tags mappings
         let subscription_tags = self.export_subscription_tags()?;
+
+        tracing::info!(
+            "exported {} subscriptions, {} categories, {} payments, {} price changes, {} tags",
+            subs.len(),
+            cats.len(),
+            payments.len(),
+            price_history.len(),
+            tags.len()
+        );
 
         Ok(BackupData {
             version: "1.1.0".to_string(),
@@ -80,12 +90,24 @@ impl DataManagementService {
 
     /// Import data from a BackupData struct.
     /// Optionally clears existing data first.
+    #[tracing::instrument(skip(self, data))]
     pub fn import_data(&self, data: BackupData, clear_existing: bool) -> Result<ImportResult> {
         if !Self::validate_backup(&data) {
+            tracing::error!("invalid backup data structure");
             return Err(SubbyCoreError::Import(
                 "Invalid backup data structure".to_string(),
             ));
         }
+
+        tracing::info!(
+            "importing data: {} subscriptions, {} categories, {} payments, {} price changes, {} tags (clear_existing: {})",
+            data.subscriptions.len(),
+            data.categories.len(),
+            data.payments.len(),
+            data.price_history.len(),
+            data.tags.len(),
+            clear_existing
+        );
 
         let conn = self.pool.get()?;
 
@@ -257,9 +279,11 @@ impl DataManagementService {
         match result {
             Ok(import_result) => {
                 tx.commit()?;
+                tracing::info!("import completed: {}", import_result.message);
                 Ok(import_result)
             }
             Err(e) => {
+                tracing::error!("import failed: {}", e);
                 // tx drops (rolls back) on error
                 Err(SubbyCoreError::Import(format!("Import failed: {e}")))
             }

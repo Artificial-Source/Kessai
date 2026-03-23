@@ -2,6 +2,7 @@
  * API adapter that works in both Tauri (IPC) and Web (REST) modes.
  * Automatically detects the environment and routes calls accordingly.
  */
+import { logger } from '@/lib/logger'
 
 // Lazy import Tauri invoke — always attempt the import, check at call time
 const tauriInvokePromise: Promise<
@@ -155,13 +156,22 @@ export async function apiInvoke<T>(command: string, args?: Record<string, unknow
   // Try Tauri IPC first (works in desktop app)
   const invoke = await tauriInvokePromise
   if (invoke) {
-    return invoke(command, args) as Promise<T>
+    try {
+      const result = await (invoke(command, args) as Promise<T>)
+      logger.debug('api', `${command}: ok`)
+      return result
+    } catch (err) {
+      logger.error('api', `${command} failed`, err)
+      throw err
+    }
   }
 
   // In web mode, use REST API
   const mapping = API_MAP[command]
   if (!mapping) {
-    throw new Error(`Unknown command: ${command}. Not mapped for web mode.`)
+    const err = new Error(`Unknown command: ${command}. Not mapped for web mode.`)
+    logger.error('api', `${command} failed`, err)
+    throw err
   }
 
   const { method, path, bodyKey } = mapping
@@ -173,8 +183,11 @@ export async function apiInvoke<T>(command: string, args?: Record<string, unknow
   }
 
   try {
-    return await webFetch<T>(url, options)
+    const result = await webFetch<T>(url, options)
+    logger.debug('api', `${command}: ok`)
+    return result
   } catch (err) {
+    logger.error('api', `${command} failed`, err)
     throw new Error(`${command}: ${err instanceof Error ? err.message : String(err)}`)
   }
 }

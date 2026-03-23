@@ -11,6 +11,7 @@ import { useSettingsStore } from '@/stores/settings-store'
 import { useSubscriptionStore } from '@/stores/subscription-store'
 import { useUpdateStore } from '@/stores/update-store'
 import { useTrayBadge } from '@/hooks/use-tray-badge'
+import { logger } from '@/lib/logger'
 import { preloadRates } from '@/lib/exchange-rates'
 import type { CurrencyCode } from '@/lib/currency'
 import '@/styles/globals.css'
@@ -35,6 +36,12 @@ export default function App() {
 
   // Keep system tray badge in sync with subscriptions
   useTrayBadge()
+
+  // Log app startup
+  useEffect(() => {
+    logger.info('app', 'Subby started')
+    logger.info('app', 'version: 0.2.0')
+  }, [])
 
   // Preload exchange rates on startup for multi-currency support
   useEffect(() => {

@@ -8,6 +8,7 @@ use clap::Parser;
 use subby_core::SubbyCore;
 use tower_http::cors::CorsLayer;
 use tower_http::services::{ServeDir, ServeFile};
+use tower_http::trace::TraceLayer;
 
 #[derive(Parser)]
 #[command(name = "subby-web", about = "Subby web server", version)]
@@ -45,17 +46,43 @@ fn resolve_db_path(cli_path: Option<PathBuf>) -> PathBuf {
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    tracing_subscriber::fmt()
-        .with_env_filter(
-            tracing_subscriber::EnvFilter::from_default_env()
-                .add_directive("subby_web=info".parse()?),
+    let args = Args::parse();
+    let db_path = resolve_db_path(args.db_path.clone());
+
+    // Set up log directory next to the database
+    let db_dir = db_path.parent().unwrap_or_else(|| std::path::Path::new("."));
+    let logs_dir = db_dir.join("logs");
+    std::fs::create_dir_all(&logs_dir).ok();
+
+    let file_appender = tracing_appender::rolling::daily(&logs_dir, "subby-web.log");
+    let (non_blocking, _guard) = tracing_appender::non_blocking(file_appender);
+
+    let env_filter = tracing_subscriber::EnvFilter::try_from_default_env()
+        .unwrap_or_else(|_| {
+            tracing_subscriber::EnvFilter::new("info")
+                .add_directive("subby_web=info".parse().unwrap())
+                .add_directive("subby_core=debug".parse().unwrap())
+                .add_directive("tower_http=debug".parse().unwrap())
+        });
+
+    use tracing_subscriber::layer::SubscriberExt;
+    use tracing_subscriber::util::SubscriberInitExt;
+
+    tracing_subscriber::registry()
+        .with(env_filter)
+        .with(
+            tracing_subscriber::fmt::layer()
+                .with_writer(std::io::stderr)
+        )
+        .with(
+            tracing_subscriber::fmt::layer()
+                .with_writer(non_blocking)
+                .with_ansi(false)
         )
         .init();
 
-    let args = Args::parse();
-    let db_path = resolve_db_path(args.db_path);
-
     tracing::info!("Opening database at: {}", db_path.display());
+    tracing::info!("Logs directory: {}", logs_dir.display());
 
     let core = SubbyCore::new(&db_path)?;
     let state = Arc::new(AppState { core });
@@ -72,7 +99,8 @@ async fn main() -> anyhow::Result<()> {
     let app = Router::new()
         .nest("/api", api_routes)
         .fallback_service(spa)
-        .layer(cors);
+        .layer(cors)
+        .layer(TraceLayer::new_for_http());
 
     let addr = format!("0.0.0.0:{}", args.port);
     tracing::info!("Starting server at http://localhost:{}", args.port);

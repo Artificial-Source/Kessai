@@ -54,7 +54,9 @@ impl SettingsService {
     }
 
     /// Update settings. Only provided fields are modified.
+    #[tracing::instrument(skip(self, data))]
     pub fn update(&self, data: UpdateSettings) -> Result<Settings> {
+        tracing::info!("updating settings");
         let conn = self.pool.get()?;
 
         let mut sets = Vec::new();

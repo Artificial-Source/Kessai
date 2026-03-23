@@ -14,6 +14,7 @@ impl PriceHistoryService {
     }
 
     /// Record a price change for a subscription.
+    #[tracing::instrument(skip(self))]
     pub fn record(
         &self,
         subscription_id: &str,
@@ -31,6 +32,11 @@ impl PriceHistoryService {
              VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
             params![id, subscription_id, old_amount, new_amount, old_currency, new_currency, now],
         )?;
+
+        tracing::info!(
+            "price change recorded for {}: {} {} -> {} {}",
+            subscription_id, old_amount, old_currency, new_amount, new_currency
+        );
 
         Ok(PriceChange {
             id,

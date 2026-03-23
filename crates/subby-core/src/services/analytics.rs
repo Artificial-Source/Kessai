@@ -15,7 +15,9 @@ impl AnalyticsService {
 
     /// Get monthly spending totals for the last N months, from payment data.
     /// Only counts payments with status = 'paid'.
+    #[tracing::instrument(skip(self))]
     pub fn monthly_spending(&self, months: i32) -> Result<Vec<MonthlySpend>> {
+        tracing::debug!("querying monthly spending for last {} months", months);
         let conn = self.pool.get()?;
 
         let mut stmt = conn.prepare(
@@ -42,7 +44,9 @@ impl AnalyticsService {
     }
 
     /// Get a summary of spending for a given year.
+    #[tracing::instrument(skip(self))]
     pub fn year_summary(&self, year: i32) -> Result<YearSummary> {
+        tracing::debug!("querying year summary for {}", year);
         let conn = self.pool.get()?;
         let start = format!("{year}-01-01");
         let end = format!("{}-01-01", year + 1);
@@ -96,7 +100,9 @@ impl AnalyticsService {
     }
 
     /// Compare current month spending to previous month.
+    #[tracing::instrument(skip(self))]
     pub fn spending_velocity(&self) -> Result<SpendingVelocity> {
+        tracing::debug!("querying spending velocity");
         let conn = self.pool.get()?;
 
         let current_month: f64 = conn.query_row(
@@ -136,7 +142,9 @@ impl AnalyticsService {
     }
 
     /// Get spending per category over the last N months from payment data.
+    #[tracing::instrument(skip(self))]
     pub fn category_spending(&self, months: i32) -> Result<Vec<CategorySpend>> {
+        tracing::debug!("querying category spending for last {} months", months);
         let conn = self.pool.get()?;
 
         let start: String = conn.query_row(

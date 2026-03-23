@@ -7,7 +7,7 @@ import { useCategoryStore } from '@/stores/category-store'
 import { useSettingsStore } from '@/stores/settings-store'
 import { useUpdateStore } from '@/stores/update-store'
 import { getCurrencyOptions } from '@/lib/currency'
-import { Moon, Sun, Monitor, Wallet, Zap, X, Check } from 'lucide-react'
+import { Moon, Sun, Monitor, Wallet, Zap, X, Check, Download } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -28,6 +28,7 @@ import { SettingsSkeleton } from '@/components/settings/settings-skeleton'
 import { UpdateSettings } from '@/components/settings/update-settings'
 import type { Theme } from '@/types/settings'
 import type { CurrencyCode } from '@/lib/currency'
+import { logger } from '@/lib/logger'
 
 export function SettingsPage() {
   const {
@@ -247,6 +248,19 @@ export function SettingsPage() {
           </div>
 
           <DataManagement onDataChanged={handleDataChanged} />
+
+          <div className="border-border border-t pt-4">
+            <div className="flex flex-col gap-1">
+              <span className="text-muted-foreground font-[family-name:var(--font-mono)] text-[10px] tracking-widest uppercase">
+                Diagnostic Logs
+              </span>
+              <p className="text-muted-foreground text-sm">Download app logs for troubleshooting</p>
+            </div>
+            <Button variant="outline" className="mt-3 gap-2" onClick={() => logger.downloadLogs()}>
+              <Download className="h-4 w-4" />
+              Download Logs
+            </Button>
+          </div>
         </div>
 
         <div className="glass-card flex flex-col gap-6 p-6">

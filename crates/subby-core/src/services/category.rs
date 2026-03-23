@@ -14,6 +14,7 @@ impl CategoryService {
     }
 
     /// List all categories, sorted by name ASC.
+    #[tracing::instrument(skip(self))]
     pub fn list(&self) -> Result<Vec<Category>> {
         let conn = self.pool.get()?;
         let mut stmt = conn.prepare(
@@ -32,7 +33,9 @@ impl CategoryService {
             })
         })?;
 
-        Ok(rows.collect::<std::result::Result<Vec<_>, _>>()?)
+        let results: Vec<Category> = rows.collect::<std::result::Result<Vec<_>, _>>()?;
+        tracing::debug!("listed {} categories", results.len());
+        Ok(results)
     }
 
     /// Get a single category by ID.
@@ -62,6 +65,7 @@ impl CategoryService {
     }
 
     /// Create a new (non-default) category.
+    #[tracing::instrument(skip(self, data), fields(name = %data.name))]
     pub fn create(&self, data: NewCategory) -> Result<Category> {
         let conn = self.pool.get()?;
         let id = uuid::Uuid::new_v4().to_string();
@@ -73,11 +77,13 @@ impl CategoryService {
             params![id, data.name, data.color, data.icon, now],
         )?;
 
+        tracing::info!("category created: {} ({})", data.name, id);
         self.get(&id)
     }
 
     /// Update a category. Only provided fields are modified.
     /// Cannot change `is_default` or `id`.
+    #[tracing::instrument(skip(self, data))]
     pub fn update(&self, id: &str, data: UpdateCategory) -> Result<Category> {
         let conn = self.pool.get()?;
 
@@ -108,6 +114,7 @@ impl CategoryService {
         let params: Vec<&dyn rusqlite::types::ToSql> = values.iter().map(|v| v.as_ref()).collect();
         conn.execute(&sql, params.as_slice())?;
 
+        tracing::info!("category updated: {}", id);
         self.get(id)
     }
 
@@ -115,6 +122,7 @@ impl CategoryService {
     ///
     /// - Rejects deletion of default categories with `CannotDeleteDefault`.
     /// - Cascades by setting `subscriptions.category_id = NULL` for affected subscriptions.
+    #[tracing::instrument(skip(self))]
     pub fn delete(&self, id: &str) -> Result<()> {
         let category = self.get(id)?;
         if category.is_default {
@@ -127,6 +135,7 @@ impl CategoryService {
             params![id],
         )?;
         conn.execute("DELETE FROM categories WHERE id = ?1", params![id])?;
+        tracing::info!("category deleted: {}", id);
         Ok(())
     }
 }

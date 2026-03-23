@@ -243,12 +243,22 @@ pub fn run_migrations(conn: &Connection) -> Result<()> {
 
     for migration in MIGRATIONS {
         if applied.contains(&migration.version) {
+            tracing::debug!(
+                "migration v{} ({}) already applied, skipping",
+                migration.version,
+                migration.description
+            );
             continue;
         }
 
         // Check if tauri-plugin-sql already applied this migration
         // by detecting if the tables/columns exist
         if should_skip_migration(conn, migration.version) {
+            tracing::warn!(
+                "migration v{} ({}) already exists (legacy), recording as applied",
+                migration.version,
+                migration.description
+            );
             // Record it as applied so we don't try again
             conn.execute(
                 "INSERT INTO _subby_migrations (version, description) VALUES (?1, ?2)",
@@ -257,6 +267,11 @@ pub fn run_migrations(conn: &Connection) -> Result<()> {
             continue;
         }
 
+        tracing::info!(
+            "applying migration v{}: {}",
+            migration.version,
+            migration.description
+        );
         conn.execute_batch(migration.sql)?;
 
         conn.execute(

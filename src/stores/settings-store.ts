@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { apiInvoke as invoke } from '@/lib/api'
+import { logger } from '@/lib/logger'
 import type { Settings, Theme, AnimationSpeed } from '@/types/settings'
 import { DEFAULT_SETTINGS } from '@/types/settings'
 
@@ -32,8 +33,10 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
     set({ isLoading: true, error: null })
     try {
       const settings = await invoke<Settings>('get_settings')
+      logger.info('store:settings', 'fetched settings')
       set({ settings, isLoading: false })
     } catch (e) {
+      logger.error('store:settings', 'fetch failed', e)
       set({
         settings: { id: 'singleton', ...DEFAULT_SETTINGS },
         error: String(e),
@@ -51,11 +54,12 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
 
     try {
       const updated = await invoke<Settings>('update_settings', { data })
+      logger.info('store:settings', `updated: ${Object.keys(data).join(', ')}`)
       set({ settings: updated })
     } catch (error) {
       // Rollback
       set({ settings: current })
-      console.error('Failed to update settings:', error)
+      logger.error('store:settings', 'update failed', error)
       throw error
     }
   },

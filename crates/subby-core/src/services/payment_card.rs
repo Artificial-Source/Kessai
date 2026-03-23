@@ -43,6 +43,7 @@ impl PaymentCardService {
     }
 
     /// Create a new payment card.
+    #[tracing::instrument(skip(self, data), fields(name = %data.name))]
     pub fn create(&self, data: NewPaymentCard) -> Result<PaymentCard> {
         let conn = self.pool.get()?;
         let id = uuid::Uuid::new_v4().to_string();
@@ -62,10 +63,12 @@ impl PaymentCardService {
             ],
         )?;
 
+        tracing::info!("payment card created: {} ({})", data.name, id);
         self.get(&id)
     }
 
     /// Update a payment card. Only provided fields are modified.
+    #[tracing::instrument(skip(self, data))]
     pub fn update(&self, id: &str, data: UpdatePaymentCard) -> Result<PaymentCard> {
         let conn = self.pool.get()?;
 
@@ -104,11 +107,13 @@ impl PaymentCardService {
         let params: Vec<&dyn rusqlite::types::ToSql> = values.iter().map(|v| v.as_ref()).collect();
         conn.execute(&sql, params.as_slice())?;
 
+        tracing::info!("payment card updated: {}", id);
         self.get(id)
     }
 
     /// Delete a payment card.
     /// Cascades by setting `subscriptions.card_id = NULL` for affected subscriptions.
+    #[tracing::instrument(skip(self))]
     pub fn delete(&self, id: &str) -> Result<()> {
         let conn = self.pool.get()?;
         conn.execute(
@@ -121,6 +126,7 @@ impl PaymentCardService {
                 "Payment card '{id}' not found"
             )));
         }
+        tracing::info!("payment card deleted: {}", id);
         Ok(())
     }
 

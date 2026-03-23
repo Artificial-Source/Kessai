@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { apiInvoke as invoke } from '@/lib/api'
+import { logger } from '@/lib/logger'
 import type { Subscription, NewSubscription, SubscriptionStatus } from '@/types/subscription'
 
 type SubscriptionState = {
@@ -41,8 +42,10 @@ export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
     set({ isLoading: true, error: null })
     try {
       const subs = await invoke<Subscription[]>('list_subscriptions')
+      logger.info('store:subscriptions', `fetched ${subs.length} subscriptions`)
       set({ subscriptions: subs, isLoading: false })
     } catch (e) {
+      logger.error('store:subscriptions', 'fetch failed', e)
       set({ error: String(e), isLoading: false })
     }
   },
@@ -81,6 +84,7 @@ export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
 
     try {
       const created = await invoke<Subscription>('create_subscription', { data: sub })
+      logger.info('store:subscriptions', `added "${created.name}"`)
       // Replace optimistic entry with real one from backend
       set((state) => ({
         subscriptions: state.subscriptions
@@ -93,7 +97,7 @@ export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
       set((state) => ({
         subscriptions: state.subscriptions.filter((s) => s.id !== optimisticId),
       }))
-      console.error('Failed to add subscription:', error)
+      logger.error('store:subscriptions', 'add failed', error)
       throw error
     }
   },
@@ -133,9 +137,10 @@ export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
 
     try {
       await invoke('delete_subscription', { id })
+      logger.info('store:subscriptions', `removed subscription ${id}`)
     } catch (error) {
       set({ subscriptions: previousSubscriptions })
-      console.error('Failed to remove subscription:', error)
+      logger.error('store:subscriptions', 'remove failed', error)
       throw error
     }
   },

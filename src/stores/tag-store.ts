@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { apiInvoke as invoke } from '@/lib/api'
+import { logger } from '@/lib/logger'
 import type { Tag, NewTag } from '@/types/tag'
 
 type TagState = {
@@ -25,8 +26,10 @@ export const useTagStore = create<TagState>((set, get) => ({
     set({ isLoading: true, error: null })
     try {
       const tags = await invoke<Tag[]>('list_tags')
+      logger.info('store:tags', `fetched ${tags.length} tags`)
       set({ tags, isLoading: false })
     } catch (e) {
+      logger.error('store:tags', 'fetch failed', e)
       set({ error: String(e), isLoading: false })
     }
   },
@@ -34,13 +37,14 @@ export const useTagStore = create<TagState>((set, get) => ({
   add: async (tag) => {
     try {
       const created = await invoke<Tag>('create_tag', { data: tag })
+      logger.info('store:tags', `added "${created.name}"`)
       set((state) => ({
         tags: [...state.tags, created].sort((a, b) => a.name.localeCompare(b.name)),
       }))
       return created
     } catch (error) {
       set({ error: String(error) })
-      console.error('Failed to add tag:', error)
+      logger.error('store:tags', 'add failed', error)
       throw error
     }
   },
@@ -77,9 +81,10 @@ export const useTagStore = create<TagState>((set, get) => ({
 
     try {
       await invoke('delete_tag', { id })
+      logger.info('store:tags', `removed tag ${id}`)
     } catch (error) {
       set({ tags: previousTags, error: String(error) })
-      console.error('Failed to remove tag:', error)
+      logger.error('store:tags', 'remove failed', error)
       throw error
     }
   },

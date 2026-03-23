@@ -16,6 +16,7 @@ impl SubscriptionService {
     }
 
     /// List all subscriptions, sorted by pinned first, then next_payment_date ASC (nulls last).
+    #[tracing::instrument(skip(self))]
     pub fn list(&self) -> Result<Vec<Subscription>> {
         let conn = self.pool.get()?;
         let mut stmt = conn.prepare(
@@ -33,7 +34,9 @@ impl SubscriptionService {
 
         let rows = stmt.query_map([], |row| row_to_subscription(row))?;
 
-        Ok(rows.collect::<std::result::Result<Vec<_>, _>>()?)
+        let results: Vec<Subscription> = rows.collect::<std::result::Result<Vec<_>, _>>()?;
+        tracing::debug!("listed {} subscriptions", results.len());
+        Ok(results)
     }
 
     /// Get a single subscription by ID.
@@ -58,6 +61,7 @@ impl SubscriptionService {
     }
 
     /// Create a new subscription. Returns the created subscription.
+    #[tracing::instrument(skip(self, data), fields(name = %data.name))]
     pub fn create(&self, data: NewSubscription) -> Result<Subscription> {
         let conn = self.pool.get()?;
         let id = uuid::Uuid::new_v4().to_string();
@@ -101,10 +105,12 @@ impl SubscriptionService {
             ],
         )?;
 
+        tracing::info!("subscription created: {} ({})", data.name, id);
         self.get(&id)
     }
 
     /// Update a subscription. Only the provided fields are modified.
+    #[tracing::instrument(skip(self, data))]
     pub fn update(&self, id: &str, data: UpdateSubscription) -> Result<Subscription> {
         let conn = self.pool.get()?;
         let now = chrono::Utc::now().to_rfc3339();
@@ -207,10 +213,12 @@ impl SubscriptionService {
         let params: Vec<&dyn rusqlite::types::ToSql> = values.iter().map(|v| v.as_ref()).collect();
         conn.execute(&sql, params.as_slice())?;
 
+        tracing::info!("subscription updated: {}", id);
         self.get(id)
     }
 
     /// Delete a subscription by ID.
+    #[tracing::instrument(skip(self))]
     pub fn delete(&self, id: &str) -> Result<()> {
         let conn = self.pool.get()?;
         let changes = conn.execute("DELETE FROM subscriptions WHERE id = ?1", params![id])?;
@@ -219,11 +227,13 @@ impl SubscriptionService {
                 "Subscription '{id}' not found"
             )));
         }
+        tracing::info!("subscription deleted: {}", id);
         Ok(())
     }
 
     /// Toggle the active status of a subscription.
-    /// Billable statuses → Paused, non-billable → Active.
+    /// Billable statuses -> Paused, non-billable -> Active.
+    #[tracing::instrument(skip(self))]
     pub fn toggle_active(&self, id: &str) -> Result<Subscription> {
         let sub = self.get(id)?;
         let new_status = if sub.status.is_billable() {
@@ -231,6 +241,7 @@ impl SubscriptionService {
         } else {
             SubscriptionStatus::Active
         };
+        tracing::info!("toggling subscription {} active: {} -> {}", id, sub.status.as_str(), new_status.as_str());
         self.update(
             id,
             UpdateSubscription {
@@ -243,6 +254,7 @@ impl SubscriptionService {
     /// Toggle the pinned status of a subscription.
     pub fn toggle_pinned(&self, id: &str) -> Result<Subscription> {
         let sub = self.get(id)?;
+        tracing::debug!("toggling subscription {} pinned: {} -> {}", id, sub.is_pinned, !sub.is_pinned);
         self.update(
             id,
             UpdateSubscription {
@@ -254,11 +266,13 @@ impl SubscriptionService {
 
     /// Transition a subscription to a new status.
     /// When transitioning to cancelled, automatically sets cancelled_at.
+    #[tracing::instrument(skip(self))]
     pub fn transition_status(
         &self,
         id: &str,
         new_status: SubscriptionStatus,
     ) -> Result<Subscription> {
+        tracing::info!("transitioning subscription {} to {}", id, new_status.as_str());
         let mut update = UpdateSubscription {
             status: Some(new_status.clone()),
             ..Default::default()
@@ -273,7 +287,9 @@ impl SubscriptionService {
     }
 
     /// Cancel a subscription with an optional reason.
+    #[tracing::instrument(skip(self))]
     pub fn cancel_with_reason(&self, id: &str, reason: Option<&str>) -> Result<Subscription> {
+        tracing::info!("cancelling subscription: {}", id);
         let now = chrono::Utc::now().to_rfc3339();
         self.update(
             id,
@@ -289,6 +305,7 @@ impl SubscriptionService {
 
     /// Mark a subscription as reviewed (sets last_reviewed_at to current timestamp).
     pub fn mark_reviewed(&self, id: &str) -> Result<Subscription> {
+        tracing::debug!("marking subscription reviewed: {}", id);
         let now = chrono::Utc::now().to_rfc3339();
         self.update(
             id,
@@ -319,7 +336,9 @@ impl SubscriptionService {
 
         let rows = stmt.query_map(params![threshold], |row| row_to_subscription(row))?;
 
-        Ok(rows.collect::<std::result::Result<Vec<_>, _>>()?)
+        let results: Vec<Subscription> = rows.collect::<std::result::Result<Vec<_>, _>>()?;
+        tracing::debug!("found {} subscriptions needing review", results.len());
+        Ok(results)
     }
 }
 

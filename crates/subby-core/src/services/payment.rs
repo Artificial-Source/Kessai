@@ -16,6 +16,7 @@ impl PaymentService {
     }
 
     /// List all payments, ordered by paid_at DESC.
+    #[tracing::instrument(skip(self))]
     pub fn list(&self) -> Result<Vec<Payment>> {
         let conn = self.pool.get()?;
         let mut stmt = conn.prepare(
@@ -24,7 +25,9 @@ impl PaymentService {
         )?;
 
         let rows = stmt.query_map([], Self::map_payment)?;
-        Ok(rows.collect::<std::result::Result<Vec<_>, _>>()?)
+        let results: Vec<Payment> = rows.collect::<std::result::Result<Vec<_>, _>>()?;
+        tracing::debug!("listed {} payments", results.len());
+        Ok(results)
     }
 
     /// List payments for a specific month.
@@ -186,16 +189,19 @@ impl PaymentService {
                 "Payment '{id}' not found"
             )));
         }
+        tracing::info!("payment deleted: {}", id);
         Ok(())
     }
 
     /// Record a payment as paid.
+    #[tracing::instrument(skip(self))]
     pub fn mark_as_paid(
         &self,
         subscription_id: &str,
         due_date: &str,
         amount: f64,
     ) -> Result<Payment> {
+        tracing::info!("marking payment paid: {} on {} (amount: {})", subscription_id, due_date, amount);
         let now = chrono::Utc::now().to_rfc3339();
         self.create(NewPayment {
             subscription_id: subscription_id.to_string(),
@@ -208,12 +214,14 @@ impl PaymentService {
     }
 
     /// Record a payment as skipped.
+    #[tracing::instrument(skip(self))]
     pub fn skip_payment(
         &self,
         subscription_id: &str,
         due_date: &str,
         amount: f64,
     ) -> Result<Payment> {
+        tracing::info!("skipping payment: {} on {}", subscription_id, due_date);
         let now = chrono::Utc::now().to_rfc3339();
         self.create(NewPayment {
             subscription_id: subscription_id.to_string(),

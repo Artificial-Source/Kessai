@@ -54,26 +54,37 @@ fn save_logo(
     source_path: String,
     subscription_id: String,
 ) -> Result<String, String> {
+    tracing::debug!("saving logo for subscription: {}", subscription_id);
     let logos_dir = get_logos_dir(&app_handle);
     let filename = format!("{}.webp", subscription_id);
 
     // Validate filename to prevent path traversal
     if !is_valid_logo_filename(&filename) {
+        tracing::error!("invalid subscription ID for logo filename: {}", subscription_id);
         return Err("Invalid subscription ID for logo filename".to_string());
     }
 
     let dest_path = logos_dir.join(&filename);
 
     let img = ImageReader::open(&source_path)
-        .map_err(|e| format!("Failed to open image: {}", e))?
+        .map_err(|e| {
+            tracing::error!("failed to open image: {}", e);
+            format!("Failed to open image: {}", e)
+        })?
         .decode()
-        .map_err(|e| format!("Failed to decode image: {}", e))?;
+        .map_err(|e| {
+            tracing::error!("failed to decode image: {}", e);
+            format!("Failed to decode image: {}", e)
+        })?;
 
     let resized = img.thumbnail(256, 256);
 
     resized
         .save_with_format(&dest_path, image::ImageFormat::WebP)
-        .map_err(|e| format!("Failed to save WebP: {}", e))?;
+        .map_err(|e| {
+            tracing::error!("failed to save WebP: {}", e);
+            format!("Failed to save WebP: {}", e)
+        })?;
 
     Ok(filename)
 }
@@ -87,7 +98,10 @@ fn get_logo_base64(app_handle: tauri::AppHandle, filename: String) -> Result<Str
     let logos_dir = get_logos_dir(&app_handle);
     let file_path = logos_dir.join(&filename);
 
-    let data = fs::read(&file_path).map_err(|e| format!("Failed to read logo: {}", e))?;
+    let data = fs::read(&file_path).map_err(|e| {
+        tracing::error!("failed to read logo {}: {}", filename, e);
+        format!("Failed to read logo: {}", e)
+    })?;
 
     let base64_data = BASE64.encode(&data);
     Ok(format!("data:image/webp;base64,{}", base64_data))
@@ -99,6 +113,7 @@ fn delete_logo(app_handle: tauri::AppHandle, filename: String) -> Result<(), Str
         return Err("Invalid filename".to_string());
     }
 
+    tracing::info!("deleting logo: {}", filename);
     let logos_dir = get_logos_dir(&app_handle);
     let file_path = logos_dir.join(&filename);
     fs::remove_file(&file_path).ok();
@@ -113,6 +128,7 @@ async fn fetch_logo(
     name: String,
     domain: Option<String>,
 ) -> Result<Option<String>, String> {
+    tracing::debug!("fetching logo for: {}", name);
     let clean_name = name.trim().to_lowercase().replace(' ', "");
     if clean_name.is_empty() {
         return Ok(None);
@@ -131,7 +147,10 @@ async fn fetch_logo(
     let client = reqwest::Client::builder()
         .timeout(std::time::Duration::from_secs(5))
         .build()
-        .map_err(|e| format!("Failed to create HTTP client: {}", e))?;
+        .map_err(|e| {
+            tracing::error!("failed to create HTTP client: {}", e);
+            format!("Failed to create HTTP client: {}", e)
+        })?;
 
     for domain in &domains {
         let url = format!(
@@ -156,6 +175,7 @@ async fn fetch_logo(
                                 .save_with_format(&dest_path, image::ImageFormat::WebP)
                                 .is_ok()
                             {
+                                tracing::info!("fetched logo for: {}", name);
                                 return Ok(Some(filename));
                             }
                         }
@@ -166,6 +186,7 @@ async fn fetch_logo(
         }
     }
 
+    tracing::debug!("no logo found for: {}", name);
     Ok(None)
 }
 
@@ -173,12 +194,20 @@ async fn fetch_logo(
 
 #[tauri::command]
 fn list_subscriptions(core: tauri::State<'_, SubbyCore>) -> Result<Vec<Subscription>, String> {
-    core.subscriptions().list().map_err(|e| e.to_string())
+    tracing::debug!("listing subscriptions");
+    core.subscriptions().list().map_err(|e| {
+        tracing::error!("failed to list subscriptions: {}", e);
+        e.to_string()
+    })
 }
 
 #[tauri::command]
 fn get_subscription(core: tauri::State<'_, SubbyCore>, id: String) -> Result<Subscription, String> {
-    core.subscriptions().get(&id).map_err(|e| e.to_string())
+    tracing::debug!("getting subscription: {}", id);
+    core.subscriptions().get(&id).map_err(|e| {
+        tracing::error!("failed to get subscription {}: {}", id, e);
+        e.to_string()
+    })
 }
 
 #[tauri::command]
@@ -186,7 +215,11 @@ fn create_subscription(
     core: tauri::State<'_, SubbyCore>,
     data: NewSubscription,
 ) -> Result<Subscription, String> {
-    core.subscriptions().create(data).map_err(|e| e.to_string())
+    tracing::info!("creating subscription: {}", data.name);
+    core.subscriptions().create(data).map_err(|e| {
+        tracing::error!("failed to create subscription: {}", e);
+        e.to_string()
+    })
 }
 
 #[tauri::command]
@@ -195,10 +228,17 @@ fn update_subscription(
     id: String,
     data: UpdateSubscription,
 ) -> Result<Subscription, String> {
+    tracing::info!("updating subscription: {}", id);
     // Auto-detect price changes and record history
     if let Some(new_amount) = data.amount {
         if let Ok(existing) = core.subscriptions().get(&id) {
             if (existing.amount - new_amount).abs() > 0.001 {
+                tracing::info!(
+                    "price change detected for {}: {} -> {}",
+                    id,
+                    existing.amount,
+                    new_amount
+                );
                 let new_currency = data
                     .currency
                     .as_deref()
@@ -216,12 +256,19 @@ fn update_subscription(
 
     core.subscriptions()
         .update(&id, data)
-        .map_err(|e| e.to_string())
+        .map_err(|e| {
+            tracing::error!("failed to update subscription {}: {}", id, e);
+            e.to_string()
+        })
 }
 
 #[tauri::command]
 fn delete_subscription(core: tauri::State<'_, SubbyCore>, id: String) -> Result<(), String> {
-    core.subscriptions().delete(&id).map_err(|e| e.to_string())
+    tracing::info!("deleting subscription: {}", id);
+    core.subscriptions().delete(&id).map_err(|e| {
+        tracing::error!("failed to delete subscription {}: {}", id, e);
+        e.to_string()
+    })
 }
 
 #[tauri::command]
@@ -229,9 +276,13 @@ fn toggle_subscription_active(
     core: tauri::State<'_, SubbyCore>,
     id: String,
 ) -> Result<Subscription, String> {
+    tracing::info!("toggling active: {}", id);
     core.subscriptions()
         .toggle_active(&id)
-        .map_err(|e| e.to_string())
+        .map_err(|e| {
+            tracing::error!("failed to toggle active {}: {}", id, e);
+            e.to_string()
+        })
 }
 
 #[tauri::command]
@@ -239,9 +290,13 @@ fn toggle_subscription_pinned(
     core: tauri::State<'_, SubbyCore>,
     id: String,
 ) -> Result<Subscription, String> {
+    tracing::debug!("toggling pinned: {}", id);
     core.subscriptions()
         .toggle_pinned(&id)
-        .map_err(|e| e.to_string())
+        .map_err(|e| {
+            tracing::error!("failed to toggle pinned {}: {}", id, e);
+            e.to_string()
+        })
 }
 
 #[tauri::command]
@@ -250,9 +305,13 @@ fn cancel_subscription(
     id: String,
     reason: Option<String>,
 ) -> Result<Subscription, String> {
+    tracing::info!("cancelling subscription: {}", id);
     core.subscriptions()
         .cancel_with_reason(&id, reason.as_deref())
-        .map_err(|e| e.to_string())
+        .map_err(|e| {
+            tracing::error!("failed to cancel subscription {}: {}", id, e);
+            e.to_string()
+        })
 }
 
 #[tauri::command]
@@ -260,9 +319,13 @@ fn mark_subscription_reviewed(
     core: tauri::State<'_, SubbyCore>,
     id: String,
 ) -> Result<Subscription, String> {
+    tracing::debug!("marking reviewed: {}", id);
     core.subscriptions()
         .mark_reviewed(&id)
-        .map_err(|e| e.to_string())
+        .map_err(|e| {
+            tracing::error!("failed to mark reviewed {}: {}", id, e);
+            e.to_string()
+        })
 }
 
 #[tauri::command]
@@ -270,9 +333,13 @@ fn list_subscriptions_needing_review(
     core: tauri::State<'_, SubbyCore>,
     days: i64,
 ) -> Result<Vec<Subscription>, String> {
+    tracing::debug!("listing subscriptions needing review (days: {})", days);
     core.subscriptions()
         .list_needing_review(days)
-        .map_err(|e| e.to_string())
+        .map_err(|e| {
+            tracing::error!("failed to list subscriptions needing review: {}", e);
+            e.to_string()
+        })
 }
 
 
@@ -280,7 +347,11 @@ fn list_subscriptions_needing_review(
 
 #[tauri::command]
 fn list_categories(core: tauri::State<'_, SubbyCore>) -> Result<Vec<Category>, String> {
-    core.categories().list().map_err(|e| e.to_string())
+    tracing::debug!("listing categories");
+    core.categories().list().map_err(|e| {
+        tracing::error!("failed to list categories: {}", e);
+        e.to_string()
+    })
 }
 
 #[tauri::command]
@@ -288,7 +359,11 @@ fn create_category(
     core: tauri::State<'_, SubbyCore>,
     data: NewCategory,
 ) -> Result<Category, String> {
-    core.categories().create(data).map_err(|e| e.to_string())
+    tracing::info!("creating category: {}", data.name);
+    core.categories().create(data).map_err(|e| {
+        tracing::error!("failed to create category: {}", e);
+        e.to_string()
+    })
 }
 
 #[tauri::command]
@@ -297,21 +372,33 @@ fn update_category(
     id: String,
     data: UpdateCategory,
 ) -> Result<Category, String> {
+    tracing::info!("updating category: {}", id);
     core.categories()
         .update(&id, data)
-        .map_err(|e| e.to_string())
+        .map_err(|e| {
+            tracing::error!("failed to update category {}: {}", id, e);
+            e.to_string()
+        })
 }
 
 #[tauri::command]
 fn delete_category(core: tauri::State<'_, SubbyCore>, id: String) -> Result<(), String> {
-    core.categories().delete(&id).map_err(|e| e.to_string())
+    tracing::info!("deleting category: {}", id);
+    core.categories().delete(&id).map_err(|e| {
+        tracing::error!("failed to delete category {}: {}", id, e);
+        e.to_string()
+    })
 }
 
 // ── Payment commands ───────────────────────────────────────────────────────
 
 #[tauri::command]
 fn list_payments(core: tauri::State<'_, SubbyCore>) -> Result<Vec<Payment>, String> {
-    core.payments().list().map_err(|e| e.to_string())
+    tracing::debug!("listing payments");
+    core.payments().list().map_err(|e| {
+        tracing::error!("failed to list payments: {}", e);
+        e.to_string()
+    })
 }
 
 #[tauri::command]
@@ -320,9 +407,13 @@ fn list_payments_by_month(
     year: i32,
     month: u32,
 ) -> Result<Vec<Payment>, String> {
+    tracing::debug!("listing payments for {}-{:02}", year, month);
     core.payments()
         .list_by_month(year, month)
-        .map_err(|e| e.to_string())
+        .map_err(|e| {
+            tracing::error!("failed to list payments by month: {}", e);
+            e.to_string()
+        })
 }
 
 #[tauri::command]
@@ -331,14 +422,22 @@ fn list_payments_with_details(
     year: i32,
     month: u32,
 ) -> Result<Vec<PaymentWithSubscription>, String> {
+    tracing::debug!("listing payments with details for {}-{:02}", year, month);
     core.payments()
         .list_with_details(year, month)
-        .map_err(|e| e.to_string())
+        .map_err(|e| {
+            tracing::error!("failed to list payments with details: {}", e);
+            e.to_string()
+        })
 }
 
 #[tauri::command]
 fn create_payment(core: tauri::State<'_, SubbyCore>, data: NewPayment) -> Result<Payment, String> {
-    core.payments().create(data).map_err(|e| e.to_string())
+    tracing::info!("creating payment for subscription: {}", data.subscription_id);
+    core.payments().create(data).map_err(|e| {
+        tracing::error!("failed to create payment: {}", e);
+        e.to_string()
+    })
 }
 
 #[tauri::command]
@@ -347,12 +446,20 @@ fn update_payment(
     id: String,
     data: UpdatePayment,
 ) -> Result<Payment, String> {
-    core.payments().update(&id, data).map_err(|e| e.to_string())
+    tracing::info!("updating payment: {}", id);
+    core.payments().update(&id, data).map_err(|e| {
+        tracing::error!("failed to update payment {}: {}", id, e);
+        e.to_string()
+    })
 }
 
 #[tauri::command]
 fn delete_payment(core: tauri::State<'_, SubbyCore>, id: String) -> Result<(), String> {
-    core.payments().delete(&id).map_err(|e| e.to_string())
+    tracing::info!("deleting payment: {}", id);
+    core.payments().delete(&id).map_err(|e| {
+        tracing::error!("failed to delete payment {}: {}", id, e);
+        e.to_string()
+    })
 }
 
 #[tauri::command]
@@ -362,9 +469,13 @@ fn mark_payment_paid(
     due_date: String,
     amount: f64,
 ) -> Result<Payment, String> {
+    tracing::info!("marking payment paid: {} on {}", subscription_id, due_date);
     core.payments()
         .mark_as_paid(&subscription_id, &due_date, amount)
-        .map_err(|e| e.to_string())
+        .map_err(|e| {
+            tracing::error!("failed to mark payment paid: {}", e);
+            e.to_string()
+        })
 }
 
 #[tauri::command]
@@ -374,9 +485,13 @@ fn skip_payment(
     due_date: String,
     amount: f64,
 ) -> Result<Payment, String> {
+    tracing::info!("skipping payment: {} on {}", subscription_id, due_date);
     core.payments()
         .skip_payment(&subscription_id, &due_date, amount)
-        .map_err(|e| e.to_string())
+        .map_err(|e| {
+            tracing::error!("failed to skip payment: {}", e);
+            e.to_string()
+        })
 }
 
 #[tauri::command]
@@ -385,16 +500,24 @@ fn is_payment_recorded(
     subscription_id: String,
     due_date: String,
 ) -> Result<bool, String> {
+    tracing::debug!("checking payment recorded: {} on {}", subscription_id, due_date);
     core.payments()
         .is_recorded(&subscription_id, &due_date)
-        .map_err(|e| e.to_string())
+        .map_err(|e| {
+            tracing::error!("failed to check payment recorded: {}", e);
+            e.to_string()
+        })
 }
 
 // ── Payment card commands ──────────────────────────────────────────────────
 
 #[tauri::command]
 fn list_payment_cards(core: tauri::State<'_, SubbyCore>) -> Result<Vec<PaymentCard>, String> {
-    core.payment_cards().list().map_err(|e| e.to_string())
+    tracing::debug!("listing payment cards");
+    core.payment_cards().list().map_err(|e| {
+        tracing::error!("failed to list payment cards: {}", e);
+        e.to_string()
+    })
 }
 
 #[tauri::command]
@@ -402,7 +525,11 @@ fn create_payment_card(
     core: tauri::State<'_, SubbyCore>,
     data: NewPaymentCard,
 ) -> Result<PaymentCard, String> {
-    core.payment_cards().create(data).map_err(|e| e.to_string())
+    tracing::info!("creating payment card: {}", data.name);
+    core.payment_cards().create(data).map_err(|e| {
+        tracing::error!("failed to create payment card: {}", e);
+        e.to_string()
+    })
 }
 
 #[tauri::command]
@@ -411,14 +538,22 @@ fn update_payment_card(
     id: String,
     data: UpdatePaymentCard,
 ) -> Result<PaymentCard, String> {
+    tracing::info!("updating payment card: {}", id);
     core.payment_cards()
         .update(&id, data)
-        .map_err(|e| e.to_string())
+        .map_err(|e| {
+            tracing::error!("failed to update payment card {}: {}", id, e);
+            e.to_string()
+        })
 }
 
 #[tauri::command]
 fn delete_payment_card(core: tauri::State<'_, SubbyCore>, id: String) -> Result<(), String> {
-    core.payment_cards().delete(&id).map_err(|e| e.to_string())
+    tracing::info!("deleting payment card: {}", id);
+    core.payment_cards().delete(&id).map_err(|e| {
+        tracing::error!("failed to delete payment card {}: {}", id, e);
+        e.to_string()
+    })
 }
 
 // ── Subscription status commands ─────────────────────────────────────
@@ -429,11 +564,15 @@ fn transition_subscription_status(
     id: String,
     status: String,
 ) -> Result<Subscription, String> {
+    tracing::info!("transitioning subscription {} to status: {}", id, status);
     let new_status = SubscriptionStatus::from_str(&status)
         .ok_or_else(|| format!("Invalid status: {status}"))?;
     core.subscriptions()
         .transition_status(&id, new_status)
-        .map_err(|e| e.to_string())
+        .map_err(|e| {
+            tracing::error!("failed to transition subscription status {}: {}", id, e);
+            e.to_string()
+        })
 }
 
 #[tauri::command]
@@ -441,8 +580,12 @@ fn get_expiring_trials(
     core: tauri::State<'_, SubbyCore>,
     days: Option<i64>,
 ) -> Result<Vec<Subscription>, String> {
-    let subs = core.subscriptions().list().map_err(|e| e.to_string())?;
     let days = days.unwrap_or(7);
+    tracing::debug!("getting expiring trials (days: {})", days);
+    let subs = core.subscriptions().list().map_err(|e| {
+        tracing::error!("failed to list subscriptions for expiring trials: {}", e);
+        e.to_string()
+    })?;
     let trials = subby_core::utils::get_expiring_trials(&subs, days);
     Ok(trials.into_iter().cloned().collect())
 }
@@ -454,9 +597,13 @@ fn list_price_history(
     core: tauri::State<'_, SubbyCore>,
     subscription_id: String,
 ) -> Result<Vec<PriceChange>, String> {
+    tracing::debug!("listing price history for: {}", subscription_id);
     core.price_history()
         .list_by_subscription(&subscription_id)
-        .map_err(|e| e.to_string())
+        .map_err(|e| {
+            tracing::error!("failed to list price history: {}", e);
+            e.to_string()
+        })
 }
 
 #[tauri::command]
@@ -464,21 +611,34 @@ fn get_recent_price_changes(
     core: tauri::State<'_, SubbyCore>,
     days: Option<i64>,
 ) -> Result<Vec<PriceChange>, String> {
+    let days = days.unwrap_or(90);
+    tracing::debug!("getting recent price changes (days: {})", days);
     core.price_history()
-        .list_recent(days.unwrap_or(90))
-        .map_err(|e| e.to_string())
+        .list_recent(days)
+        .map_err(|e| {
+            tracing::error!("failed to get recent price changes: {}", e);
+            e.to_string()
+        })
 }
 
 // ── Tag commands ──────────────────────────────────────────────────────────
 
 #[tauri::command]
 fn list_tags(core: tauri::State<'_, SubbyCore>) -> Result<Vec<Tag>, String> {
-    core.tags().list().map_err(|e| e.to_string())
+    tracing::debug!("listing tags");
+    core.tags().list().map_err(|e| {
+        tracing::error!("failed to list tags: {}", e);
+        e.to_string()
+    })
 }
 
 #[tauri::command]
 fn create_tag(core: tauri::State<'_, SubbyCore>, data: NewTag) -> Result<Tag, String> {
-    core.tags().create(data).map_err(|e| e.to_string())
+    tracing::info!("creating tag: {}", data.name);
+    core.tags().create(data).map_err(|e| {
+        tracing::error!("failed to create tag: {}", e);
+        e.to_string()
+    })
 }
 
 #[tauri::command]
@@ -487,12 +647,20 @@ fn update_tag(
     id: String,
     data: UpdateTag,
 ) -> Result<Tag, String> {
-    core.tags().update(&id, data).map_err(|e| e.to_string())
+    tracing::info!("updating tag: {}", id);
+    core.tags().update(&id, data).map_err(|e| {
+        tracing::error!("failed to update tag {}: {}", id, e);
+        e.to_string()
+    })
 }
 
 #[tauri::command]
 fn delete_tag(core: tauri::State<'_, SubbyCore>, id: String) -> Result<(), String> {
-    core.tags().delete(&id).map_err(|e| e.to_string())
+    tracing::info!("deleting tag: {}", id);
+    core.tags().delete(&id).map_err(|e| {
+        tracing::error!("failed to delete tag {}: {}", id, e);
+        e.to_string()
+    })
 }
 
 #[tauri::command]
@@ -501,9 +669,13 @@ fn add_subscription_tag(
     subscription_id: String,
     tag_id: String,
 ) -> Result<(), String> {
+    tracing::info!("adding tag {} to subscription {}", tag_id, subscription_id);
     core.tags()
         .add_to_subscription(&subscription_id, &tag_id)
-        .map_err(|e| e.to_string())
+        .map_err(|e| {
+            tracing::error!("failed to add tag to subscription: {}", e);
+            e.to_string()
+        })
 }
 
 #[tauri::command]
@@ -512,9 +684,13 @@ fn remove_subscription_tag(
     subscription_id: String,
     tag_id: String,
 ) -> Result<(), String> {
+    tracing::info!("removing tag {} from subscription {}", tag_id, subscription_id);
     core.tags()
         .remove_from_subscription(&subscription_id, &tag_id)
-        .map_err(|e| e.to_string())
+        .map_err(|e| {
+            tracing::error!("failed to remove tag from subscription: {}", e);
+            e.to_string()
+        })
 }
 
 #[tauri::command]
@@ -522,9 +698,13 @@ fn list_subscription_tags(
     core: tauri::State<'_, SubbyCore>,
     subscription_id: String,
 ) -> Result<Vec<Tag>, String> {
+    tracing::debug!("listing tags for subscription: {}", subscription_id);
     core.tags()
         .list_for_subscription(&subscription_id)
-        .map_err(|e| e.to_string())
+        .map_err(|e| {
+            tracing::error!("failed to list subscription tags: {}", e);
+            e.to_string()
+        })
 }
 
 // ── Analytics commands ─────────────────────────────────────────────────────
@@ -534,9 +714,13 @@ fn get_monthly_spending(
     core: tauri::State<'_, SubbyCore>,
     months: Option<i32>,
 ) -> Result<Vec<MonthlySpend>, String> {
+    tracing::debug!("getting monthly spending");
     core.analytics()
         .monthly_spending(months.unwrap_or(12))
-        .map_err(|e| e.to_string())
+        .map_err(|e| {
+            tracing::error!("failed to get monthly spending: {}", e);
+            e.to_string()
+        })
 }
 
 #[tauri::command]
@@ -544,18 +728,26 @@ fn get_year_summary(
     core: tauri::State<'_, SubbyCore>,
     year: i32,
 ) -> Result<YearSummary, String> {
+    tracing::debug!("getting year summary for {}", year);
     core.analytics()
         .year_summary(year)
-        .map_err(|e| e.to_string())
+        .map_err(|e| {
+            tracing::error!("failed to get year summary: {}", e);
+            e.to_string()
+        })
 }
 
 #[tauri::command]
 fn get_spending_velocity(
     core: tauri::State<'_, SubbyCore>,
 ) -> Result<SpendingVelocity, String> {
+    tracing::debug!("getting spending velocity");
     core.analytics()
         .spending_velocity()
-        .map_err(|e| e.to_string())
+        .map_err(|e| {
+            tracing::error!("failed to get spending velocity: {}", e);
+            e.to_string()
+        })
 }
 
 #[tauri::command]
@@ -563,9 +755,13 @@ fn get_category_spending(
     core: tauri::State<'_, SubbyCore>,
     months: Option<i32>,
 ) -> Result<Vec<CategorySpend>, String> {
+    tracing::debug!("getting category spending");
     core.analytics()
         .category_spending(months.unwrap_or(6))
-        .map_err(|e| e.to_string())
+        .map_err(|e| {
+            tracing::error!("failed to get category spending: {}", e);
+            e.to_string()
+        })
 }
 
 
@@ -573,7 +769,11 @@ fn get_category_spending(
 
 #[tauri::command]
 fn get_settings(core: tauri::State<'_, SubbyCore>) -> Result<Settings, String> {
-    core.settings().get().map_err(|e| e.to_string())
+    tracing::debug!("getting settings");
+    core.settings().get().map_err(|e| {
+        tracing::error!("failed to get settings: {}", e);
+        e.to_string()
+    })
 }
 
 #[tauri::command]
@@ -581,16 +781,24 @@ fn update_settings(
     core: tauri::State<'_, SubbyCore>,
     data: UpdateSettings,
 ) -> Result<Settings, String> {
-    core.settings().update(data).map_err(|e| e.to_string())
+    tracing::info!("updating settings");
+    core.settings().update(data).map_err(|e| {
+        tracing::error!("failed to update settings: {}", e);
+        e.to_string()
+    })
 }
 
 // ── Data management commands ───────────────────────────────────────────────
 
 #[tauri::command]
 fn export_data(core: tauri::State<'_, SubbyCore>) -> Result<BackupData, String> {
+    tracing::info!("exporting data");
     core.data_management()
         .export_data()
-        .map_err(|e| e.to_string())
+        .map_err(|e| {
+            tracing::error!("failed to export data: {}", e);
+            e.to_string()
+        })
 }
 
 #[tauri::command]
@@ -599,9 +807,13 @@ fn import_data(
     data: BackupData,
     clear_existing: Option<bool>,
 ) -> Result<ImportResult, String> {
+    tracing::info!("importing data (clear_existing: {})", clear_existing.unwrap_or(false));
     core.data_management()
         .import_data(data, clear_existing.unwrap_or(false))
-        .map_err(|e| e.to_string())
+        .map_err(|e| {
+            tracing::error!("failed to import data: {}", e);
+            e.to_string()
+        })
 }
 
 // ── System tray helpers ─────────────────────────────────────────────────────
@@ -686,7 +898,46 @@ pub fn run() {
                 .app_data_dir()
                 .expect("Failed to get app data dir");
             fs::create_dir_all(&app_data_dir).expect("Failed to create app data dir");
+
+            // ── Logging setup ────────────────────────────────────────────
+            let logs_dir = app_data_dir.join("logs");
+            fs::create_dir_all(&logs_dir).expect("Failed to create logs dir");
+
+            let file_appender = tracing_appender::rolling::daily(&logs_dir, "subby.log");
+            let (non_blocking, _guard) = tracing_appender::non_blocking(file_appender);
+
+            // Keep the guard alive for the lifetime of the app
+            // by leaking it (it's a singleton that lives forever anyway)
+            std::mem::forget(_guard);
+
+            let env_filter = tracing_subscriber::EnvFilter::try_from_default_env()
+                .unwrap_or_else(|_| {
+                    tracing_subscriber::EnvFilter::new("info")
+                        .add_directive("subby_lib=debug".parse().unwrap())
+                        .add_directive("subby_core=debug".parse().unwrap())
+                });
+
+            use tracing_subscriber::layer::SubscriberExt;
+            use tracing_subscriber::util::SubscriberInitExt;
+
+            tracing_subscriber::registry()
+                .with(env_filter)
+                .with(
+                    tracing_subscriber::fmt::layer()
+                        .with_writer(std::io::stderr)
+                )
+                .with(
+                    tracing_subscriber::fmt::layer()
+                        .with_writer(non_blocking)
+                        .with_ansi(false)
+                )
+                .init();
+
+            tracing::info!("Subby starting up");
+            tracing::info!("Logs directory: {}", logs_dir.display());
+
             let db_path = app_data_dir.join("subby.db");
+            tracing::info!("Opening database at: {}", db_path.display());
 
             let core = SubbyCore::new(&db_path).expect("Failed to initialize SubbyCore database");
             let upcoming_count = count_upcoming_payments(&core);
