@@ -27,15 +27,57 @@ type CommandGroup = {
 }
 
 const PAGES: CommandResult[] = [
-  { id: 'page-dashboard', type: 'page', title: 'Dashboard', subtitle: 'Overview and stats', icon: 'layout-dashboard', route: '/' },
-  { id: 'page-subscriptions', type: 'page', title: 'Subscriptions', subtitle: 'Manage subscriptions', icon: 'credit-card', route: '/subscriptions' },
-  { id: 'page-calendar', type: 'page', title: 'Calendar', subtitle: 'Payment schedule', icon: 'calendar', route: '/calendar' },
-  { id: 'page-settings', type: 'page', title: 'Settings', subtitle: 'Preferences', icon: 'settings', route: '/settings' },
+  {
+    id: 'page-dashboard',
+    type: 'page',
+    title: 'Dashboard',
+    subtitle: 'Overview and stats',
+    icon: 'layout-dashboard',
+    route: '/',
+  },
+  {
+    id: 'page-subscriptions',
+    type: 'page',
+    title: 'Subscriptions',
+    subtitle: 'Manage subscriptions',
+    icon: 'credit-card',
+    route: '/subscriptions',
+  },
+  {
+    id: 'page-calendar',
+    type: 'page',
+    title: 'Calendar',
+    subtitle: 'Payment schedule',
+    icon: 'calendar',
+    route: '/calendar',
+  },
+  {
+    id: 'page-settings',
+    type: 'page',
+    title: 'Settings',
+    subtitle: 'Preferences',
+    icon: 'settings',
+    route: '/settings',
+  },
 ]
 
 const ACTIONS: CommandResult[] = [
-  { id: 'action-add-subscription', type: 'action', title: 'Add Subscription', subtitle: 'Create a new subscription', icon: 'plus', action: 'add-subscription' },
-  { id: 'action-toggle-theme', type: 'action', title: 'Toggle Theme', subtitle: 'Switch between dark and light', icon: 'sun-moon', action: 'toggle-theme' },
+  {
+    id: 'action-add-subscription',
+    type: 'action',
+    title: 'Add Subscription',
+    subtitle: 'Create a new subscription',
+    icon: 'plus',
+    action: 'add-subscription',
+  },
+  {
+    id: 'action-toggle-theme',
+    type: 'action',
+    title: 'Toggle Theme',
+    subtitle: 'Switch between dark and light',
+    icon: 'sun-moon',
+    action: 'toggle-theme',
+  },
 ]
 
 function matchesQuery(text: string, query: string): boolean {
@@ -57,10 +99,7 @@ export function useCommandPalette(query: string): CommandGroup[] {
         if (!trimmed) return true
         // Match against name and category name
         const category = categories.find((c) => c.id === sub.category_id)
-        return (
-          matchesQuery(sub.name, trimmed) ||
-          (category && matchesQuery(category.name, trimmed))
-        )
+        return matchesQuery(sub.name, trimmed) || (category && matchesQuery(category.name, trimmed))
       })
       .slice(0, 8)
       .map((sub) => {
@@ -82,7 +121,9 @@ export function useCommandPalette(query: string): CommandGroup[] {
     // Page results
     const pageResults = PAGES.filter((page) => {
       if (!trimmed) return true
-      return matchesQuery(page.title, trimmed) || (page.subtitle && matchesQuery(page.subtitle, trimmed))
+      return (
+        matchesQuery(page.title, trimmed) || (page.subtitle && matchesQuery(page.subtitle, trimmed))
+      )
     })
 
     if (pageResults.length > 0) {
@@ -92,7 +133,10 @@ export function useCommandPalette(query: string): CommandGroup[] {
     // Action results
     const actionResults = ACTIONS.filter((action) => {
       if (!trimmed) return true
-      return matchesQuery(action.title, trimmed) || (action.subtitle && matchesQuery(action.subtitle, trimmed))
+      return (
+        matchesQuery(action.title, trimmed) ||
+        (action.subtitle && matchesQuery(action.subtitle, trimmed))
+      )
     })
 
     if (actionResults.length > 0) {

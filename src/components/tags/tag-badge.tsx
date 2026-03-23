@@ -21,10 +21,7 @@ export function TagBadge({ tag, onRemove, className }: TagBadgeProps) {
         color: tag.color,
       }}
     >
-      <span
-        className="h-1.5 w-1.5 shrink-0 rounded-full"
-        style={{ backgroundColor: tag.color }}
-      />
+      <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ backgroundColor: tag.color }} />
       {tag.name}
       {onRemove && (
         <button

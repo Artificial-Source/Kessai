@@ -14,15 +14,19 @@ import { Dialog, DialogPortal, DialogOverlay } from '@/components/ui/dialog'
 import * as DialogPrimitive from '@radix-ui/react-dialog'
 import { useUiStore } from '@/stores/ui-store'
 import { useSettingsStore } from '@/stores/settings-store'
-import { useCommandPalette, type CommandResult, type CommandResultType } from '@/hooks/use-command-palette'
+import {
+  useCommandPalette,
+  type CommandResult,
+  type CommandResultType,
+} from '@/hooks/use-command-palette'
 import { cn } from '@/lib/utils'
 
 const ICON_MAP: Record<string, React.ComponentType<{ size?: number; className?: string }>> = {
   'layout-dashboard': LayoutDashboard,
   'credit-card': CreditCard,
-  'calendar': Calendar,
-  'settings': Settings,
-  'plus': Plus,
+  calendar: Calendar,
+  settings: Settings,
+  plus: Plus,
   'sun-moon': SunMoon,
 }
 
@@ -44,10 +48,7 @@ export function CommandPalette() {
   const groups = useCommandPalette(query)
 
   // Flatten results for keyboard navigation
-  const flatResults = useMemo(
-    () => groups.flatMap((g) => g.results),
-    [groups]
-  )
+  const flatResults = useMemo(() => groups.flatMap((g) => g.results), [groups])
 
   // Reset state when opening
   useEffect(() => {
@@ -115,7 +116,12 @@ export function CommandPalette() {
   let flatIndex = -1
 
   return (
-    <Dialog open={commandPaletteOpen} onOpenChange={(open) => { if (!open) closeCommandPalette() }}>
+    <Dialog
+      open={commandPaletteOpen}
+      onOpenChange={(open) => {
+        if (!open) closeCommandPalette()
+      }}
+    >
       <DialogPortal>
         <DialogOverlay className="bg-black/60 backdrop-blur-sm" />
         <DialogPrimitive.Content
@@ -141,11 +147,11 @@ export function CommandPalette() {
               onChange={(e) => setQuery(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder="Search subscriptions, pages, actions..."
-              className="font-[family-name:var(--font-sans)] text-foreground placeholder:text-muted-foreground w-full bg-transparent text-sm outline-none"
+              className="text-foreground placeholder:text-muted-foreground w-full bg-transparent font-[family-name:var(--font-sans)] text-sm outline-none"
               autoComplete="off"
               spellCheck={false}
             />
-            <kbd className="font-[family-name:var(--font-mono)] text-muted-foreground hidden shrink-0 rounded border border-[var(--color-border)] bg-[var(--color-input)] px-1.5 py-0.5 text-[10px] uppercase tracking-widest sm:inline-block">
+            <kbd className="text-muted-foreground hidden shrink-0 rounded border border-[var(--color-border)] bg-[var(--color-input)] px-1.5 py-0.5 font-[family-name:var(--font-mono)] text-[10px] tracking-widest uppercase sm:inline-block">
               ESC
             </kbd>
           </div>
@@ -160,7 +166,7 @@ export function CommandPalette() {
 
             {groups.map((group) => (
               <div key={group.type} className="mb-1">
-                <div className="font-[family-name:var(--font-mono)] text-muted-foreground px-2 py-1.5 text-[10px] uppercase tracking-widest">
+                <div className="text-muted-foreground px-2 py-1.5 font-[family-name:var(--font-mono)] text-[10px] tracking-widest uppercase">
                   {TYPE_LABELS[group.type]}
                 </div>
                 {group.results.map((result) => {
@@ -182,18 +188,22 @@ export function CommandPalette() {
                       onClick={() => executeResult(result)}
                       onMouseEnter={() => setSelectedIndex(currentFlatIndex)}
                     >
-                      <div className={cn(
-                        'flex h-8 w-8 shrink-0 items-center justify-center rounded-lg',
-                        result.type === 'subscription' ? 'bg-primary/10 text-primary' : 'bg-[var(--color-input)] text-muted-foreground'
-                      )}>
+                      <div
+                        className={cn(
+                          'flex h-8 w-8 shrink-0 items-center justify-center rounded-lg',
+                          result.type === 'subscription'
+                            ? 'bg-primary/10 text-primary'
+                            : 'text-muted-foreground bg-[var(--color-input)]'
+                        )}
+                      >
                         <IconComponent size={16} />
                       </div>
                       <div className="min-w-0 flex-1">
-                        <div className="font-[family-name:var(--font-sans)] truncate text-sm font-medium">
+                        <div className="truncate font-[family-name:var(--font-sans)] text-sm font-medium">
                           {result.title}
                         </div>
                         {result.subtitle && (
-                          <div className="font-[family-name:var(--font-mono)] text-muted-foreground truncate text-[11px]">
+                          <div className="text-muted-foreground truncate font-[family-name:var(--font-mono)] text-[11px]">
                             {result.subtitle}
                           </div>
                         )}
@@ -210,13 +220,13 @@ export function CommandPalette() {
 
           {/* Footer */}
           <div className="flex items-center gap-4 border-t border-[var(--color-border)] px-4 py-2">
-            <div className="font-[family-name:var(--font-mono)] text-muted-foreground flex items-center gap-1 text-[10px] uppercase tracking-widest">
+            <div className="text-muted-foreground flex items-center gap-1 font-[family-name:var(--font-mono)] text-[10px] tracking-widest uppercase">
               <kbd className="rounded border border-[var(--color-border)] bg-[var(--color-input)] px-1 py-0.5">
                 ↑↓
               </kbd>
               Navigate
             </div>
-            <div className="font-[family-name:var(--font-mono)] text-muted-foreground flex items-center gap-1 text-[10px] uppercase tracking-widest">
+            <div className="text-muted-foreground flex items-center gap-1 font-[family-name:var(--font-mono)] text-[10px] tracking-widest uppercase">
               <kbd className="rounded border border-[var(--color-border)] bg-[var(--color-input)] px-1 py-0.5">
                 ↵
               </kbd>

@@ -191,9 +191,7 @@ export function CSVImportWizard({ open, onOpenChange, onDataChanged }: CSVImport
 
   const toggleSubscription = useCallback((index: number) => {
     setDetected((prev) =>
-      prev.map((sub, i) =>
-        i === index ? { ...sub, include: !sub.include } : sub
-      )
+      prev.map((sub, i) => (i === index ? { ...sub, include: !sub.include } : sub))
     )
   }, [])
 
@@ -203,11 +201,7 @@ export function CSVImportWizard({ open, onOpenChange, onDataChanged }: CSVImport
       field: K,
       value: DetectedSubscription[K]
     ) => {
-      setDetected((prev) =>
-        prev.map((sub, i) =>
-          i === index ? { ...sub, [field]: value } : sub
-        )
-      )
+      setDetected((prev) => prev.map((sub, i) => (i === index ? { ...sub, [field]: value } : sub)))
     },
     []
   )
@@ -263,8 +257,7 @@ export function CSVImportWizard({ open, onOpenChange, onDataChanged }: CSVImport
           status: 'active',
           shared_count: 1,
           is_pinned: false,
-          next_payment_date:
-            sub.next_payment_date || new Date().toISOString().split('T')[0],
+          next_payment_date: sub.next_payment_date || new Date().toISOString().split('T')[0],
         })
         imported++
       } catch (error) {
@@ -341,11 +334,7 @@ export function CSVImportWizard({ open, onOpenChange, onDataChanged }: CSVImport
           )}
 
           {step === 'mapping' && csvData && (
-            <MappingStep
-              csvData={csvData}
-              mapping={mapping}
-              onMappingChange={setMapping}
-            />
+            <MappingStep csvData={csvData} mapping={mapping} onMappingChange={setMapping} />
           )}
 
           {step === 'review' && (
@@ -360,9 +349,7 @@ export function CSVImportWizard({ open, onOpenChange, onDataChanged }: CSVImport
             />
           )}
 
-          {step === 'results' && results && (
-            <ResultsStep results={results} />
-          )}
+          {step === 'results' && results && <ResultsStep results={results} />}
         </div>
 
         <DialogFooter className="border-border flex-shrink-0 border-t pt-4">
@@ -459,9 +446,7 @@ function UploadStep({
         onDragOver={onDragOver}
         onDragLeave={onDragLeave}
         className={`flex flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed p-10 transition-colors ${
-          isDragging
-            ? 'border-primary bg-primary/5'
-            : 'border-border hover:border-primary/50'
+          isDragging ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'
         }`}
       >
         <div className="bg-primary/10 text-primary flex h-12 w-12 items-center justify-center rounded-full">
@@ -597,7 +582,7 @@ function MappingStep({
                     {csvData.headers.map((header, i) => (
                       <th
                         key={`preview-header-${header}-${i}`}
-                        className="text-muted-foreground whitespace-nowrap px-3 py-2 text-left font-[family-name:var(--font-mono)] text-[10px] font-normal tracking-widest uppercase"
+                        className="text-muted-foreground px-3 py-2 text-left font-[family-name:var(--font-mono)] text-[10px] font-normal tracking-widest whitespace-nowrap uppercase"
                       >
                         {header}
                       </th>
@@ -610,7 +595,7 @@ function MappingStep({
                       {csvData.headers.map((_, ci) => (
                         <td
                           key={`preview-cell-${ri}-${ci}`}
-                          className="text-foreground max-w-[200px] truncate whitespace-nowrap px-3 py-2 text-xs"
+                          className="text-foreground max-w-[200px] truncate px-3 py-2 text-xs whitespace-nowrap"
                         >
                           {row[ci] || ''}
                         </td>
@@ -672,8 +657,8 @@ function ReviewStep({
         <div className="flex items-start gap-2 rounded-lg border border-amber-500/30 bg-amber-500/5 p-3">
           <AlertCircle className="mt-0.5 h-4 w-4 flex-shrink-0 text-amber-400" />
           <p className="text-muted-foreground text-xs">
-            {duplicateCount} subscription{duplicateCount !== 1 ? 's' : ''} already exist and will
-            be skipped during import.
+            {duplicateCount} subscription{duplicateCount !== 1 ? 's' : ''} already exist and will be
+            skipped during import.
           </p>
         </div>
       )}
@@ -779,11 +764,7 @@ function ReviewStep({
                         <select
                           value={sub.category_name || ''}
                           onChange={(e) =>
-                            onUpdateField(
-                              i,
-                              'category_name',
-                              e.target.value || undefined
-                            )
+                            onUpdateField(i, 'category_name', e.target.value || undefined)
                           }
                           className="border-border bg-input text-foreground h-7 w-full appearance-none rounded border pr-6 pl-2 text-xs focus:outline-none"
                         >
@@ -835,11 +816,7 @@ function ResultsStep({ results }: { results: ImportResults }) {
   return (
     <div className="flex flex-col items-center gap-6 py-8">
       <div className="bg-primary/10 text-primary flex h-16 w-16 items-center justify-center rounded-full">
-        {results.imported > 0 ? (
-          <Check className="h-8 w-8" />
-        ) : (
-          <X className="h-8 w-8" />
-        )}
+        {results.imported > 0 ? <Check className="h-8 w-8" /> : <X className="h-8 w-8" />}
       </div>
 
       <div className="text-center">
@@ -853,9 +830,7 @@ function ResultsStep({ results }: { results: ImportResults }) {
             </p>
           )}
           {results.skipped > 0 && (
-            <p className="text-amber-400">
-              {results.skipped} skipped (already exist)
-            </p>
+            <p className="text-amber-400">{results.skipped} skipped (already exist)</p>
           )}
         </div>
       </div>

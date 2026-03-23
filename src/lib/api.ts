@@ -6,9 +6,7 @@
 // Lazy import Tauri invoke — always attempt the import, check at call time
 const tauriInvokePromise: Promise<
   ((cmd: string, args?: Record<string, unknown>) => Promise<unknown>) | null
-> = import('@tauri-apps/api/core')
-  .then((mod) => mod.invoke)
-  .catch(() => null)
+> = import('@tauri-apps/api/core').then((mod) => mod.invoke).catch(() => null)
 
 async function webFetch<T>(url: string, options?: RequestInit): Promise<T> {
   const res = await fetch(url, {
@@ -141,7 +139,6 @@ const API_MAP: Record<
     method: 'GET',
     path: (a) => `/api/analytics/categories?months=${(a.months as number | undefined) ?? 6}`,
   },
-
 
   // Data Management
   export_data: { method: 'GET', path: () => '/api/export' },

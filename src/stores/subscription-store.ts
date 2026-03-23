@@ -212,7 +212,6 @@ export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
     }
   },
 
-
   cancel: async (id, reason) => {
     const previousSubscriptions = get().subscriptions
     const now = new Date().toISOString()

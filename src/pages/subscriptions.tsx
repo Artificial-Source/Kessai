@@ -2,7 +2,17 @@ import { useState, useEffect, useMemo, lazy, Suspense } from 'react'
 import { toast } from 'sonner'
 import dayjs from 'dayjs'
 import isSameOrBefore from 'dayjs/plugin/isSameOrBefore'
-import { Plus, Search, LayoutGrid, List, Grid3x3, ArrowUpDown, ChevronDown, Ban, Trash2 } from 'lucide-react'
+import {
+  Plus,
+  Search,
+  LayoutGrid,
+  List,
+  Grid3x3,
+  ArrowUpDown,
+  ChevronDown,
+  Ban,
+  Trash2,
+} from 'lucide-react'
 import { useSubscriptions } from '@/hooks/use-subscriptions'
 import { useSubscriptionStore } from '@/stores/subscription-store'
 import { useCategoryStore } from '@/stores/category-store'
@@ -232,7 +242,15 @@ export function Subscriptions() {
           return 0
       }
     })
-  }, [activeSubscriptions, searchQuery, selectedCategories, selectedTags, subscriptionTagMap, sortOption, getCategory])
+  }, [
+    activeSubscriptions,
+    searchQuery,
+    selectedCategories,
+    selectedTags,
+    subscriptionTagMap,
+    sortOption,
+    getCategory,
+  ])
 
   // Separate totals by billing cycle (converted to display currency)
   const monthlySubsTotal = useMemo(() => {
@@ -347,7 +365,6 @@ export function Subscriptions() {
       setCancelTarget(null)
     }
   }
-
 
   const handleToggleActive = async (sub: Subscription) => {
     try {
@@ -608,10 +625,7 @@ export function Subscriptions() {
                           <p className="text-foreground truncate text-sm font-medium">{sub.name}</p>
                           <div className="text-muted-foreground flex items-center gap-2 font-[family-name:var(--font-mono)] text-[10px]">
                             {sub.cancelled_at && (
-                              <span>
-                                Cancelled{' '}
-                                {dayjs(sub.cancelled_at).format('MMM D, YYYY')}
-                              </span>
+                              <span>Cancelled {dayjs(sub.cancelled_at).format('MMM D, YYYY')}</span>
                             )}
                             {sub.cancellation_reason && (
                               <>

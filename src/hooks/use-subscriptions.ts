@@ -10,21 +10,31 @@ import type { Subscription } from '@/types/subscription'
 
 export function useSubscriptions() {
   // Use selective subscriptions for better performance
-  const { subscriptions, isLoading, error, fetch, add, update, remove, toggleActive, togglePinned, cancel } =
-    useSubscriptionStore(
-      useShallow((state) => ({
-        subscriptions: state.subscriptions,
-        isLoading: state.isLoading,
-        error: state.error,
-        fetch: state.fetch,
-        add: state.add,
-        update: state.update,
-        remove: state.remove,
-        toggleActive: state.toggleActive,
-        togglePinned: state.togglePinned,
-        cancel: state.cancel,
-      }))
-    )
+  const {
+    subscriptions,
+    isLoading,
+    error,
+    fetch,
+    add,
+    update,
+    remove,
+    toggleActive,
+    togglePinned,
+    cancel,
+  } = useSubscriptionStore(
+    useShallow((state) => ({
+      subscriptions: state.subscriptions,
+      isLoading: state.isLoading,
+      error: state.error,
+      fetch: state.fetch,
+      add: state.add,
+      update: state.update,
+      remove: state.remove,
+      toggleActive: state.toggleActive,
+      togglePinned: state.togglePinned,
+      cancel: state.cancel,
+    }))
+  )
 
   const { categories, fetch: fetchCategories } = useCategoryStore(
     useShallow((state) => ({

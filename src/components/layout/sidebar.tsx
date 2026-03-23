@@ -109,8 +109,10 @@ export function Sidebar() {
           <Search size={14} className="shrink-0" />
           {!isCollapsed && (
             <>
-              <span className="font-[family-name:var(--font-sans)] flex-1 text-left">Search...</span>
-              <kbd className="font-[family-name:var(--font-mono)] text-muted-foreground rounded border border-[var(--color-border)] bg-[var(--color-surface)] px-1 py-0.5 text-[10px] tracking-widest">
+              <span className="flex-1 text-left font-[family-name:var(--font-sans)]">
+                Search...
+              </span>
+              <kbd className="text-muted-foreground rounded border border-[var(--color-border)] bg-[var(--color-surface)] px-1 py-0.5 font-[family-name:var(--font-mono)] text-[10px] tracking-widest">
                 ⌘K
               </kbd>
             </>

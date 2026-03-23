@@ -153,7 +153,7 @@ export function NotificationSettings({
                     key={day}
                     type="button"
                     onClick={() => handleDayToggle(day)}
-                    className={`font-[family-name:var(--font-mono)] text-xs px-3 py-1.5 border transition-colors ${
+                    className={`border px-3 py-1.5 font-[family-name:var(--font-mono)] text-xs transition-colors ${
                       isActive
                         ? 'bg-primary text-primary-foreground border-primary'
                         : 'bg-muted/30 text-muted-foreground border-border hover:text-foreground hover:border-foreground/20'

@@ -111,38 +111,64 @@ function readFileText(file: File): Promise<string> {
 // ── Column Auto-Detection ─────────────────────────────────────────────
 
 const NAME_ALIASES = [
-  'name', 'merchant', 'description', 'vendor', 'payee', 'service',
-  'subscription', 'title', 'company', 'service_name', 'merchant_name',
-  'transaction_description', 'memo',
+  'name',
+  'merchant',
+  'description',
+  'vendor',
+  'payee',
+  'service',
+  'subscription',
+  'title',
+  'company',
+  'service_name',
+  'merchant_name',
+  'transaction_description',
+  'memo',
 ]
 
 const AMOUNT_ALIASES = [
-  'amount', 'price', 'cost', 'fee', 'value', 'total', 'charge',
-  'debit', 'payment', 'monthly_cost', 'sum',
+  'amount',
+  'price',
+  'cost',
+  'fee',
+  'value',
+  'total',
+  'charge',
+  'debit',
+  'payment',
+  'monthly_cost',
+  'sum',
 ]
 
-const CURRENCY_ALIASES = [
-  'currency', 'currency_code', 'cur', 'ccy',
-]
+const CURRENCY_ALIASES = ['currency', 'currency_code', 'cur', 'ccy']
 
 const CYCLE_ALIASES = [
-  'billing_cycle', 'cycle', 'frequency', 'period', 'billing_period',
-  'recurrence', 'interval',
+  'billing_cycle',
+  'cycle',
+  'frequency',
+  'period',
+  'billing_period',
+  'recurrence',
+  'interval',
 ]
 
-const CATEGORY_ALIASES = [
-  'category', 'category_name', 'group', 'type', 'tag',
-]
+const CATEGORY_ALIASES = ['category', 'category_name', 'group', 'type', 'tag']
 
 const DATE_ALIASES = [
-  'date', 'transaction_date', 'payment_date', 'next_payment',
-  'start_date', 'posted_date', 'booking_date', 'value_date',
-  'created', 'created_at', 'trans_date',
+  'date',
+  'transaction_date',
+  'payment_date',
+  'next_payment',
+  'start_date',
+  'posted_date',
+  'booking_date',
+  'value_date',
+  'created',
+  'created_at',
+  'trans_date',
 ]
 
-const NOTES_ALIASES = [
-  'notes', 'note', 'memo', 'comment', 'remarks', 'reference',
-]
+const NOTES_ALIASES = ['notes', 'note', 'memo', 'comment', 'remarks', 'reference']
 
 function normalizeHeader(header: string): string {
   return header
@@ -203,10 +229,7 @@ interface RawTransaction {
   rowIndex: number
 }
 
-function extractTransactions(
-  rows: string[][],
-  mapping: ColumnMapping
-): RawTransaction[] {
+function extractTransactions(rows: string[][], mapping: ColumnMapping): RawTransaction[] {
   const transactions: RawTransaction[] = []
 
   for (let i = 0; i < rows.length; i++) {
@@ -227,7 +250,8 @@ function extractTransactions(
     if (amount <= 0) continue
 
     const dateStr = mapping.date !== undefined ? row[mapping.date]?.trim() : undefined
-    const currency = mapping.currency !== undefined ? row[mapping.currency]?.trim().toUpperCase() : undefined
+    const currency =
+      mapping.currency !== undefined ? row[mapping.currency]?.trim().toUpperCase() : undefined
     const category = mapping.category !== undefined ? row[mapping.category]?.trim() : undefined
     const notes = mapping.notes !== undefined ? row[mapping.notes]?.trim() : undefined
 
@@ -382,7 +406,8 @@ export function detectRecurringCharges(
     }
 
     // Determine if this looks like a subscription (recurring same-amount charges)
-    const isLikelySubscription = txs.length >= 2 || (txs.length === 1 && mapping.billing_cycle !== undefined)
+    const isLikelySubscription =
+      txs.length >= 2 || (txs.length === 1 && mapping.billing_cycle !== undefined)
 
     detected.push({
       name: latestTx.name,

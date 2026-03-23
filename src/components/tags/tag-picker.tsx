@@ -74,11 +74,7 @@ export function TagPicker({ selectedTagIds, onChange }: TagPickerProps) {
       {selectedTags.length > 0 && (
         <div className="flex flex-wrap gap-1.5">
           {selectedTags.map((tag) => (
-            <TagBadge
-              key={tag.id}
-              tag={tag}
-              onRemove={() => handleToggle(tag.id)}
-            />
+            <TagBadge key={tag.id} tag={tag} onRemove={() => handleToggle(tag.id)} />
           ))}
         </div>
       )}
@@ -103,10 +99,7 @@ export function TagPicker({ selectedTagIds, onChange }: TagPickerProps) {
                 {isSelected ? (
                   <Check className="h-3 w-3" />
                 ) : (
-                  <span
-                    className="h-2 w-2 rounded-full"
-                    style={{ backgroundColor: tag.color }}
-                  />
+                  <span className="h-2 w-2 rounded-full" style={{ backgroundColor: tag.color }} />
                 )}
                 {tag.name}
               </button>

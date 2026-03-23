@@ -162,7 +162,7 @@ export function DataManagement({ onDataChanged }: DataManagementProps) {
       </div>
 
       <div className="border-border border-t pt-6">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
           <div>
             <p className="text-foreground font-[family-name:var(--font-sans)] text-sm font-medium">
               Import from CSV / Bank Statement
@@ -171,7 +171,11 @@ export function DataManagement({ onDataChanged }: DataManagementProps) {
               Detect recurring charges from bank exports with column mapping
             </p>
           </div>
-          <Button variant="outline" onClick={() => setShowCSVImportWizard(true)} className="gap-2 shrink-0">
+          <Button
+            variant="outline"
+            onClick={() => setShowCSVImportWizard(true)}
+            className="shrink-0 gap-2"
+          >
             <FileSpreadsheet className="h-4 w-4" />
             CSV Import
           </Button>

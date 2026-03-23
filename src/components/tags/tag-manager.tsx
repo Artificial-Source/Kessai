@@ -204,7 +204,7 @@ export function TagManager() {
                     className="border-border bg-muted/50 h-7 flex-1 text-sm"
                     maxLength={30}
                     // eslint-disable-next-line jsx-a11y/no-autofocus
-              autoFocus
+                    autoFocus
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') {
                         e.preventDefault()

@@ -1,11 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { apiInvoke as invoke } from '@/lib/api'
-import type {
-  MonthlySpend,
-  YearSummary,
-  SpendingVelocity,
-  CategorySpend,
-} from '@/types/analytics'
+import type { MonthlySpend, YearSummary, SpendingVelocity, CategorySpend } from '@/types/analytics'
 
 interface AnalyticsData {
   monthlySpending: MonthlySpend[]

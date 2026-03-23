@@ -6,7 +6,6 @@ import { formatCurrency } from '@/lib/currency'
 import type { CurrencyCode } from '@/lib/currency'
 import type { Subscription } from '@/types/subscription'
 
-
 interface ReminderPreviewProps {
   daysBefore: number[]
 }
@@ -119,8 +118,8 @@ export function ReminderPreview({ daysBefore }: ReminderPreviewProps) {
             key={`${sub.id}-${reminder.paymentDate}-${reminder.daysUntilReminder}`}
             className="border-border bg-muted/30 flex items-center justify-between gap-3 rounded-lg border px-3 py-2"
           >
-            <div className="flex flex-col gap-0.5 min-w-0">
-              <span className="text-foreground font-[family-name:var(--font-sans)] text-sm truncate">
+            <div className="flex min-w-0 flex-col gap-0.5">
+              <span className="text-foreground truncate font-[family-name:var(--font-sans)] text-sm">
                 {sub.name}
               </span>
               <span className="text-muted-foreground text-[11px]">
@@ -130,7 +129,7 @@ export function ReminderPreview({ daysBefore }: ReminderPreviewProps) {
                 </span>
               </span>
             </div>
-            <div className="flex flex-col items-end gap-0.5 shrink-0">
+            <div className="flex shrink-0 flex-col items-end gap-0.5">
               <span className="text-foreground font-[family-name:var(--font-mono)] text-sm">
                 {amount}
               </span>
@@ -142,7 +141,7 @@ export function ReminderPreview({ daysBefore }: ReminderPreviewProps) {
         )
       })}
       {remaining > 0 && (
-        <p className="text-muted-foreground font-[family-name:var(--font-mono)] text-[10px] text-center pt-1">
+        <p className="text-muted-foreground pt-1 text-center font-[family-name:var(--font-mono)] text-[10px]">
           +{remaining} more reminder{remaining !== 1 ? 's' : ''}
         </p>
       )}

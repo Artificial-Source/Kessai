@@ -1,13 +1,5 @@
 import { memo, useMemo, useCallback } from 'react'
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-} from 'recharts'
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import dayjs from 'dayjs'
 import { BarChart3 } from 'lucide-react'
 import { formatCurrency, type CurrencyCode } from '@/lib/currency'
