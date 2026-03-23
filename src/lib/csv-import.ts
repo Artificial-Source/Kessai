@@ -219,7 +219,7 @@ function extractTransactions(
     const name = row[nameIdx]?.trim()
     if (!name) continue
 
-    const amountStr = row[amountIdx]?.trim().replace(/[^0-9.\-]/g, '')
+    const amountStr = row[amountIdx]?.trim().replace(/[^0-9.-]/g, '')
     let amount = parseFloat(amountStr)
     if (isNaN(amount)) continue
     // Bank statements often show debits as negative

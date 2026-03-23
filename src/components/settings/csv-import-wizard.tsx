@@ -262,6 +262,7 @@ export function CSVImportWizard({ open, onOpenChange, onDataChanged }: CSVImport
           is_active: true,
           status: 'active',
           shared_count: 1,
+          is_pinned: false,
           next_payment_date:
             sub.next_payment_date || new Date().toISOString().split('T')[0],
         })
