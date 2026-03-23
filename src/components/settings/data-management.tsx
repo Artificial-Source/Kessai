@@ -1,9 +1,10 @@
 import { useState, useRef } from 'react'
 import { toast } from 'sonner'
-import { Download, Upload, FileUp } from 'lucide-react'
+import { Download, Upload, FileUp, FileSpreadsheet } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { ImportDialog } from '@/components/settings/import-dialog'
+import { CSVImportWizard } from '@/components/settings/csv-import-wizard'
 import {
   exportData,
   saveBackupToFile,
@@ -21,6 +22,7 @@ export function DataManagement({ onDataChanged }: DataManagementProps) {
   const [isImporting, setIsImporting] = useState(false)
   const [showImportConfirm, setShowImportConfirm] = useState(false)
   const [showImportDialog, setShowImportDialog] = useState(false)
+  const [showCSVImportWizard, setShowCSVImportWizard] = useState(false)
   const [pendingImportData, setPendingImportData] = useState<unknown>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -159,6 +161,23 @@ export function DataManagement({ onDataChanged }: DataManagementProps) {
         </div>
       </div>
 
+      <div className="border-border border-t pt-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <p className="text-foreground font-[family-name:var(--font-sans)] text-sm font-medium">
+              Import from CSV / Bank Statement
+            </p>
+            <p className="text-muted-foreground text-xs">
+              Detect recurring charges from bank exports with column mapping
+            </p>
+          </div>
+          <Button variant="outline" onClick={() => setShowCSVImportWizard(true)} className="gap-2 shrink-0">
+            <FileSpreadsheet className="h-4 w-4" />
+            CSV Import
+          </Button>
+        </div>
+      </div>
+
       <ConfirmDialog
         open={showImportConfirm}
         onOpenChange={setShowImportConfirm}
@@ -171,6 +190,12 @@ export function DataManagement({ onDataChanged }: DataManagementProps) {
       <ImportDialog
         open={showImportDialog}
         onOpenChange={setShowImportDialog}
+        onDataChanged={onDataChanged}
+      />
+
+      <CSVImportWizard
+        open={showCSVImportWizard}
+        onOpenChange={setShowCSVImportWizard}
         onDataChanged={onDataChanged}
       />
     </div>
