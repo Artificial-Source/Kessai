@@ -172,5 +172,9 @@ export async function apiInvoke<T>(command: string, args?: Record<string, unknow
     options.body = JSON.stringify(bodyKey ? args[bodyKey] : args)
   }
 
-  return webFetch<T>(url, options)
+  try {
+    return await webFetch<T>(url, options)
+  } catch (err) {
+    throw new Error(`${command}: ${err instanceof Error ? err.message : String(err)}`)
+  }
 }

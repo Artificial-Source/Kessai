@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import dayjs from 'dayjs'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import { CalendarDay } from '@/components/calendar/calendar-day'
 import { CalendarDayPanel } from '@/components/calendar/calendar-day-panel'
@@ -85,13 +86,21 @@ export function CalendarPage() {
   }, [navigateMonth, goToToday])
 
   const handleMarkPaid = async (subscriptionId: string, dueDate: string, amount: number) => {
-    await markAsPaid(subscriptionId, dueDate, amount)
-    refetchPayments()
+    try {
+      await markAsPaid(subscriptionId, dueDate, amount)
+      refetchPayments()
+    } catch {
+      toast.error('Error', { description: 'Failed to record payment.' })
+    }
   }
 
   const handleSkip = async (subscriptionId: string, dueDate: string, amount: number) => {
-    await skipPayment(subscriptionId, dueDate, amount)
-    refetchPayments()
+    try {
+      await skipPayment(subscriptionId, dueDate, amount)
+      refetchPayments()
+    } catch {
+      toast.error('Error', { description: 'Failed to skip payment.' })
+    }
   }
 
   const handleEdit = (subscription: Subscription) => {

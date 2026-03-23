@@ -8,6 +8,7 @@ import { MonthlySpendingChart } from '@/components/analytics/monthly-spending-ch
 import { YearSummaryCard } from '@/components/analytics/year-summary-card'
 import { CategoryBreakdownChart } from '@/components/analytics/category-breakdown-chart'
 import { AnalyticsSkeleton } from '@/components/analytics/analytics-skeleton'
+import { AlertTriangle } from 'lucide-react'
 import type { CurrencyCode } from '@/lib/currency'
 
 type MonthsOption = 6 | 12
@@ -24,10 +25,8 @@ export function AnalyticsPage() {
   )
   const currency = (settings?.currency || 'USD') as CurrencyCode
 
-  const { monthlySpending, yearSummary, velocity, categorySpending, isLoading } = useAnalytics(
-    year,
-    months
-  )
+  const { monthlySpending, yearSummary, velocity, categorySpending, isLoading, error } =
+    useAnalytics(year, months)
 
   if (isLoading) {
     return <AnalyticsSkeleton />
@@ -80,6 +79,16 @@ export function AnalyticsPage() {
           </div>
         </div>
       </header>
+
+      {/* Partial failure banner */}
+      {error && (
+        <div className="glass-card flex items-center gap-3 border-amber-500/20 bg-amber-500/5 p-4">
+          <AlertTriangle className="h-4 w-4 shrink-0 text-amber-500" />
+          <p className="text-muted-foreground text-sm">
+            Some analytics data could not be loaded. Showing available data.
+          </p>
+        </div>
+      )}
 
       {/* Spending Velocity */}
       {velocity && <SpendingVelocityCard velocity={velocity} currency={currency} />}

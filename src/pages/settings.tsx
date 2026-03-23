@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { toast } from 'sonner'
 import { useSettings } from '@/hooks/use-settings'
 import { useTheme } from '@/components/theme-provider'
 import { useSubscriptionStore } from '@/stores/subscription-store'
@@ -69,9 +70,13 @@ export function SettingsPage() {
     const timer = setTimeout(async () => {
       const val = parseFloat(budgetInput)
       if (!isNaN(val) && val > 0) {
-        await setBudget(val)
-        setBudgetSaved(true)
-        setTimeout(() => setBudgetSaved(false), 2000)
+        try {
+          await setBudget(val)
+          setBudgetSaved(true)
+          setTimeout(() => setBudgetSaved(false), 2000)
+        } catch {
+          toast.error('Failed to save budget')
+        }
       }
     }, 800)
     return () => clearTimeout(timer)
@@ -211,9 +216,13 @@ export function SettingsPage() {
                     aria-label="Clear budget"
                     className="text-muted-foreground hover:text-foreground absolute top-1/2 right-2 -translate-y-1/2 transition-colors"
                     onClick={async () => {
-                      await setBudget(null)
-                      setBudgetInput('')
-                      setBudgetSaved(false)
+                      try {
+                        await setBudget(null)
+                        setBudgetInput('')
+                        setBudgetSaved(false)
+                      } catch {
+                        toast.error('Failed to clear budget')
+                      }
                     }}
                   >
                     <X className="h-3.5 w-3.5" />

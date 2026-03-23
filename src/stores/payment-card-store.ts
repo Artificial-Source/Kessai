@@ -43,6 +43,7 @@ export const usePaymentCardStore = create<PaymentCardState>((set, get) => ({
       set((state) => ({ cards: [...state.cards, card] }))
       return card
     } catch (error) {
+      set({ error: String(error) })
       console.error('Failed to add payment card:', error)
       throw error
     }
@@ -56,7 +57,7 @@ export const usePaymentCardStore = create<PaymentCardState>((set, get) => ({
         cards: state.cards.map((c) => (c.id === id ? updated : c)),
       }))
     } catch (error) {
-      set({ cards: previousCards })
+      set({ cards: previousCards, error: String(error) })
       console.error('Failed to update payment card:', error)
       throw error
     }
@@ -68,7 +69,7 @@ export const usePaymentCardStore = create<PaymentCardState>((set, get) => ({
     try {
       await invoke('delete_payment_card', { id })
     } catch (error) {
-      set({ cards: previousCards })
+      set({ cards: previousCards, error: String(error) })
       console.error('Failed to remove payment card:', error)
       throw error
     }

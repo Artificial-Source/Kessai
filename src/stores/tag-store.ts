@@ -32,11 +32,17 @@ export const useTagStore = create<TagState>((set, get) => ({
   },
 
   add: async (tag) => {
-    const created = await invoke<Tag>('create_tag', { data: tag })
-    set((state) => ({
-      tags: [...state.tags, created].sort((a, b) => a.name.localeCompare(b.name)),
-    }))
-    return created
+    try {
+      const created = await invoke<Tag>('create_tag', { data: tag })
+      set((state) => ({
+        tags: [...state.tags, created].sort((a, b) => a.name.localeCompare(b.name)),
+      }))
+      return created
+    } catch (error) {
+      set({ error: String(error) })
+      console.error('Failed to add tag:', error)
+      throw error
+    }
   },
 
   update: async (id, data) => {
@@ -56,7 +62,7 @@ export const useTagStore = create<TagState>((set, get) => ({
           .sort((a, b) => a.name.localeCompare(b.name)),
       }))
     } catch (error) {
-      set({ tags: previousTags })
+      set({ tags: previousTags, error: String(error) })
       console.error('Failed to update tag:', error)
       throw error
     }
@@ -72,29 +78,46 @@ export const useTagStore = create<TagState>((set, get) => ({
     try {
       await invoke('delete_tag', { id })
     } catch (error) {
-      set({ tags: previousTags })
+      set({ tags: previousTags, error: String(error) })
       console.error('Failed to remove tag:', error)
       throw error
     }
   },
 
   addToSubscription: async (subscriptionId, tagId) => {
-    await invoke('add_subscription_tag', {
-      subscriptionId,
-      tagId,
-    })
+    try {
+      await invoke('add_subscription_tag', {
+        subscriptionId,
+        tagId,
+      })
+    } catch (error) {
+      set({ error: String(error) })
+      console.error('Failed to add tag to subscription:', error)
+      throw error
+    }
   },
 
   removeFromSubscription: async (subscriptionId, tagId) => {
-    await invoke('remove_subscription_tag', {
-      subscriptionId,
-      tagId,
-    })
+    try {
+      await invoke('remove_subscription_tag', {
+        subscriptionId,
+        tagId,
+      })
+    } catch (error) {
+      set({ error: String(error) })
+      console.error('Failed to remove tag from subscription:', error)
+      throw error
+    }
   },
 
   fetchForSubscription: async (subscriptionId) => {
-    return await invoke<Tag[]>('list_subscription_tags', {
-      subscriptionId,
-    })
+    try {
+      return await invoke<Tag[]>('list_subscription_tags', {
+        subscriptionId,
+      })
+    } catch (error) {
+      console.error('Failed to fetch tags for subscription:', error)
+      return []
+    }
   },
 }))

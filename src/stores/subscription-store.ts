@@ -256,6 +256,7 @@ export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
         needingReview: state.needingReview.filter((s) => s.id !== id),
       }))
     } catch (error) {
+      set({ error: String(error) })
       console.error('Failed to mark subscription as reviewed:', error)
       throw error
     }
@@ -266,6 +267,7 @@ export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
       const subs = await invoke<Subscription[]>('list_subscriptions_needing_review', { days })
       set({ needingReview: subs })
     } catch (error) {
+      set({ error: String(error) })
       console.error('Failed to fetch subscriptions needing review:', error)
     }
   },
