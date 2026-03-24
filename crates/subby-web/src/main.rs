@@ -28,6 +28,7 @@ struct Args {
 
 pub struct AppState {
     pub core: SubbyCore,
+    pub logos_dir: PathBuf,
 }
 
 fn resolve_db_path(cli_path: Option<PathBuf>) -> PathBuf {
@@ -84,8 +85,12 @@ async fn main() -> anyhow::Result<()> {
     tracing::info!("Opening database at: {}", db_path.display());
     tracing::info!("Logs directory: {}", logs_dir.display());
 
+    let logos_dir = db_dir.join("logos");
+    std::fs::create_dir_all(&logos_dir).ok();
+    tracing::info!("Logos directory: {}", logos_dir.display());
+
     let core = SubbyCore::new(&db_path)?;
-    let state = Arc::new(AppState { core });
+    let state = Arc::new(AppState { core, logos_dir });
 
     let api_routes = routes::api_router(state);
 
