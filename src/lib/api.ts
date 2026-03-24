@@ -4,10 +4,25 @@
  */
 import { logger } from '@/lib/logger'
 
-// Lazy import Tauri invoke — always attempt the import, check at call time
-const tauriInvokePromise: Promise<
-  ((cmd: string, args?: Record<string, unknown>) => Promise<unknown>) | null
-> = import('@tauri-apps/api/core').then((mod) => mod.invoke).catch(() => null)
+// Lazy import Tauri invoke — resolve once, then cache the result
+let resolvedInvoke: ((cmd: string, args?: Record<string, unknown>) => Promise<unknown>) | null =
+  null
+let invokeResolved = false
+
+async function getTauriInvoke() {
+  if (invokeResolved) return resolvedInvoke
+  try {
+    const mod = await import('@tauri-apps/api/core')
+    // Test that invoke actually works (not just that the module loaded)
+    if (mod.invoke && typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window) {
+      resolvedInvoke = mod.invoke
+    }
+  } catch {
+    // Not in Tauri environment
+  }
+  invokeResolved = true
+  return resolvedInvoke
+}
 
 async function webFetch<T>(url: string, options?: RequestInit): Promise<T> {
   const res = await fetch(url, {
@@ -154,7 +169,7 @@ const API_MAP: Record<
 
 export async function apiInvoke<T>(command: string, args?: Record<string, unknown>): Promise<T> {
   // Try Tauri IPC first (works in desktop app)
-  const invoke = await tauriInvokePromise
+  const invoke = await getTauriInvoke()
   if (invoke) {
     try {
       const result = await (invoke(command, args) as Promise<T>)
