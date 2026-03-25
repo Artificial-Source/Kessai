@@ -9,11 +9,11 @@ body:
         Thanks for taking the time to report a bug.
 
   - type: textarea
-    id: summary
+    id: what-happened
     attributes:
-      label: Summary
-      description: What happened?
-      placeholder: Clear and concise description of the bug.
+      label: What happened
+      description: A clear and concise description of the bug.
+      placeholder: Describe what happened.
     validations:
       required: true
 
@@ -33,32 +33,44 @@ body:
     id: expected
     attributes:
       label: Expected behavior
+      description: What did you expect to happen instead?
       placeholder: What did you expect to happen?
     validations:
       required: true
 
+  - type: textarea
+    id: error-output
+    attributes:
+      label: Error output
+      description: Paste any relevant error messages or logs.
+      render: text
+
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots
+      description: If applicable, add screenshots to help explain the problem.
+
   - type: input
     id: version
     attributes:
-      label: App version
-      placeholder: e.g. 0.1.0
+      label: Version
+      description: Subby version or commit hash.
+      placeholder: "v0.2.0 or commit abc1234"
     validations:
       required: true
 
-  - type: dropdown
+  - type: input
     id: os
     attributes:
-      label: Operating system
-      options:
-        - Linux
-        - macOS
-        - Windows
-        - Other
+      label: OS / Platform
+      description: Operating system and version.
+      placeholder: "e.g. Fedora 43, macOS 15.3, Windows 11"
     validations:
       required: true
 
   - type: textarea
-    id: logs
+    id: additional
     attributes:
-      label: Logs or screenshots
-      description: Paste relevant logs/screenshots if available.
+      label: Additional context
+      description: Any other context about the problem.
