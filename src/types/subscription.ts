@@ -103,21 +103,21 @@ export const STATUS_LABELS: Record<SubscriptionStatus, string> = {
 }
 
 export const STATUS_COLORS: Record<SubscriptionStatus, string> = {
-  trial: 'text-blue-400',
-  active: 'text-emerald-500',
-  paused: 'text-amber-500',
-  pending_cancellation: 'text-orange-400',
-  grace_period: 'text-yellow-500',
-  cancelled: 'text-red-400',
+  trial: 'text-info',
+  active: 'text-success',
+  paused: 'text-warning',
+  pending_cancellation: 'text-accent-orange',
+  grace_period: 'text-warning',
+  cancelled: 'text-destructive',
 }
 
 export const STATUS_DOT_COLORS: Record<SubscriptionStatus, string> = {
-  trial: 'bg-blue-400',
-  active: 'bg-emerald-500',
-  paused: 'bg-amber-500',
-  pending_cancellation: 'bg-orange-400',
-  grace_period: 'bg-yellow-500',
-  cancelled: 'bg-red-400',
+  trial: 'bg-info',
+  active: 'bg-success',
+  paused: 'bg-warning',
+  pending_cancellation: 'bg-accent-orange',
+  grace_period: 'bg-warning',
+  cancelled: 'bg-destructive',
 }
 
 export function isBillableStatus(status: SubscriptionStatus): boolean {
@@ -146,6 +146,16 @@ export function calculateUserYearlyAmount(
   sharedCount: number
 ): number {
   return calculateYearlyAmount(amount, cycle) / Math.max(sharedCount, 1)
+}
+
+export function compareSubscriptionDisplayPriority(a: Subscription, b: Subscription): number {
+  if (a.is_pinned && !b.is_pinned) return -1
+  if (!a.is_pinned && b.is_pinned) return 1
+
+  if (a.is_active && !b.is_active) return -1
+  if (!a.is_active && b.is_active) return 1
+
+  return 0
 }
 
 export type NormalizationPeriod = 'as-is' | 'daily' | 'weekly' | 'monthly' | 'yearly'
