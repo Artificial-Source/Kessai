@@ -1,4 +1,5 @@
 import type { CurrencyCode } from '@/lib/currency'
+import { useSettingsStore } from '@/stores/settings-store'
 
 /**
  * Exchange rate cache entry with TTL tracking.
@@ -13,11 +14,39 @@ interface RateCache {
 }
 
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000 // 24 hours
-const STORAGE_KEY = 'subby-exchange-rates'
+const STORAGE_KEY = 'kessai-exchange-rates'
 const API_BASE = 'https://api.frankfurter.app'
 
 /** In-memory rate cache, keyed by base currency */
 let memoryCache: Record<string, RateCache> = {}
+
+function getManualRate(from: CurrencyCode, to: CurrencyCode): number | null {
+  if (from === to) return 1
+
+  const settings = useSettingsStore.getState().settings
+  if (!settings) return null
+
+  const mainCurrency = settings.currency as CurrencyCode
+  const rates = settings.display_exchange_rates || {}
+
+  if (to === mainCurrency) {
+    return rates[from] ?? null
+  }
+
+  if (from === mainCurrency) {
+    const reverse = rates[to]
+    return reverse && reverse !== 0 ? 1 / reverse : null
+  }
+
+  const fromToMain = rates[from]
+  const toToMain = rates[to]
+
+  if (fromToMain !== undefined && toToMain !== undefined && toToMain !== 0) {
+    return fromToMain / toToMain
+  }
+
+  return null
+}
 
 /**
  * Load cached rates from localStorage as fallback.
@@ -122,6 +151,11 @@ export async function convertCurrency(
 ): Promise<number> {
   if (from === to) return amount
 
+  const manualRate = getManualRate(from, to)
+  if (manualRate !== null) {
+    return amount * manualRate
+  }
+
   const rates = await getRates(from)
   const rate = rates[to]
 
@@ -142,6 +176,38 @@ export async function convertCurrency(
 }
 
 /**
+ * Async conversion that returns null instead of a 1:1 fallback when no rate is available.
+ */
+export async function convertCurrencyStrict(
+  amount: number,
+  from: CurrencyCode,
+  to: CurrencyCode
+): Promise<number | null> {
+  if (from === to) return amount
+
+  const manualRate = getManualRate(from, to)
+  if (manualRate !== null) {
+    return amount * manualRate
+  }
+
+  const rates = await getRates(from)
+  const rate = rates[to]
+
+  if (rate !== undefined) {
+    return amount * rate
+  }
+
+  const reverseRates = await getRates(to)
+  const reverseRate = reverseRates[from]
+
+  if (reverseRate !== undefined && reverseRate !== 0) {
+    return amount / reverseRate
+  }
+
+  return null
+}
+
+/**
  * Synchronous version that only uses cached rates.
  * Returns null if no cached rate is available.
  * Useful for rendering where async is inconvenient.
@@ -157,6 +223,11 @@ export function convertCurrencyCached(
   to: CurrencyCode
 ): number | null {
   if (from === to) return amount
+
+  const manualRate = getManualRate(from, to)
+  if (manualRate !== null) {
+    return amount * manualRate
+  }
 
   // Check memory cache
   const cached = memoryCache[from]
@@ -201,6 +272,11 @@ export async function preloadRates(currencies: CurrencyCode[]): Promise<void> {
  */
 export function getCachedRate(from: CurrencyCode, to: CurrencyCode): number | null {
   if (from === to) return 1
+
+  const manualRate = getManualRate(from, to)
+  if (manualRate !== null) {
+    return manualRate
+  }
 
   const cached = memoryCache[from]
   if (cached !== undefined && cached.rates[to] !== undefined) {

@@ -7,6 +7,7 @@ const _settingsSchema = z.object({
   id: z.string(),
   theme: themeSchema,
   currency: z.string().length(3),
+  display_exchange_rates: z.record(z.string().length(3), z.number().positive()).default({}),
   notification_enabled: z.boolean(),
   notification_days_before: z.array(z.number()),
   notification_advance_days: z.number().min(1).max(30),
@@ -25,6 +26,7 @@ export type Settings = z.infer<typeof _settingsSchema>
 export const DEFAULT_SETTINGS: Omit<Settings, 'id'> = {
   theme: 'dark',
   currency: 'USD',
+  display_exchange_rates: {},
   notification_enabled: true,
   notification_days_before: [1, 3, 7],
   notification_advance_days: 1,

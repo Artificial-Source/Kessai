@@ -11,6 +11,7 @@ const settingsSchema = z.object({
   id: z.string(),
   theme: themeSchema,
   currency: z.string().length(3),
+  display_exchange_rates: z.record(z.string().length(3), z.number().positive()),
   notification_enabled: z.boolean(),
   notification_days_before: z.array(z.number()),
   notification_advance_days: z.number().min(1).max(30),
@@ -108,6 +109,7 @@ describe('DEFAULT_SETTINGS', () => {
   it('has expected default values', () => {
     expect(DEFAULT_SETTINGS.theme).toBe('dark')
     expect(DEFAULT_SETTINGS.currency).toBe('USD')
+    expect(DEFAULT_SETTINGS.display_exchange_rates).toEqual({})
     expect(DEFAULT_SETTINGS.notification_enabled).toBe(true)
     expect(DEFAULT_SETTINGS.animation_speed).toBe('normal')
     expect(DEFAULT_SETTINGS.reduce_motion).toBe(false)

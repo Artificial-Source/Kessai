@@ -12,6 +12,7 @@ const mockSettings = {
   id: 'singleton',
   theme: 'dark' as const,
   currency: 'USD',
+  display_exchange_rates: {},
   notification_enabled: true,
   notification_days_before: [1, 3, 7],
   notification_advance_days: 1,

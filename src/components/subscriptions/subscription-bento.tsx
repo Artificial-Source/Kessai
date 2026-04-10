@@ -1,11 +1,12 @@
 import { useState, useEffect, useMemo, useCallback, useRef, memo } from 'react'
 import { Pin } from 'lucide-react'
 import { formatCurrency, type CurrencyCode } from '@/lib/currency'
-import { convertCurrencyCached } from '@/lib/exchange-rates'
+import { convertCurrency, convertCurrencyCached } from '@/lib/exchange-rates'
 import { getLogoDataUrl } from '@/lib/logo-storage'
 import {
   calculateMonthlyAmount,
   calculateNormalizedAmount,
+  compareSubscriptionDisplayPriority,
   NORMALIZATION_SUFFIXES,
 } from '@/types/subscription'
 import type { Subscription, NormalizationPeriod } from '@/types/subscription'
@@ -19,26 +20,20 @@ interface SubscriptionBentoProps {
   onEdit: (subscription: Subscription) => void
 }
 
-// Vibrant color palette
 const BENTO_COLORS = [
-  '#bf5af2', // Violet
-  '#06b6d4', // Cyan
-  '#f97316', // Orange
-  '#10b981', // Emerald
-  '#ec4899', // Pink
-  '#3b82f6', // Blue
-  '#eab308', // Yellow
-  '#ef4444', // Red
-  '#14b8a6', // Teal
-  '#a855f7', // Purple
-  '#f43f5e', // Rose
-  '#22c55e', // Green
+  'var(--color-bento-1)',
+  'var(--color-bento-2)',
+  'var(--color-bento-3)',
+  'var(--color-bento-4)',
+  'var(--color-bento-5)',
 ]
 
-const GAP = 3 // Gap between tiles in pixels
+const GAP = 3
+const MIN_LAYOUT_VALUE = 16
 
 interface TreemapNode {
   value: number
+  layoutValue: number
   subscription: Subscription
   colorIndex: number
 }
@@ -51,14 +46,36 @@ interface TreemapRect {
   node: TreemapNode
 }
 
-// Squarify treemap algorithm implementation
+function worstAspectRatio(
+  row: TreemapNode[],
+  rowValue: number,
+  side: number,
+  totalRemaining: number,
+  container: { width: number; height: number }
+): number {
+  if (row.length === 0 || rowValue === 0) return Infinity
+
+  const area = (rowValue / totalRemaining) * container.width * container.height
+  const rowLength = area / side
+
+  let worst = 0
+  for (const node of row) {
+    const nodeArea = (node.layoutValue / rowValue) * area
+    const nodeLength = nodeArea / rowLength
+    const aspect = Math.max(rowLength / nodeLength, nodeLength / rowLength)
+    worst = Math.max(worst, aspect)
+  }
+
+  return worst
+}
+
 function squarify(
   nodes: TreemapNode[],
   container: { x: number; y: number; width: number; height: number }
 ): TreemapRect[] {
   if (nodes.length === 0) return []
 
-  const totalValue = nodes.reduce((sum, n) => sum + n.value, 0)
+  const totalValue = nodes.reduce((sum, node) => sum + node.layoutValue, 0)
   if (totalValue === 0) return []
 
   const results: TreemapRect[] = []
@@ -66,45 +83,41 @@ function squarify(
   let currentRect = { ...container }
 
   while (remaining.length > 0) {
-    // Prefer vertical layout (items stack top to bottom) by inverting the usual logic
     const isHorizontal = currentRect.width < currentRect.height
     const side = isHorizontal ? currentRect.height : currentRect.width
 
-    // Find optimal row using squarify algorithm
     const row: TreemapNode[] = []
     let rowValue = 0
-    const remainingValue = remaining.reduce((sum, n) => sum + n.value, 0)
+    const remainingValue = remaining.reduce((sum, node) => sum + node.layoutValue, 0)
 
     for (const node of remaining) {
-      const testRow = [...row, node]
-      const testRowValue = rowValue + node.value
+      const nextRow = [...row, node]
+      const nextRowValue = rowValue + node.layoutValue
 
       if (row.length === 0) {
         row.push(node)
-        rowValue = node.value
+        rowValue = node.layoutValue
         continue
       }
 
-      // Calculate aspect ratios
       const currentWorst = worstAspectRatio(row, rowValue, side, remainingValue, currentRect)
-      const newWorst = worstAspectRatio(testRow, testRowValue, side, remainingValue, currentRect)
+      const nextWorst = worstAspectRatio(nextRow, nextRowValue, side, remainingValue, currentRect)
 
-      if (newWorst <= currentWorst) {
+      if (nextWorst <= currentWorst) {
         row.push(node)
-        rowValue = testRowValue
+        rowValue = nextRowValue
       } else {
         break
       }
     }
 
-    // Layout the row
     const rowArea = (rowValue / remainingValue) * currentRect.width * currentRect.height
     const rowSize = isHorizontal ? rowArea / currentRect.height : rowArea / currentRect.width
 
     let offset = 0
     for (const node of row) {
       const nodeSize =
-        (node.value / rowValue) * (isHorizontal ? currentRect.height : currentRect.width)
+        (node.layoutValue / rowValue) * (isHorizontal ? currentRect.height : currentRect.width)
 
       if (isHorizontal) {
         results.push({
@@ -127,7 +140,6 @@ function squarify(
       offset += nodeSize
     }
 
-    // Update remaining rectangle
     if (isHorizontal) {
       currentRect = {
         x: currentRect.x + rowSize,
@@ -144,34 +156,16 @@ function squarify(
       }
     }
 
-    // Remove processed nodes
     remaining = remaining.slice(row.length)
   }
 
   return results
 }
 
-function worstAspectRatio(
-  row: TreemapNode[],
-  rowValue: number,
-  side: number,
-  totalRemaining: number,
-  container: { width: number; height: number }
-): number {
-  if (row.length === 0 || rowValue === 0) return Infinity
-
-  const area = (rowValue / totalRemaining) * container.width * container.height
-  const rowLength = area / side
-
-  let worst = 0
-  for (const node of row) {
-    const nodeArea = (node.value / rowValue) * area
-    const nodeLength = nodeArea / rowLength
-    const aspect = Math.max(rowLength / nodeLength, nodeLength / rowLength)
-    worst = Math.max(worst, aspect)
-  }
-
-  return worst
+function formatPercentage(percentage: number): string {
+  if (percentage <= 0) return '0%'
+  if (percentage < 1) return `${percentage.toFixed(1)}%`
+  return `${percentage.toFixed(0)}%`
 }
 
 const BentoTile = memo(function BentoTile({
@@ -181,9 +175,10 @@ const BentoTile = memo(function BentoTile({
   percentage,
   currency,
   costNormalization,
+  convertedAmount,
   width,
   height,
-  onClick,
+  onEdit,
 }: {
   subscription: Subscription
   category?: Category
@@ -191,58 +186,60 @@ const BentoTile = memo(function BentoTile({
   percentage: number
   currency: CurrencyCode
   costNormalization: NormalizationPeriod
+  convertedAmount: number
   width: number
   height: number
-  onClick: () => void
+  onEdit: (subscription: Subscription) => void
 }) {
   const [logoSrc, setLogoSrc] = useState<string | null>(null)
-  const subCurrency = (subscription.currency || currency) as CurrencyCode
-  const convertedAmount =
-    subCurrency === currency
-      ? subscription.amount
-      : (convertCurrencyCached(subscription.amount, subCurrency, currency) ?? subscription.amount)
   const isNormalized = costNormalization !== 'as-is'
   const displayAmount = isNormalized
     ? calculateNormalizedAmount(convertedAmount, subscription.billing_cycle, costNormalization)
     : calculateMonthlyAmount(convertedAmount, subscription.billing_cycle)
   const bgColor = BENTO_COLORS[colorIndex % BENTO_COLORS.length]
 
-  // Determine tile size for adaptive content
   const isLarge = width > 150 && height > 100
   const isMedium = width > 100 && height > 80
   const isTiny = width < 60 || height < 50
 
   useEffect(() => {
-    if (subscription.logo_url) {
-      getLogoDataUrl(subscription.logo_url).then(setLogoSrc)
+    if (!subscription.logo_url) {
+      setLogoSrc(null)
+      return
+    }
+
+    let isStale = false
+    getLogoDataUrl(subscription.logo_url).then((src) => {
+      if (!isStale) setLogoSrc(src)
+    })
+
+    return () => {
+      isStale = true
     }
   }, [subscription.logo_url])
 
   return (
     <button
-      onClick={onClick}
+      onClick={() => onEdit(subscription)}
       className="group absolute inset-0 overflow-hidden text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
-      style={{ backgroundColor: bgColor, borderRadius: '4px' }}
+      style={{ backgroundColor: bgColor, borderRadius: 'var(--radius-sm)' }}
     >
-      {/* Subtle gradient overlay */}
       <div
         className="pointer-events-none absolute inset-0"
         style={{
-          background: 'linear-gradient(135deg, rgba(255,255,255,0.12) 0%, transparent 60%)',
+          background: 'linear-gradient(135deg, var(--color-subtle-overlay) 0%, transparent 60%)',
         }}
       />
 
-      {/* Content */}
       <div
         className={`relative z-10 flex h-full flex-col justify-between ${
           isLarge ? 'p-4' : isMedium ? 'p-3' : 'p-2'
         }`}
       >
-        {/* Top: Logo + Name */}
         <div className="flex items-start justify-between gap-1">
           <div className="min-w-0 flex-1">
             <h4
-              className={`leading-tight font-bold text-white ${
+              className={`text-foreground leading-tight font-bold ${
                 isLarge ? 'text-base' : isMedium ? 'text-sm' : 'text-xs'
               }`}
               style={{
@@ -255,13 +252,13 @@ const BentoTile = memo(function BentoTile({
               {subscription.name}
             </h4>
             {isLarge && category && (
-              <p className="mt-0.5 truncate text-xs text-white/50">{category.name}</p>
+              <p className="text-muted-foreground mt-0.5 truncate text-xs">{category.name}</p>
             )}
           </div>
 
           {subscription.is_pinned && (
             <Pin
-              className={`flex-shrink-0 fill-white/80 text-white/80 ${
+              className={`text-muted-foreground fill-muted-foreground flex-shrink-0 ${
                 isLarge ? 'h-4 w-4' : isMedium ? 'h-3.5 w-3.5' : 'h-3 w-3'
               }`}
             />
@@ -271,57 +268,54 @@ const BentoTile = memo(function BentoTile({
             <img
               src={logoSrc}
               alt=""
-              className={`flex-shrink-0 bg-white/10 object-contain ${
+              className={`bg-surface-highest/50 flex-shrink-0 object-contain ${
                 isLarge ? 'h-10 w-10 p-1.5' : isMedium ? 'h-7 w-7 p-1' : 'h-5 w-5 p-0.5'
               }`}
-              style={{ borderRadius: '3px' }}
+              style={{ borderRadius: 'var(--radius-sm)' }}
             />
           )}
         </div>
 
-        {/* Bottom: Amount + Percentage */}
         {!isTiny && (
           <div className="flex items-end justify-between gap-1">
             <span
-              className={`font-bold text-white ${
+              className={`text-foreground font-bold ${
                 isLarge ? 'text-xl' : isMedium ? 'text-base' : 'text-sm'
               }`}
             >
               {formatCurrency(displayAmount, currency)}
               {isNormalized && isLarge && (
-                <span className="ml-0.5 text-xs font-normal text-white/60">
+                <span className="text-muted-foreground ml-0.5 text-xs font-normal">
                   {NORMALIZATION_SUFFIXES[costNormalization]}
                 </span>
               )}
             </span>
             <span
-              className={`bg-black/25 font-semibold text-white/90 ${
+              className={`bg-surface-highest/60 text-foreground font-semibold ${
                 isLarge ? 'px-1.5 py-0.5 text-xs' : 'px-1 py-0.5 text-[10px]'
               }`}
-              style={{ borderRadius: '3px' }}
+              style={{ borderRadius: 'var(--radius-sm)' }}
             >
-              {percentage.toFixed(0)}%
+              {formatPercentage(percentage)}
             </span>
           </div>
         )}
 
-        {/* For tiny tiles, just show percentage */}
         {isTiny && (
           <span
-            className="bg-black/25 px-1 py-0.5 text-[9px] font-semibold text-white/90"
-            style={{ borderRadius: '2px', alignSelf: 'flex-end' }}
+            className="bg-surface-highest/60 text-foreground px-1 py-0.5 text-[9px] font-semibold"
+            style={{ borderRadius: 'var(--radius-sm)', alignSelf: 'flex-end' }}
           >
-            {percentage.toFixed(0)}%
+            {formatPercentage(percentage)}
           </span>
         )}
       </div>
 
-      {/* Inactive overlay */}
       {!subscription.is_active && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black/60">
+        <div className="absolute inset-0 flex items-center justify-center bg-[var(--color-overlay)]">
           <span
-            className="bg-black/60 px-2 py-0.5 text-xs font-medium text-white"
-            style={{ borderRadius: '3px' }}
+            className="bg-surface-elevated/90 text-foreground px-2 py-0.5 text-xs font-medium"
+            style={{ borderRadius: 'var(--radius-sm)' }}
           >
             Paused
           </span>
@@ -340,24 +334,17 @@ export function SubscriptionBento({
 }: SubscriptionBentoProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 })
+  const [convertedAmounts, setConvertedAmounts] = useState<Record<string, number>>({})
 
-  // Measure container size with ResizeObserver for reliable dimensions
   useEffect(() => {
     if (!containerRef.current) return
 
     const resizeObserver = new ResizeObserver((entries) => {
       const entry = entries[0]
-      if (entry) {
-        // Use borderBoxSize for accurate dimensions including padding
-        const borderBox = entry.borderBoxSize?.[0]
-        if (borderBox) {
-          setContainerSize({ width: borderBox.inlineSize, height: borderBox.blockSize })
-        } else {
-          // Fallback to getBoundingClientRect
-          const rect = entry.target.getBoundingClientRect()
-          setContainerSize({ width: rect.width, height: rect.height })
-        }
-      }
+      if (!entry) return
+
+      const rect = entry.target.getBoundingClientRect()
+      setContainerSize({ width: rect.width, height: rect.height })
     })
 
     resizeObserver.observe(containerRef.current)
@@ -366,23 +353,55 @@ export function SubscriptionBento({
 
   const getConvertedAmount = useCallback(
     (sub: Subscription): number => {
+      const resolved = convertedAmounts[sub.id]
+      if (resolved !== undefined) return resolved
+
       const subCurrency = (sub.currency || currency) as CurrencyCode
       if (subCurrency === currency) return sub.amount
       return convertCurrencyCached(sub.amount, subCurrency, currency) ?? sub.amount
     },
-    [currency]
+    [convertedAmounts, currency]
   )
 
-  // Sort by monthly amount descending (converted)
+  useEffect(() => {
+    let cancelled = false
+
+    const resolveConvertedAmounts = async () => {
+      const entries = await Promise.all(
+        subscriptions.map(async (sub) => {
+          const subCurrency = (sub.currency || currency) as CurrencyCode
+          if (subCurrency === currency) {
+            return [sub.id, sub.amount] as const
+          }
+
+          const converted = await convertCurrency(sub.amount, subCurrency, currency)
+          return [sub.id, converted] as const
+        })
+      )
+
+      if (!cancelled) {
+        setConvertedAmounts(Object.fromEntries(entries))
+      }
+    }
+
+    void resolveConvertedAmounts()
+
+    return () => {
+      cancelled = true
+    }
+  }, [subscriptions, currency])
+
   const sortedSubscriptions = useMemo(() => {
     return [...subscriptions].sort((a, b) => {
+      const priority = compareSubscriptionDisplayPriority(a, b)
+      if (priority !== 0) return priority
+
       const amountA = calculateMonthlyAmount(getConvertedAmount(a), a.billing_cycle)
       const amountB = calculateMonthlyAmount(getConvertedAmount(b), b.billing_cycle)
       return amountB - amountA
     })
   }, [subscriptions, getConvertedAmount])
 
-  // Calculate total monthly spending (converted)
   const totalMonthly = useMemo(() => {
     return subscriptions.reduce(
       (sum, sub) => sum + calculateMonthlyAmount(getConvertedAmount(sub), sub.billing_cycle),
@@ -390,7 +409,6 @@ export function SubscriptionBento({
     )
   }, [subscriptions, getConvertedAmount])
 
-  // Calculate treemap layout
   const treemapRects = useMemo((): TreemapRect[] => {
     if (
       containerSize.width === 0 ||
@@ -400,14 +418,17 @@ export function SubscriptionBento({
       return []
     }
 
-    // Prepare nodes for treemap (use converted amounts for sizing)
-    const nodes: TreemapNode[] = sortedSubscriptions.map((sub, index) => ({
-      value: calculateMonthlyAmount(getConvertedAmount(sub), sub.billing_cycle),
-      subscription: sub,
-      colorIndex: index,
-    }))
+    const nodes: TreemapNode[] = sortedSubscriptions.map((sub, index) => {
+      const monthlyValue = calculateMonthlyAmount(getConvertedAmount(sub), sub.billing_cycle)
 
-    // Run squarify algorithm
+      return {
+        value: monthlyValue,
+        layoutValue: Math.sqrt(Math.max(monthlyValue, 0) + MIN_LAYOUT_VALUE),
+        subscription: sub,
+        colorIndex: index,
+      }
+    })
+
     return squarify(nodes, {
       x: 0,
       y: 0,
@@ -419,7 +440,7 @@ export function SubscriptionBento({
   const getCategory = useCallback(
     (categoryId: string | null) => {
       if (!categoryId) return undefined
-      return categories.find((c) => c.id === categoryId)
+      return categories.find((category) => category.id === categoryId)
     },
     [categories]
   )
@@ -427,8 +448,8 @@ export function SubscriptionBento({
   if (subscriptions.length === 0) {
     return (
       <div
-        className="flex h-[400px] items-center justify-center border border-dashed border-white/10"
-        style={{ borderRadius: '4px' }}
+        className="border-border flex h-[400px] items-center justify-center border border-dashed"
+        style={{ borderRadius: 'var(--radius-sm)' }}
       >
         <p className="text-muted-foreground">No subscriptions to display</p>
       </div>
@@ -440,7 +461,8 @@ export function SubscriptionBento({
       ref={containerRef}
       className="relative w-full"
       style={{
-        height: 'calc(100vh - 180px)', // Full viewport minus header/filters
+        height: 'clamp(420px, calc(100vh - 220px), 720px)',
+        minHeight: '420px',
         contain: 'layout style',
       }}
     >
@@ -467,9 +489,10 @@ export function SubscriptionBento({
                 percentage={percentage}
                 currency={currency}
                 costNormalization={costNormalization}
+                convertedAmount={getConvertedAmount(rect.node.subscription)}
                 width={width}
                 height={height}
-                onClick={() => onEdit(rect.node.subscription)}
+                onEdit={onEdit}
               />
             </div>
           )

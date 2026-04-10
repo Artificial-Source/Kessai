@@ -40,6 +40,7 @@ describe('validateBackupData', () => {
     settings: {
       theme: 'dark',
       currency: 'USD',
+      display_exchange_rates: {},
       notification_enabled: true,
       notification_days_before: [1, 3, 7],
       notification_advance_days: 1,
@@ -165,6 +166,7 @@ describe('exportData', () => {
       settings: {
         theme: 'dark',
         currency: 'USD',
+        display_exchange_rates: {},
         notification_enabled: true,
         notification_days_before: [1, 3, 7],
         notification_advance_days: 1,
@@ -199,6 +201,7 @@ describe('importData', () => {
       settings: {
         theme: 'dark',
         currency: 'USD',
+        display_exchange_rates: {},
         notification_enabled: true,
         notification_days_before: [1, 3, 7],
         notification_advance_days: 1,
@@ -230,6 +233,7 @@ describe('importData', () => {
       settings: {
         theme: 'dark',
         currency: 'USD',
+        display_exchange_rates: {},
         notification_enabled: true,
         notification_days_before: [1, 3, 7],
         notification_advance_days: 1,
@@ -260,6 +264,7 @@ describe('importData', () => {
       settings: {
         theme: 'dark',
         currency: 'USD',
+        display_exchange_rates: {},
         notification_enabled: true,
         notification_days_before: [1, 3, 7],
         notification_advance_days: 1,
@@ -288,6 +293,7 @@ describe('importData', () => {
       settings: {
         theme: 'dark',
         currency: 'USD',
+        display_exchange_rates: {},
         notification_enabled: true,
         notification_days_before: [1, 3, 7],
         notification_advance_days: 1,
@@ -324,6 +330,7 @@ describe('saveBackupToFile', () => {
       settings: {
         theme: 'dark',
         currency: 'USD',
+        display_exchange_rates: {},
         notification_enabled: true,
         notification_days_before: [1, 3, 7],
         notification_advance_days: 1,
@@ -354,6 +361,7 @@ describe('saveBackupToFile', () => {
       settings: {
         theme: 'dark',
         currency: 'USD',
+        display_exchange_rates: {},
         notification_enabled: true,
         notification_days_before: [1, 3, 7],
         notification_advance_days: 1,

@@ -6,6 +6,7 @@ import {
   preloadRates,
 } from '../exchange-rates'
 import type { CurrencyCode } from '@/lib/currency'
+import { useSettingsStore } from '@/stores/settings-store'
 
 // We need to reset the module-level memoryCache between tests
 // We do this by re-importing after resetting module state
@@ -37,6 +38,7 @@ describe('exchange-rates', () => {
     vi.clearAllMocks()
     localStorageMock.clear()
     mockFetch.mockReset()
+    useSettingsStore.setState({ settings: null })
   })
 
   describe('getCachedRate', () => {
@@ -64,6 +66,28 @@ describe('exchange-rates', () => {
       const result = convertCurrencyCached(100, 'JPY' as CurrencyCode, 'CHF' as CurrencyCode)
       // For uncached pair with no localStorage data, expect null
       expect(result === null || typeof result === 'number').toBe(true)
+    })
+
+    it('prefers manual display rates from settings', () => {
+      useSettingsStore.setState({
+        settings: {
+          id: 'singleton',
+          theme: 'dark',
+          currency: 'MXN',
+          display_exchange_rates: { USD: 20 },
+          notification_enabled: true,
+          notification_days_before: [1, 3, 7],
+          notification_advance_days: 1,
+          notification_time: '09:00',
+          monthly_budget: null,
+          reduce_motion: false,
+          enable_transitions: true,
+          enable_hover_effects: true,
+          animation_speed: 'normal',
+        },
+      })
+
+      expect(convertCurrencyCached(10, 'USD' as CurrencyCode, 'MXN' as CurrencyCode)).toBe(200)
     })
   })
 
@@ -108,7 +132,7 @@ describe('exchange-rates', () => {
       await preloadRates(['GBP' as CurrencyCode])
 
       expect(localStorageMock.setItem).toHaveBeenCalledWith(
-        'subby-exchange-rates',
+        'kessai-exchange-rates',
         expect.any(String)
       )
     })
@@ -162,6 +186,31 @@ describe('exchange-rates', () => {
 
       const result = await convertCurrency(75, 'ZAR' as CurrencyCode, 'BRL' as CurrencyCode)
       expect(result).toBe(75)
+    })
+
+    it('uses manual settings rates before fetching', async () => {
+      useSettingsStore.setState({
+        settings: {
+          id: 'singleton',
+          theme: 'dark',
+          currency: 'MXN',
+          display_exchange_rates: { USD: 20, EUR: 22 },
+          notification_enabled: true,
+          notification_days_before: [1, 3, 7],
+          notification_advance_days: 1,
+          notification_time: '09:00',
+          monthly_budget: null,
+          reduce_motion: false,
+          enable_transitions: true,
+          enable_hover_effects: true,
+          animation_speed: 'normal',
+        },
+      })
+
+      await expect(convertCurrency(10, 'USD' as CurrencyCode, 'MXN' as CurrencyCode)).resolves.toBe(
+        200
+      )
+      expect(mockFetch).not.toHaveBeenCalled()
     })
   })
 
