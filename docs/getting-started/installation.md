@@ -1,12 +1,12 @@
 # Installation
 
-Subby ships as a Tauri desktop app and can also be installed from source.
+Kessai ships as a Tauri desktop app and also exposes CLI, MCP, and web entrypoints through the `kessai` command.
 
 ## Download Binaries
 
 Download the latest release artifacts from:
 
-- `https://github.com/Artificial-Source-Foundation/Subby/releases`
+- `https://github.com/Artificial-Source-Foundation/Kessai/releases`
 
 Platform artifacts currently produced include Linux (`.deb`, `.rpm`, `.AppImage`), macOS (`.dmg`, `.app.tar.gz`), and Windows (`.msi`, `.exe`).
 
@@ -16,20 +16,23 @@ Use the bundled installer script if you want guided setup:
 
 ```bash
 chmod +x install.sh
-./install.sh
+./install.sh --from-source
 ```
 
-Non-interactive modes are also supported:
+After installation:
 
 ```bash
-./install.sh --app
-./install.sh --bot
-./install.sh --all
+kessai
+kessai list
+kessai mcp
+kessai web --port 3000
 ```
+
+Use `./install.sh` without flags if you only want the desktop app from releases.
 
 ## Verify Installation
 
-After install, launch Subby and confirm:
+After install, launch Kessai and confirm:
 
 1. Dashboard loads
 2. You can add one subscription

@@ -27,7 +27,7 @@ test_fail() {
 }
 
 echo ""
-echo "Testing Subby Installer"
+echo "Testing Kessai Installer"
 echo "======================="
 echo ""
 

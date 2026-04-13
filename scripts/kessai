@@ -1,0 +1,91 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SELF_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+show_help() {
+    cat <<'EOF'
+Kessai command runner
+
+Usage:
+  kessai                 Open the desktop app
+  kessai app             Open the desktop app
+  kessai mcp [args...]   Run the MCP server or MCP subcommands
+  kessai web [args...]   Run the web server
+  kessai <command> ...   Run a Kessai CLI command (delegates to kessai-mcp)
+
+Examples:
+  kessai
+  kessai list
+  kessai add "Netflix" 15.99 monthly 2026-04-20
+  kessai mcp serve
+  kessai web --port 3000
+
+Installed binaries:
+  kessai          Unified entrypoint
+  kessai-desktop  Desktop app
+  kessai-mcp      CLI + MCP server
+  kessai-web      Web server
+EOF
+}
+
+resolve_bin() {
+    local name="$1"
+
+    if [[ -x "$SELF_DIR/$name" ]]; then
+        printf '%s\n' "$SELF_DIR/$name"
+        return 0
+    fi
+
+    if command -v "$name" >/dev/null 2>&1; then
+        command -v "$name"
+        return 0
+    fi
+
+    return 1
+}
+
+run_bin() {
+    local name="$1"
+    shift
+
+    local bin
+    if ! bin="$(resolve_bin "$name")"; then
+        printf 'Kessai: required binary "%s" is not installed.\n' "$name" >&2
+        exit 1
+    fi
+
+    exec "$bin" "$@"
+}
+
+if [[ $# -eq 0 ]]; then
+    run_bin kessai-desktop
+fi
+
+case "$1" in
+    app|desktop)
+        shift
+        run_bin kessai-desktop "$@"
+        ;;
+    mcp)
+        shift
+        run_bin kessai-mcp "$@"
+        ;;
+    web)
+        shift
+        run_bin kessai-web "$@"
+        ;;
+    -h|--help|help)
+        show_help
+        ;;
+    -V|--version|version)
+        if resolve_bin kessai-mcp >/dev/null 2>&1; then
+            run_bin kessai-mcp --version
+        else
+            printf 'kessai\n'
+        fi
+        ;;
+    *)
+        run_bin kessai-mcp "$@"
+        ;;
+esac
