@@ -8,11 +8,13 @@ interface AppLogoProps {
 export function AppLogo({ compact = false, className }: AppLogoProps) {
   return (
     <div className={cn('flex items-center gap-3', className)}>
-      <img src="/icon-mark.png" alt="Subby" className="h-9 w-9 shrink-0 object-contain" />
+      <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-lg">
+        <img src="/kessai-logo.png" alt="Kessai" className="h-full w-full object-contain" />
+      </div>
       {!compact ? (
         <div className="min-w-0">
           <p className="text-foreground text-[15px] leading-5 font-semibold tracking-tight">
-            Subby
+            Kessai
           </p>
           <p className="text-muted-foreground text-xs leading-4">Subscription clarity</p>
         </div>
