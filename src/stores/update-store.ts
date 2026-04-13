@@ -1,10 +1,41 @@
 import { getVersion } from '@tauri-apps/api/app'
-import { isTauri } from '@tauri-apps/api/core'
+import { invoke, isTauri } from '@tauri-apps/api/core'
 import type { DownloadEvent, Update } from '@tauri-apps/plugin-updater'
 import { create } from 'zustand'
 import { toast } from 'sonner'
 
-type UpdateSupport = 'supported' | 'development' | 'browser'
+type UpdateSupport = 'supported' | 'development' | 'browser' | 'manual-linux-install'
+
+type UpdaterContext = {
+  executablePath: string
+  bundleType: string | null
+}
+
+const getErrorMessage = (error: unknown, fallback: string) => {
+  if (error instanceof Error && error.message) {
+    return error.message
+  }
+
+  if (typeof error === 'string' && error) {
+    return error
+  }
+
+  return fallback
+}
+
+const isUnsupportedLinuxInstall = ({ executablePath, bundleType }: UpdaterContext) => {
+  if (navigator.userAgent.toLowerCase().indexOf('linux') === -1) {
+    return false
+  }
+
+  const isPackageBundle = bundleType === 'deb' || bundleType === 'rpm'
+  const isLocalBinary = executablePath.includes('/.local/bin/')
+
+  return isPackageBundle && isLocalBinary
+}
+
+const manualLinuxInstallMessage =
+  'This Linux build was installed as a local binary but still identifies as a package build. Reinstall Kessai once from the AppImage release to enable in-app updates.'
 
 type UpdateState = {
   support: UpdateSupport
@@ -69,6 +100,23 @@ export const useUpdateStore = create<UpdateState>((set, get) => ({
 
       try {
         const currentVersion = await getVersion()
+
+        if (typeof navigator !== 'undefined') {
+          const updaterContext = await invoke<UpdaterContext>('get_updater_context')
+
+          if (isUnsupportedLinuxInstall(updaterContext)) {
+            set({
+              support: 'manual-linux-install',
+              currentVersion,
+              latestVersion: currentVersion,
+              status: 'unsupported',
+              error: manualLinuxInstallMessage,
+            })
+            initialized = true
+            return
+          }
+        }
+
         set({
           support,
           currentVersion,
@@ -81,7 +129,7 @@ export const useUpdateStore = create<UpdateState>((set, get) => ({
         set({
           support,
           status: support === 'supported' ? 'error' : 'unsupported',
-          error: error instanceof Error ? error.message : 'Failed to read current app version',
+          error: getErrorMessage(error, 'Failed to read current app version'),
         })
       } finally {
         if (!initialized) {
@@ -117,7 +165,7 @@ export const useUpdateStore = create<UpdateState>((set, get) => ({
         }))
 
         if (!silent) {
-          toast.success('Subby is up to date')
+          toast.success('Kessai is up to date')
         }
 
         return false
@@ -132,13 +180,13 @@ export const useUpdateStore = create<UpdateState>((set, get) => ({
         progress: 0,
       })
 
-      toast.info(`Subby ${update.version} is ready`, {
+      toast.info(`Kessai ${update.version} is ready`, {
         description: 'Open Settings > Updates to install it.',
       })
 
       return true
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Failed to check for updates'
+      const message = getErrorMessage(error, 'Failed to check for updates')
       set({ status: 'error', error: message, progress: 0 })
 
       if (!silent) {
@@ -183,10 +231,10 @@ export const useUpdateStore = create<UpdateState>((set, get) => ({
         set({ progress: 100, status: 'installing' })
       })
 
-      toast.success('Update installed. Restarting Subby...')
+      toast.success('Update installed. Restarting Kessai...')
       await relaunch()
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Failed to install update'
+      const message = getErrorMessage(error, 'Failed to install update')
       set({ status: 'available', error: message })
       toast.error('Failed to install update', {
         description: message,

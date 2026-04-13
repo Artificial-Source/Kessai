@@ -46,7 +46,7 @@ export function UpdateSettings() {
             <h2 className="text-foreground text-lg font-bold">Updates</h2>
           </div>
           <p className="text-muted-foreground text-sm">
-            Install Subby once, then pull future releases from GitHub automatically.
+            Install Kessai once, then pull future releases from GitHub automatically.
           </p>
         </div>
 
@@ -93,6 +93,13 @@ export function UpdateSettings() {
         <p className="text-muted-foreground text-sm">
           Updater checks are disabled in `pnpm tauri dev`. Build and install a release package to
           test the full flow.
+        </p>
+      ) : null}
+
+      {support === 'manual-linux-install' ? (
+        <p className="text-muted-foreground text-sm">
+          This Linux install needs one reinstall from the AppImage release before in-app updates can
+          take over.
         </p>
       ) : null}
 
