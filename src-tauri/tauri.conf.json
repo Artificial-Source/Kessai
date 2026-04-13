@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "Subby",
+  "productName": "Kessai",
   "version": "0.3.0",
-  "identifier": "com.asf.subby",
+  "identifier": "com.asf.kessai",
   "build": {
     "beforeDevCommand": "pnpm dev",
     "devUrl": "http://localhost:1420",
@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "Subby",
+        "title": "Kessai",
         "width": 1200,
         "height": 800,
         "minWidth": 900,
@@ -43,9 +43,9 @@
   },
   "plugins": {
     "updater": {
-      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEMzQkQwQUU0QjM3MjBCRTcKUldUbkMzS3o1QXE5dzBnYS91V1lORzNFWDRmdjVta25zY0hNSmwrYzNvL2ZISGpYQUJtYlo3WjcK",
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDg1RDU1RTJGNTg3MTlBNkIKUldScm1uRllMMTdWaFNoUU5xMkdiWDUwZDJxUlBCQmU4UUdqV2xZckdONlFORHpQenhLUkJxeUcK",
       "endpoints": [
-        "https://github.com/Artificial-Source-Foundation/Subby/releases/latest/download/latest.json"
+        "https://github.com/Artificial-Source-Foundation/Kessai/releases/latest/download/latest.json"
       ]
     }
   }

@@ -32,9 +32,9 @@ pnpm release:dry
 pnpm release
 ```
 
-4. Wait for the `Release` workflow to finish building installers for each platform.
+4. Wait for the `Release` workflow to finish building installers for each platform and publish the GitHub release assets.
 
-5. Publish the draft GitHub release after verifying the attached assets.
+5. Verify the attached assets and release notes.
 
 ## What Happens Automatically
 
@@ -44,7 +44,7 @@ pnpm release
 - `scripts/sync-versions.js` syncs version to:
   - `src-tauri/tauri.conf.json`
   - `src-tauri/Cargo.toml`
-- Git tag is pushed so the `Release` workflow can create a draft GitHub release
+- Git tag is pushed so the `Release` workflow can publish a GitHub release
 - `.github/workflows/release.yml` builds installers and updater artifacts from the tag
 - `latest.json` is uploaded to GitHub Releases for in-app auto-updates
 
@@ -53,12 +53,12 @@ pnpm release
 Generate a Tauri updater keypair once on your machine:
 
 ```bash
-pnpm tauri signer generate --ci -w ~/.tauri/subby-updater.key -p ""
+pnpm tauri signer generate --ci -w ~/.tauri/kessai-updater.key -p ""
 ```
 
 Then add these GitHub repository secrets:
 
-- `TAURI_SIGNING_PRIVATE_KEY` - contents of `~/.tauri/subby-updater.key`
+- `TAURI_SIGNING_PRIVATE_KEY` - contents of `~/.tauri/kessai-updater.key`
 - `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` - leave empty if you generated the key without a password
 
 Optional macOS signing/notarization secrets for smoother installs:

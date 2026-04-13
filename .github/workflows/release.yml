@@ -73,8 +73,76 @@ jobs:
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         with:
           tagName: v__VERSION__
-          releaseName: 'Subby v__VERSION__'
-          releaseBody: 'Installers and updater artifacts for Subby.'
+          releaseName: 'Kessai v__VERSION__'
+          releaseBody: 'Installers and updater artifacts for Kessai.'
           releaseDraft: false
           prerelease: false
           args: ${{ matrix.args }}
+
+  publish-mcp:
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: ubuntu-22.04
+            target: x86_64-unknown-linux-gnu
+            archive_extension: tar.gz
+            binary_extension: ''
+          - platform: windows-latest
+            target: x86_64-pc-windows-msvc
+            archive_extension: zip
+            binary_extension: .exe
+          - platform: macos-latest
+            target: x86_64-apple-darwin
+            archive_extension: tar.gz
+            binary_extension: ''
+          - platform: macos-latest
+            target: aarch64-apple-darwin
+            archive_extension: tar.gz
+            binary_extension: ''
+
+    runs-on: ${{ matrix.platform }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Rust cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: './ -> target'
+
+      - name: Build kessai-mcp
+        shell: bash
+        run: cargo build --release -p kessai-mcp --target "${{ matrix.target }}"
+
+      - name: Package kessai-mcp
+        shell: bash
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          package_dir="kessai-mcp-${version}-${{ matrix.target }}"
+          binary_name="kessai-mcp${{ matrix.binary_extension }}"
+          mkdir -p "$RUNNER_TEMP/$package_dir"
+          cp "target/${{ matrix.target }}/release/$binary_name" "$RUNNER_TEMP/$package_dir/$binary_name"
+
+          if [ "${{ matrix.archive_extension }}" = "zip" ]; then
+            archive_path="$RUNNER_TEMP/$package_dir.zip"
+            (cd "$RUNNER_TEMP" && zip -r "$archive_path" "$package_dir")
+          else
+            archive_path="$RUNNER_TEMP/$package_dir.tar.gz"
+            tar -C "$RUNNER_TEMP" -czf "$archive_path" "$package_dir"
+          fi
+
+          echo "archive_path=$archive_path" >> "$GITHUB_ENV"
+
+      - name: Upload kessai-mcp release asset
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ env.archive_path }}
