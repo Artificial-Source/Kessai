@@ -3,6 +3,16 @@
 All notable changes to Kessai will be documented in this file.
 
 
+## [0.4.2](https://github.com/Artificial-Source-Foundation/Kessai/compare/v0.4.1...v0.4.2) (2026-04-14)
+
+### Bug Fixes
+
+* restore custom logo file picking ([8da21b7](https://github.com/Artificial-Source-Foundation/Kessai/commit/8da21b738e82ec1f3effb4944184e3b6b2144e0e))
+
+### Documentation
+
+* add updater validation release backlog ([5ea1891](https://github.com/Artificial-Source-Foundation/Kessai/commit/5ea189125fd61c3ba2bbee7ffe4b92c1d5ce43f9))
+
 ## [0.4.1](https://github.com/Artificial-Source-Foundation/Kessai/compare/v0.4.0...v0.4.1) (2026-04-13)
 
 ### Bug Fixes
