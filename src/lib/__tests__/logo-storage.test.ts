@@ -1,11 +1,8 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 
-// Simulate Tauri environment for pickAndSaveLogo tests
-// @ts-expect-error -- setting Tauri flag for tests
-window.__TAURI__ = true
-
 const mockInvoke = vi.fn()
 const mockOpen = vi.fn()
+const mockIsTauri = vi.fn(() => true)
 
 vi.mock('@/lib/api', () => ({
   apiInvoke: (...args: unknown[]) => mockInvoke(...args),
@@ -15,12 +12,17 @@ vi.mock('@tauri-apps/plugin-dialog', () => ({
   open: (...args: unknown[]) => mockOpen(...args),
 }))
 
+vi.mock('@tauri-apps/api/core', () => ({
+  isTauri: () => mockIsTauri(),
+}))
+
 // Import after mocking
 import { getLogoDataUrl, pickAndSaveLogo } from '../logo-storage'
 
 describe('logo-storage', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    mockIsTauri.mockReturnValue(true)
     // We need to clear the internal cache. Since it's module-scoped,
     // we can reset it by testing with different filenames each time.
   })
@@ -68,6 +70,16 @@ describe('logo-storage', () => {
   })
 
   describe('pickAndSaveLogo', () => {
+    it('returns null outside Tauri', async () => {
+      mockIsTauri.mockReturnValue(false)
+
+      const result = await pickAndSaveLogo('sub-1')
+
+      expect(result).toBeNull()
+      expect(mockOpen).not.toHaveBeenCalled()
+      expect(mockInvoke).not.toHaveBeenCalled()
+    })
+
     it('returns null when no file is selected', async () => {
       mockOpen.mockResolvedValue(null)
 

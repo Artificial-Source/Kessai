@@ -1,8 +1,5 @@
 import { apiInvoke as invoke } from '@/lib/api'
-
-function isTauri(): boolean {
-  return typeof window !== 'undefined' && '__TAURI__' in window
-}
+import { isTauri } from '@tauri-apps/api/core'
 
 // In-memory cache for logo data URLs
 const logoCache = new Map<string, string>()
