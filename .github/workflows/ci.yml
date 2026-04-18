@@ -40,9 +40,8 @@ jobs:
 
   # E2E tests require a running Tauri app with a display server (Xvfb/WebKitGTK).
   # Full Playwright E2E cannot run in a standard GitHub Actions environment without
-  # a virtual display and the full Tauri build (~10 min). This job verifies the
-  # Playwright setup is valid and runs any tests tagged @web-only (pure-frontend,
-  # no Tauri IPC required).
+  # a virtual display and the full Tauri build (~10 min). This job runs a dedicated
+  # web smoke spec that uses base Playwright (no mocked Tauri internals).
   e2e-ready:
     runs-on: ubuntu-latest
     steps:
@@ -58,8 +57,8 @@ jobs:
       - run: pnpm build
       - run: npx playwright install --with-deps chromium
       # E2E tests require a running Tauri app with display server.
-      # Run subset of tests that only need the web frontend.
-      - run: pnpm test:e2e --grep @web-only || echo "No @web-only tests found, skipping"
+      # Run dedicated real-web smoke coverage against the web backend path.
+      - run: pnpm test:e2e:web-smoke
 
   rust-tests:
     runs-on: ubuntu-latest

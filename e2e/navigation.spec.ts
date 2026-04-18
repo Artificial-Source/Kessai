@@ -1,7 +1,7 @@
 import { test, expect } from './fixtures'
 
 test.describe('Navigation', () => {
-  test('should load the dashboard page by default', async ({ page }) => {
+  test('should load the dashboard page by default @web-only', async ({ page }) => {
     await page.goto('/')
 
     // Should show dashboard heading

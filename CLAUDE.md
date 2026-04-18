@@ -88,7 +88,7 @@
 | `--color-background` | `#020202` | Page background (deep black) |
 | `--color-foreground` | `#f0f0f0` | Primary text |
 | `--color-primary` | `#bf5af2` | Accent (Plasma Violet) |
-| `--color-card` | `rgba(10,10,10,0.6)` | Glass card surfaces (with blur) |
+| `--color-card` | `rgba(10,10,10,0.6)` | Card and overlay surfaces |
 | `--color-border` | `rgba(255,255,255,0.06)` | Hairline borders |
 | `--color-input` | `rgba(255,255,255,0.06)` | Input backgrounds |
 | `--color-muted-foreground` | `#888888` | Secondary/tertiary text |
@@ -97,7 +97,7 @@
 
 ### UI Patterns
 
-- **Glass cards**: Semi-transparent bg + backdrop-blur(12px) + 1px hairline border + 12px radius
+- **Glass cards**: Semi-transparent bg + 1px hairline border + 12px radius
 - **Grid background**: 40px grid pattern on main content area (`grid-bg` utility)
 - **Sidebar**: Glass morphism bg, 2px violet left-border active state
 - **Buttons (primary)**: Sharp 0px radius (brutalist sm/md), solid violet bg
@@ -108,7 +108,7 @@
 ## Design Principles
 
 1. **Dark-first**: Design for dark mode, ensure light mode works
-2. **Glass morphism**: Use `backdrop-filter: blur(12px)` on glass elements
+2. **Glass morphism**: Reserve `backdrop-filter` for small fixed or overlay surfaces, not scrolling content
 3. **CSS animations only**: Use CSS transitions, avoid JS animation libraries
 4. **Type safety**: Zod schemas → TypeScript types
 
@@ -209,6 +209,6 @@ The app uses **Tauri's updater plugin** to deliver updates to installed instance
 
 SQLite database stored in Tauri app data directory:
 
-- Linux: `~/.local/share/kessai/`
-- macOS: `~/Library/Application Support/kessai/`
-- Windows: `%APPDATA%/kessai/`
+- Linux: `~/.local/share/com.asf.kessai/`
+- macOS: `~/Library/Application Support/com.asf.kessai/`
+- Windows: `%APPDATA%/com.asf.kessai/`

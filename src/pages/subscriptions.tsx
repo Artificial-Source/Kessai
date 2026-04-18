@@ -417,7 +417,7 @@ export function Subscriptions() {
         )}
 
         {activeSubscriptions.length === 0 && cancelledSubscriptions.length === 0 ? (
-          <div className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-[var(--color-border-hover)] bg-[var(--color-card)] py-16 backdrop-blur-xl">
+          <div className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-[var(--color-border-hover)] bg-[var(--color-card)] py-16">
             <div className="bg-primary/10 animate-gentle-float mb-4 rounded-full p-4">
               <Plus className="text-primary h-8 w-8" />
             </div>

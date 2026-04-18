@@ -7,7 +7,7 @@ test.describe('Subscriptions', () => {
     await expect(page.getByRole('heading', { name: /my subscriptions/i })).toBeVisible()
   })
 
-  test('should show empty state when no subscriptions exist', async ({ page }) => {
+  test('should show empty state when no subscriptions exist @web-only', async ({ page }) => {
     await expect(page.getByText(/no subscriptions yet/i)).toBeVisible()
   })
 

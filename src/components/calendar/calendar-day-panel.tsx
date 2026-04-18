@@ -44,7 +44,7 @@ export function CalendarDayPanel({
   }
 
   return (
-    <div className="glass-card animate-slide-in-right flex h-full w-full flex-col overflow-hidden lg:w-[380px]">
+    <div className="glass-overlay animate-slide-in-right flex h-full w-full flex-col overflow-hidden lg:w-[380px]">
       <div className="border-border relative border-b p-6">
         <div className="mb-2 flex items-center justify-between">
           <span className="text-muted-foreground font-[family-name:var(--font-mono)] text-[10px] font-normal tracking-widest uppercase">

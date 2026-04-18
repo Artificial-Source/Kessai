@@ -39,6 +39,7 @@
     "test:run": "vitest run",
     "test:coverage": "vitest run --coverage",
     "test:e2e": "playwright test",
+    "test:e2e:web-smoke": "playwright test -c playwright.web-smoke.config.ts e2e/web-smoke.spec.ts",
     "test:e2e:ui": "playwright test --ui",
     "test:installer": "bash scripts/test-installer.sh",
     "prepare": "husky",
@@ -46,7 +47,8 @@
     "release:dry": "release-it --dry-run",
     "sync-versions": "node scripts/sync-versions.js",
     "serve": "cargo build --release -p kessai-web && pnpm build && ./target/release/kessai-web",
-    "serve:dev": "cargo run -p kessai-web -- --dist-dir dist --port 3000"
+    "serve:dev": "cargo run -p kessai-web -- --dist-dir dist --port 3000",
+    "serve:smoke": "pnpm build && cargo run -p kessai-web -- --dist-dir dist --port 3001"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",

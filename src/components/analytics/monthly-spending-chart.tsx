@@ -35,7 +35,7 @@ function CustomTooltipContent({
   const monthLabel = dayjs(dataPoint.month + '-01').format('MMMM YYYY')
 
   return (
-    <div className="glass-card px-3 py-2 shadow-lg">
+    <div className="glass-overlay px-3 py-2 shadow-lg">
       <p className="text-muted-foreground mb-1 font-[family-name:var(--font-mono)] text-[10px] tracking-wider uppercase">
         {monthLabel}
       </p>

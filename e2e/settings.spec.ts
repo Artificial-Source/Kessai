@@ -8,7 +8,7 @@ test.describe('Settings', () => {
     await expect(page.getByRole('heading', { name: /settings/i })).toBeVisible()
   })
 
-  test('should display settings page', async ({ page }) => {
+  test('should display settings page @web-only', async ({ page }) => {
     await expect(page.getByRole('heading', { name: /settings/i })).toBeVisible()
   })
 

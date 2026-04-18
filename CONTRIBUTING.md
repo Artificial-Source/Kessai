@@ -24,7 +24,7 @@ Thank you for your interest in contributing to Kessai! This document provides gu
 
 ```bash
 git clone https://github.com/Artificial-Source-Foundation/Kessai.git
-cd kessai
+cd Kessai
 pnpm install
 pnpm tauri dev
 ```
@@ -79,7 +79,7 @@ docs: update installation instructions
 
 - Don't use `as any` to suppress TypeScript errors
 - Don't use array index as React keys
-- Don't add heavy animations (Framer Motion, backdrop-blur)
+- Don't add heavy animations (Framer Motion, backdrop-blur on scrolling content)
 - Don't use date-fns (use dayjs instead)
 
 ## Code Review

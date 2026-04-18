@@ -13,7 +13,7 @@
 <p align="center">
   <img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License: MIT">
   <img src="https://img.shields.io/badge/platform-Linux%20%7C%20macOS%20%7C%20Windows-informational" alt="Platform">
-  <img src="https://img.shields.io/badge/tests-517%20passed-brightgreen" alt="Tests">
+  <img src="https://img.shields.io/badge/tests-passing-brightgreen" alt="Tests">
   <img src="https://img.shields.io/badge/Tauri%202-Rust%20%2B%20React-bf5af2" alt="Tauri 2">
 </p>
 
@@ -140,7 +140,7 @@ kessai-mcp upcoming --days 14          # Upcoming payments
 
 **Web mode:** `cargo run -p kessai-web -- --port 3000` -- same database, browser access.
 
-**MCP:** AI assistant integration with 10 tools and 5 resources. See [MCP Setup Guide](docs/guides/mcp-setup.md).
+**MCP:** AI assistant integration with 10 tools and 5 resources. See [How to use the Kessai MCP server](docs/how-to/use-mcp-server.md).
 
 ---
 
@@ -149,8 +149,8 @@ kessai-mcp upcoming --days 14          # Upcoming payments
 ```bash
 pnpm tauri dev           # Start dev app
 pnpm check               # Lint + typecheck + format
-pnpm test:run            # 517 frontend tests
-cargo test --workspace   # 22 Rust tests
+pnpm test:run            # Frontend tests
+cargo test --workspace   # Rust tests
 ```
 
 **Stack:** Tauri 2 (Rust) + React 19 + TypeScript + Vite 7 + Tailwind CSS 4 + shadcn/ui + Zustand + SQLite + Recharts
@@ -177,6 +177,10 @@ All data stays on your device. Plain SQLite you can inspect, backup, or migrate.
 | Windows  | `%APPDATA%/com.asf.kessai/`                     |
 
 Structured logs in `{data_dir}/logs/` for debugging. Frontend logs downloadable from Settings.
+
+## Documentation
+
+Browse the full docs set in [`docs/index.md`](./docs/index.md) for tutorials, task guides, reference pages, and architecture notes.
 
 ---
 

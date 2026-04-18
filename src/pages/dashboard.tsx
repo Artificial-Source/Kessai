@@ -243,7 +243,7 @@ export function Dashboard() {
           <div className="glass-card p-6">
             <h3 className="mb-5 text-lg font-bold">Upcoming Payments</h3>
             {upcomingPayments.length === 0 ? (
-              <div className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-[var(--color-border-hover)] bg-[var(--color-card)] py-12 text-center backdrop-blur-xl">
+              <div className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-[var(--color-border-hover)] bg-[var(--color-card)] py-12 text-center">
                 <div className="bg-success/10 animate-gentle-float mb-4 rounded-full p-4">
                   <span className="text-3xl leading-none">🎉</span>
                 </div>

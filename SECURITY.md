@@ -4,24 +4,24 @@
 
 | Version | Supported          |
 | ------- | ------------------ |
-| 0.1.x   | :white_check_mark: |
+| 0.4.x   | :white_check_mark: |
 
 ## Security Model
 
 Kessai is a **local-first application** with the following security characteristics:
 
 - **All data stored locally** - SQLite database in your app data directory
-- **No network requests in desktop runtime** - 100% offline desktop app, no telemetry, no analytics
+- **No telemetry or analytics** - the desktop app has no checked-in tracking layer, but optional features such as update checks, exchange-rate fetches, and logo fetches do make network requests
 - **No authentication** - No accounts, passwords, or login required
-- **No sensitive data transmission** - Your subscription data never leaves your device
+- **Mostly local data handling** - subscription and payment data stay local by default, but optional network-assisted features such as logo fetch, exchange-rate lookup, and update checks do contact external services
 
 ### Data Storage Locations
 
 | Platform | Location                               |
 | -------- | -------------------------------------- |
-| Linux    | `~/.local/share/kessai/`                |
-| macOS    | `~/Library/Application Support/kessai/` |
-| Windows  | `%APPDATA%/kessai/`                     |
+| Linux    | `~/.local/share/com.asf.kessai/`                |
+| macOS    | `~/Library/Application Support/com.asf.kessai/` |
+| Windows  | `%APPDATA%/com.asf.kessai/`                     |
 
 ## Reporting a Vulnerability
 
