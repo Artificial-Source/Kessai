@@ -1,6 +1,6 @@
 [package]
 name = "kessai"
-version = "0.4.4"
+version = "0.4.5"
 description = "Know where your money flows - Personal subscription tracker"
 authors = ["ASF", "Andrés (NewStella)"]
 license = "MIT"
