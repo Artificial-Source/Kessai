@@ -14,6 +14,7 @@ import { TrendingUp } from 'lucide-react'
 import { useSubscriptionStore } from '@/stores/subscription-store'
 import { usePaymentStore } from '@/stores/payment-store'
 import { formatCurrency, type CurrencyCode } from '@/lib/currency'
+import { isTauriRuntime } from '@/lib/runtime'
 import { calculateMonthlyAmount } from '@/types/subscription'
 import type { Payment } from '@/types/payment'
 
@@ -100,6 +101,7 @@ function CustomTooltipContent({
 
 export const SpendingTrends = memo(function SpendingTrends({ currency }: SpendingTrendsProps) {
   const [range, setRange] = useState<RangeOption>(6)
+  const isDesktopRuntime = isTauriRuntime()
 
   const subscriptions = useSubscriptionStore((state) => state.subscriptions)
   const { payments, fetchPayments } = usePaymentStore(
@@ -188,7 +190,7 @@ export const SpendingTrends = memo(function SpendingTrends({ currency }: Spendin
       </div>
 
       <div className="h-[180px] w-full sm:h-[240px]">
-        <ResponsiveContainer width="100%" height="100%">
+        <ResponsiveContainer width="100%" height="100%" debounce={isDesktopRuntime ? 200 : 0}>
           <AreaChart data={data} margin={{ top: 4, right: 4, bottom: 0, left: -12 }}>
             <defs>
               <linearGradient id="spendingGradient" x1="0" y1="0" x2="0" y2="1">
@@ -229,6 +231,7 @@ export const SpendingTrends = memo(function SpendingTrends({ currency }: Spendin
               stroke="var(--color-primary)"
               strokeWidth={2}
               fill="url(#spendingGradient)"
+              isAnimationActive={!isDesktopRuntime}
               dot={false}
               activeDot={{
                 r: 4,

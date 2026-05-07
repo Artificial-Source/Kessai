@@ -2,7 +2,7 @@ import { NavLink } from 'react-router-dom'
 import { LayoutDashboard, CreditCard, Calendar, BarChart3, Settings } from 'lucide-react'
 import { Search } from 'lucide-react'
 import { useUiStore } from '@/stores/ui-store'
-import kessaiLogo from '@/assets/kessai-logo.png'
+import kessaiLogo from '@/assets/kessai-logo.svg'
 
 const SIDEBAR_COLLAPSED_WIDTH = 72
 

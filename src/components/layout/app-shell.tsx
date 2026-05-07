@@ -28,8 +28,11 @@ export function AppShell() {
       <div className="flex min-h-0 flex-1 overflow-hidden">
         <Sidebar />
 
-        <main id="main-content" className="grid-bg relative z-0 flex-1 overflow-y-auto">
-          <div className="mx-auto max-w-7xl p-4 pb-24 md:p-6 md:pb-6">
+        <main
+          id="main-content"
+          className="grid-bg desktop-scroll-container relative z-0 flex-1 overflow-y-auto"
+        >
+          <div className="desktop-scroll-content mx-auto max-w-7xl p-4 pb-24 md:p-6 md:pb-6">
             <Outlet />
           </div>
         </main>

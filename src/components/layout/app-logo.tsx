@@ -1,5 +1,5 @@
 import { cn } from '@/lib/utils'
-import kessaiLogo from '@/assets/kessai-logo.png'
+import kessaiLogo from '@/assets/kessai-logo.svg'
 
 interface AppLogoProps {
   compact?: boolean

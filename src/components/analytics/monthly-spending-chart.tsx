@@ -3,6 +3,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import dayjs from 'dayjs'
 import { BarChart3 } from 'lucide-react'
 import { formatCurrency, type CurrencyCode } from '@/lib/currency'
+import { isTauriRuntime } from '@/lib/runtime'
 import type { MonthlySpend } from '@/types/analytics'
 
 interface MonthlySpendingChartProps {
@@ -50,6 +51,8 @@ export const MonthlySpendingChart = memo(function MonthlySpendingChart({
   data,
   currency,
 }: MonthlySpendingChartProps) {
+  const isDesktopRuntime = isTauriRuntime()
+
   const chartData = useMemo<ChartDataPoint[]>(
     () =>
       data.map((d) => ({
@@ -98,7 +101,7 @@ export const MonthlySpendingChart = memo(function MonthlySpendingChart({
         </div>
       ) : (
         <div className="h-[260px] w-full">
-          <ResponsiveContainer width="100%" height="100%">
+          <ResponsiveContainer width="100%" height="100%" debounce={isDesktopRuntime ? 200 : 0}>
             <BarChart data={chartData} margin={{ top: 4, right: 4, bottom: 0, left: -12 }}>
               <defs>
                 <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
@@ -140,7 +143,13 @@ export const MonthlySpendingChart = memo(function MonthlySpendingChart({
                 content={tooltipRenderer}
                 cursor={{ fill: 'var(--color-surface-highest)' }}
               />
-              <Bar dataKey="total" fill="url(#barGradient)" radius={[2, 2, 0, 0]} maxBarSize={40} />
+              <Bar
+                dataKey="total"
+                fill="url(#barGradient)"
+                isAnimationActive={!isDesktopRuntime}
+                radius={[2, 2, 0, 0]}
+                maxBarSize={40}
+              />
             </BarChart>
           </ResponsiveContainer>
         </div>

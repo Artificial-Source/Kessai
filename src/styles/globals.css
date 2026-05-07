@@ -557,3 +557,96 @@ body,
 .animate-gentle-float {
   animation: gentle-float 3s ease-in-out infinite;
 }
+
+/* Desktop WebKitGTK performance profile. Browser styling remains unchanged. */
+.tauri-runtime .desktop-scroll-container {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+  transform: translateZ(0);
+  will-change: scroll-position;
+  contain: paint;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: var(--color-background) !important;
+  background-image: none !important;
+  clip-path: none !important;
+}
+
+.tauri-runtime .desktop-scroll-content > * > :not(.fixed),
+.tauri-runtime .desktop-scroll-content .glass-card {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 360px;
+}
+
+.tauri-runtime .glass-overlay,
+.tauri-runtime .glass-sidebar,
+.tauri-runtime [class*='backdrop-blur'],
+.tauri-runtime [data-sonner-toast] {
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+
+.tauri-runtime .shadow-ambient,
+.tauri-runtime .shadow-ambient-sm,
+.tauri-runtime .shadow-ambient-strong,
+.tauri-runtime [class*='shadow-'],
+.tauri-runtime [data-sonner-toast] {
+  box-shadow: none !important;
+}
+
+.tauri-runtime [class*='bg-gradient'],
+.tauri-runtime [class*='bg-[radial-gradient'],
+.tauri-runtime [class*='bg-[linear-gradient'],
+.tauri-runtime [class*='bg-gradient']::before,
+.tauri-runtime [class*='bg-[radial-gradient']::before,
+.tauri-runtime [class*='bg-[linear-gradient']::before,
+.tauri-runtime [class*='bg-gradient']::after,
+.tauri-runtime [class*='bg-[radial-gradient']::after,
+.tauri-runtime [class*='bg-[linear-gradient']::after {
+  background-image: none !important;
+}
+
+.tauri-runtime .gradient-text {
+  background-image: none !important;
+  color: var(--color-foreground) !important;
+}
+
+.tauri-runtime:not(.reduce-motion) *,
+.tauri-runtime:not(.reduce-motion) *::before,
+.tauri-runtime:not(.reduce-motion) *::after {
+  transition-duration: 80ms !important;
+  transition-delay: 0s !important;
+}
+
+.tauri-runtime .hover-lift:hover,
+.tauri-runtime .hover-scale:hover {
+  transform: none !important;
+}
+
+.tauri-runtime .hover-glow:hover {
+  box-shadow: none !important;
+}
+
+.tauri-runtime .animate-fade-in,
+.tauri-runtime .animate-fade-in-up,
+.tauri-runtime .animate-scale-in,
+.tauri-runtime .animate-slide-in-right,
+.tauri-runtime .animate-slide-in-left,
+.tauri-runtime .animate-draw-line,
+.tauri-runtime .animate-donut-segment,
+.tauri-runtime .animate-gentle-float,
+.tauri-runtime .animate-pulse,
+.tauri-runtime .stagger-children > *,
+.tauri-runtime [class*='animate-in'],
+.tauri-runtime [class*='animate-out'],
+.tauri-runtime [class*='fade-in-'],
+.tauri-runtime [class*='fade-out-'],
+.tauri-runtime [class*='zoom-in-'],
+.tauri-runtime [class*='zoom-out-'],
+.tauri-runtime [class*='slide-in-from-'] {
+  animation: none !important;
+  animation-delay: 0s !important;
+  opacity: 1 !important;
+  transform: none !important;
+}
