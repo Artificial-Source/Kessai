@@ -3,6 +3,12 @@
 All notable changes to Kessai will be documented in this file.
 
 
+## [0.4.4](https://github.com/Artificial-Source/Kessai/compare/v0.4.3...v0.4.4) (2026-05-07)
+
+### Bug Fixes
+
+* sync Cargo lock during release ([6892b73](https://github.com/Artificial-Source/Kessai/commit/6892b73733b4614d961609e998edfed1c6294e7b))
+
 ## [0.4.3](https://github.com/Artificial-Source/Kessai/compare/v0.4.2...v0.4.3) (2026-04-26)
 
 ### Bug Fixes
