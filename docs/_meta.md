@@ -52,12 +52,6 @@ This file is the public docs manifest for the final Diataxis set under `docs/`. 
 | [`docs/explanation/design-decisions.md`](./explanation/design-decisions.md) | Explains why the repo is structured around a shared core, one frontend, local-first storage, and GitHub-based releases |
 | [`docs/explanation/security-and-privacy.md`](./explanation/security-and-privacy.md) | Explains actual trust boundaries, local storage behavior, and the repo's real network touchpoints |
 
-## Non-page assets kept on purpose
-
-| Path | Why it exists |
-| --- | --- |
-| `docs/screenshots/` | Shared screenshots and assets used by the public docs and repository README |
-
 ## Cleanup policy applied for this milestone
 
 Legacy entrypoints, stale reference pages, old architecture/reference splits, and internal planning files were removed from `docs/` so the public docs tree now centers on:

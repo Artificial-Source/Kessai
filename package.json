@@ -42,7 +42,6 @@
     "test:e2e:web-smoke": "playwright test -c playwright.web-smoke.config.ts e2e/web-smoke.spec.ts",
     "test:e2e:ui": "playwright test --ui",
     "test:installer": "bash scripts/test-installer.sh",
-    "prepare": "husky",
     "release": "release-it",
     "release:dry": "node scripts/release-dry-run.js",
     "sync-versions": "node scripts/sync-versions.js",
@@ -96,9 +95,7 @@
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.4.26",
     "globals": "^17.4.0",
-    "husky": "^9.1.7",
     "jsdom": "^27.4.0",
-    "lint-staged": "^16.3.3",
     "playwright": "^1.58.2",
     "prettier": "^3.8.1",
     "prettier-plugin-tailwindcss": "^0.7.2",
@@ -114,14 +111,5 @@
       "lodash": "4.18.1",
       "undici": ">=6.24.0"
     }
-  },
-  "lint-staged": {
-    "*.{ts,tsx}": [
-      "eslint --fix",
-      "prettier --write"
-    ],
-    "*.{css,json,md}": [
-      "prettier --write"
-    ]
   }
 }

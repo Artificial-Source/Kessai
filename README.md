@@ -17,12 +17,6 @@
   <img src="https://img.shields.io/badge/Tauri%202-Rust%20%2B%20React-bf5af2" alt="Tauri 2">
 </p>
 
-<br />
-
-<p align="center">
-  <img src="docs/screenshots/dashboard.png" alt="Kessai Dashboard" width="90%">
-</p>
-
 ---
 
 ## Features
@@ -38,19 +32,6 @@
 - **Data Portability** -- JSON export/import, CSV/bank statement import, diagnostic logs
 - **Web + CLI + MCP** -- Browser mode, terminal CLI, AI assistant integration
 - **Dark/Light Themes** -- Glassmorphic UI with keyboard shortcuts throughout
-
----
-
-## Screenshots
-
-<p align="center">
-  <img src="docs/screenshots/subscriptions.png" alt="Subscriptions Grid View" width="49%">
-  <img src="docs/screenshots/subscriptions-list.png" alt="Subscriptions List View" width="49%">
-</p>
-
-<p align="center">
-  <em>Grid and list views with category badges, multi-currency conversion, and price change indicators</em>
-</p>
 
 ---
 

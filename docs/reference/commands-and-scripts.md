@@ -45,7 +45,6 @@ The main command catalog lives in `package.json`.
 | `pnpm release`       | `release-it`                      | Requires a clean `main` branch per `.release-it.json`; preflight now includes `cargo test --workspace`                      |
 | `pnpm release:dry`   | `node scripts/release-dry-run.js` | Runs `release-it --dry-run`, then restores release-managed files so dry-runs do not leave version skew or changelog residue |
 | `pnpm sync-versions` | `node scripts/sync-versions.js`   | Syncs `package.json`, `src-tauri/tauri.conf.json`, and `src-tauri/Cargo.toml`                                               |
-| `pnpm prepare`       | `husky`                           | Installs Git hooks for local contributors                                                                                   |
 
 ## Rust and workspace binaries
 

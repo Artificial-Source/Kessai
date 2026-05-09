@@ -17,7 +17,7 @@ set -euo pipefail
 #   ${XDG_BIN_HOME:-~/.local/bin}/kessai-mcp                     (CLI + MCP server, source installs)
 #   ${XDG_BIN_HOME:-~/.local/bin}/kessai-web                     (web server, source installs)
 #   ${XDG_DATA_HOME:-~/.local/share}/applications/kessai.desktop (desktop entry)
-#   ${XDG_DATA_HOME:-~/.local/share}/icons/hicolor/128x128/apps/kessai.png (icon)
+#   ${XDG_DATA_HOME:-~/.local/share}/icons/hicolor/*/apps/kessai.png (icons)
 #
 # To uninstall: ./uninstall.sh
 # ============================================================================
@@ -127,7 +127,6 @@ XDG_BIN_HOME="${XDG_BIN_HOME:-$HOME/.local/bin}"
 BIN_DIR="$XDG_BIN_HOME"
 APPLICATIONS_DIR="$XDG_DATA_HOME/applications"
 ICON_THEME_DIR="$XDG_DATA_HOME/icons/hicolor"
-ICON_DIR="$ICON_THEME_DIR/128x128/apps"
 
 # Default options
 DRY_RUN=false
@@ -180,7 +179,7 @@ ${BOLD}FILES CREATED:${NC}
       $BIN_DIR/kessai-mcp
       $BIN_DIR/kessai-web
       $APPLICATIONS_DIR/kessai.desktop
-      $ICON_DIR/kessai.png
+      $ICON_THEME_DIR/*/apps/kessai.png
 
 ${BOLD}TO UNINSTALL:${NC}
     ./uninstall.sh
@@ -259,11 +258,48 @@ fi
 # Pre-built binary download (default fast path)
 # ============================================================================
 BINARY_PATH=""
-ICON_SRC=""
+RELEASE_ICON_SRC=""
 BUILD_LOG=""
 STATUS_FILE=""
 PROGRESS_FILE=""
 COMPILE_FILE=""
+
+install_icon_file() {
+    local theme_dir="$1"
+    local source_file="$2"
+
+    if [[ ! -f "$source_file" ]]; then
+        return 1
+    fi
+
+    mkdir -p "$theme_dir/apps"
+    cp "$source_file" "$theme_dir/apps/kessai.png"
+    return 0
+}
+
+install_app_icons() {
+    local installed=false
+    local icon_512="$SCRIPT_DIR/src-tauri/icons/icon.png"
+
+    if [[ ! -f "$icon_512" ]]; then
+        icon_512="$SCRIPT_DIR/public/icon-transparent.png"
+    fi
+
+    install_icon_file "$ICON_THEME_DIR/32x32" "$SCRIPT_DIR/src-tauri/icons/32x32.png" && installed=true
+    install_icon_file "$ICON_THEME_DIR/64x64" "$SCRIPT_DIR/src-tauri/icons/64x64.png" && installed=true
+    install_icon_file "$ICON_THEME_DIR/128x128" "$SCRIPT_DIR/src-tauri/icons/128x128.png" && installed=true
+    install_icon_file "$ICON_THEME_DIR/256x256" "$SCRIPT_DIR/src-tauri/icons/128x128@2x.png" && installed=true
+    install_icon_file "$ICON_THEME_DIR/256x256@2" "$SCRIPT_DIR/src-tauri/icons/128x128@2x.png" && installed=true
+    install_icon_file "$ICON_THEME_DIR/512x512" "$icon_512" && installed=true
+
+    if [[ "$installed" == "false" && -n "$RELEASE_ICON_SRC" ]]; then
+        install_icon_file "$ICON_THEME_DIR/128x128" "$RELEASE_ICON_SRC" && installed=true
+    fi
+
+    if [[ "$installed" == "false" ]]; then
+        print_warning "No app icon source found; desktop entry may use a cached icon"
+    fi
+}
 
 try_download_binary() {
     # Determine the right asset name for this platform
@@ -400,7 +436,7 @@ try_download_binary() {
         local found_icon
         found_icon=$(find "$deb_extract" -name "*.png" -path "*/128*" 2>/dev/null | head -1) || true
         if [[ -n "$found_icon" ]]; then
-            ICON_SRC="$found_icon"
+            RELEASE_ICON_SRC="$found_icon"
         fi
     fi
 
@@ -659,13 +695,6 @@ fi
 # ============================================================================
 # Install to XDG locations
 # ============================================================================
-# Icon source: prefer transparent desktop asset, then fall back to Tauri icon.
-if [[ -z "$ICON_SRC" && -f "$SCRIPT_DIR/public/icon-transparent.png" ]]; then
-    ICON_SRC="$SCRIPT_DIR/public/icon-transparent.png"
-elif [[ -z "$ICON_SRC" && -f "$SCRIPT_DIR/src-tauri/icons/128x128.png" ]]; then
-    ICON_SRC="$SCRIPT_DIR/src-tauri/icons/128x128.png"
-fi
-
 echo ""
 print_step "Installing to XDG user directories (no sudo needed)..."
 
@@ -676,7 +705,7 @@ if [[ "$DRY_RUN" == "true" ]]; then
         print_dry "Would copy kessai-mcp and kessai-web to $BIN_DIR/"
     fi
     print_dry "Would create desktop entry at $APPLICATIONS_DIR/kessai.desktop"
-    print_dry "Would install icon at $ICON_DIR/kessai.png"
+    print_dry "Would install app icons under $ICON_THEME_DIR/*/apps/kessai.png"
 else
     draw_progress 92 "Installing binaries..." 5
 
@@ -699,10 +728,7 @@ else
 
     draw_progress 95 "Installing icon..." 5
 
-    mkdir -p "$ICON_DIR"
-    if [[ -n "$ICON_SRC" && -f "$ICON_SRC" ]]; then
-        cp "$ICON_SRC" "$ICON_DIR/kessai.png"
-    fi
+    install_app_icons
 
     draw_progress 97 "Creating desktop entry..." 5
 

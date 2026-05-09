@@ -47,8 +47,40 @@ XDG_BIN_HOME="${XDG_BIN_HOME:-$HOME/.local/bin}"
 BIN_DIR="$XDG_BIN_HOME"
 APPLICATIONS_DIR="$XDG_DATA_HOME/applications"
 ICON_THEME_DIR="$XDG_DATA_HOME/icons/hicolor"
-ICON_DIR="$ICON_THEME_DIR/128x128/apps"
 APP_DATA_DIR="$XDG_DATA_HOME/com.asf.kessai"
+
+remove_icon_file() {
+    local theme_dir="$1"
+    local icon_path="$theme_dir/apps/kessai.png"
+
+    if [[ -f "$icon_path" ]]; then
+        rm -f "$icon_path"
+        return 0
+    fi
+
+    return 1
+}
+
+remove_app_icons() {
+    local removed=false
+
+    remove_icon_file "$ICON_THEME_DIR/32x32" && removed=true
+    remove_icon_file "$ICON_THEME_DIR/64x64" && removed=true
+    remove_icon_file "$ICON_THEME_DIR/128x128" && removed=true
+    remove_icon_file "$ICON_THEME_DIR/256x256" && removed=true
+    remove_icon_file "$ICON_THEME_DIR/256x256@2" && removed=true
+    remove_icon_file "$ICON_THEME_DIR/512x512" && removed=true
+
+    if [[ "$removed" == "true" ]]; then
+        if command -v gtk-update-icon-cache &>/dev/null; then
+            gtk-update-icon-cache -f -t "$ICON_THEME_DIR" 2>/dev/null || true
+        fi
+        print_success "Removed icons"
+        return 0
+    fi
+
+    return 1
+}
 
 # Default options
 UNINSTALL_APP=false
@@ -217,18 +249,13 @@ if [[ "$UNINSTALL_APP" == "true" ]]; then
         FOUND_SOMETHING=true
     fi
 
-    if [[ -f "$APPLICATIONS_DIR/kessai.desktop" ]]; then
-        rm -f "$APPLICATIONS_DIR/kessai.desktop"
+    if [[ -f "$APPLICATIONS_DIR/kessai.desktop" || -f "$APPLICATIONS_DIR/Kessai.desktop" ]]; then
+        rm -f "$APPLICATIONS_DIR/kessai.desktop" "$APPLICATIONS_DIR/Kessai.desktop"
         print_success "Removed desktop entry"
         FOUND_SOMETHING=true
     fi
 
-    if [[ -f "$ICON_DIR/kessai.png" ]]; then
-        rm -f "$ICON_DIR/kessai.png"
-        if command -v gtk-update-icon-cache &>/dev/null; then
-            gtk-update-icon-cache -f -t "$ICON_THEME_DIR" 2>/dev/null || true
-        fi
-        print_success "Removed icon"
+    if remove_app_icons; then
         FOUND_SOMETHING=true
     fi
 

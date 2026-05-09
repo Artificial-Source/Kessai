@@ -7,7 +7,7 @@ vi.mock('@tauri-apps/api/core', () => ({
   invoke: vi.fn(),
 }))
 
-// Mock matchMedia for useMediaQuery
+// Mock matchMedia for responsive sidebar behavior.
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
   value: vi.fn().mockImplementation((query: string) => ({
