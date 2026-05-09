@@ -1,7 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
 import { SubscriptionsListView } from '../subscriptions-list-view'
-import { usePriceHistoryStore } from '@/stores/price-history-store'
 import type { Subscription } from '@/types/subscription'
 import type { Category } from '@/types/category'
 
@@ -54,14 +53,7 @@ const defaultProps = {
 
 describe('SubscriptionsListView', () => {
   beforeEach(() => {
-    usePriceHistoryStore.setState({
-      recentChanges: [],
-      isLoading: false,
-      error: null,
-      fetchRecent: vi.fn().mockResolvedValue(undefined),
-      fetchBySubscription: vi.fn().mockResolvedValue([]),
-      getLatest: vi.fn().mockResolvedValue(null),
-    })
+    vi.clearAllMocks()
   })
 
   it('renders table headers', () => {

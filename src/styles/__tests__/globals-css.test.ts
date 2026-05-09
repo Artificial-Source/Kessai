@@ -5,10 +5,6 @@ import { expect, describe, it } from 'vitest'
 const globalsCss = resolve(process.cwd(), 'src/styles/globals.css')
 const calendarDayPanel = resolve(process.cwd(), 'src/components/calendar/calendar-day-panel.tsx')
 const spendingTrends = resolve(process.cwd(), 'src/components/dashboard/spending-trends.tsx')
-const monthlySpendingChart = resolve(
-  process.cwd(),
-  'src/components/analytics/monthly-spending-chart.tsx'
-)
 const dashboardPage = resolve(process.cwd(), 'src/pages/dashboard.tsx')
 const subscriptionsPage = resolve(process.cwd(), 'src/pages/subscriptions.tsx')
 const bottomTabBar = resolve(process.cwd(), 'src/components/layout/bottom-tab-bar.tsx')
@@ -58,7 +54,7 @@ describe('global blur policy', () => {
   })
 
   it('keeps blur off known scrolling surfaces and uses glass-overlay for preserved overlays', () => {
-    const overlayComponents = [calendarDayPanel, spendingTrends, monthlySpendingChart].map((file) =>
+    const overlayComponents = [calendarDayPanel, spendingTrends].map((file) =>
       readFileSync(file, 'utf8')
     )
     const scrollSurfaceComponents = [dashboardPage, subscriptionsPage, bottomTabBar].map((file) =>
@@ -67,7 +63,6 @@ describe('global blur policy', () => {
 
     expect(overlayComponents[0]).toMatch(/className="[^"]*glass-overlay[^"]*animate-slide-in-right/)
     expect(overlayComponents[1]).toMatch(/className="[^"]*glass-overlay[^"]*shadow-lg[^"]*"/)
-    expect(overlayComponents[2]).toMatch(/className="[^"]*glass-overlay[^"]*shadow-lg[^"]*"/)
 
     for (const component of overlayComponents) {
       expect(component).not.toMatch(/backdrop-blur\b/)

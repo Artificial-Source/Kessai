@@ -15,8 +15,7 @@ const shortcuts = [
   { key: '1', description: 'Go to Dashboard' },
   { key: '2', description: 'Go to Subscriptions' },
   { key: '3', description: 'Go to Calendar' },
-  { key: '4', description: 'Go to Analytics' },
-  { key: '5', description: 'Go to Settings' },
+  { key: '4', description: 'Go to Settings' },
   { key: '?', description: 'Show this help' },
 ] as const
 

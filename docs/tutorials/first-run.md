@@ -2,7 +2,7 @@
 
 This tutorial walks you through a complete first session in Kessai: launch the app, add one subscription, verify it on Dashboard and Calendar, and set up a backup.
 
-> Scope: **desktop app flow** (`pnpm tauri dev` or a released desktop build).
+> Scope: **desktop app flow** (`pnpm start` or a released desktop build).
 
 ## Before you start
 

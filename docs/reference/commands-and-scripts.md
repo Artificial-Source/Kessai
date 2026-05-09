@@ -10,13 +10,14 @@ The main command catalog lives in `package.json`.
 
 | Command                               | What it runs                                                                       | Notes                                                                     |
 | ------------------------------------- | ---------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
-| `pnpm start`                          | `tauri dev`                                                                        | Convenience alias for the desktop dev app                                 |
+| `pnpm start`                          | `tauri dev --config src-tauri/tauri.dev.conf.json`                                 | Desktop dev app as `Kessai Dev` with isolated app identity and data       |
 | `pnpm dev`                            | `vite`                                                                             | Frontend-only dev server on port `1420` from `vite.config.ts`             |
 | `pnpm dev:web`                        | `cargo run -p kessai-web -- --dist-dir dist --port 3000` and `pnpm dev`            | Runs the local web API and Vite together                                  |
 | `pnpm build`                          | `tsc && vite build`                                                                | Produces the frontend bundle in `dist/`                                   |
 | `pnpm build:tauri`                    | `tauri build`                                                                      | Alias for a production desktop build                                      |
 | `pnpm preview`                        | `vite preview`                                                                     | Serves the built frontend bundle                                          |
-| `pnpm tauri dev` / `pnpm tauri build` | via the `tauri` script                                                             | Common desktop commands because `package.json` exposes `"tauri": "tauri"` |
+| `pnpm start:prod-id`                  | `tauri dev`                                                                        | Dev runner with production app identity; use only when testing prod paths |
+| `pnpm tauri dev` / `pnpm tauri build` | via the `tauri` script                                                             | Raw Tauri commands because `package.json` exposes `"tauri": "tauri"`      |
 | `pnpm serve`                          | `cargo build --release -p kessai-web && pnpm build && ./target/release/kessai-web` | Builds and runs the release web server                                    |
 | `pnpm serve:dev`                      | `cargo run -p kessai-web -- --dist-dir dist --port 3000`                           | Runs only the web backend                                                 |
 

@@ -46,7 +46,7 @@ If you run only `pnpm dev`, start the backend separately:
 cargo run -p kessai-web -- --port 3000
 ```
 
-## `pnpm tauri dev` or `pnpm tauri build` fails on Linux
+## `pnpm start` or `pnpm tauri build` fails on Linux
 
 Install Tauri build dependencies (Ubuntu/Debian):
 
@@ -58,7 +58,7 @@ sudo apt-get install -y libwebkit2gtk-4.1-dev libgtk-3-dev libayatana-appindicat
 Then retry:
 
 ```bash
-pnpm tauri dev
+pnpm start
 ```
 
 ## Import fails with invalid backup data

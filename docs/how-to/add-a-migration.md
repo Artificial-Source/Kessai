@@ -79,7 +79,7 @@ You should see a dense sequence up to your newest migration.
 Desktop and web startup paths call `run_migrations` automatically through shared
 core initialization, so you can also validate by starting the intended surface:
 
-- `pnpm tauri dev` (desktop)
+- `pnpm start` (desktop)
 - `cargo run -p kessai-web -- --port 3000` (web server)
 
 If startup fails after schema changes, check logs first and verify that all

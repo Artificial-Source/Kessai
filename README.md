@@ -27,9 +27,8 @@
 
 ## Features
 
-- **Dashboard** -- Stats, category breakdown, spending trends, budget tracking, price change alerts
+- **Dashboard** -- Stats, category breakdown, spending trends, and budget tracking
 - **Subscriptions** -- Grid, list, and bento views. Search, sort, filter by category or tags. Pin favorites
-- **Analytics** -- Monthly spending charts, year summaries, spending velocity, category breakdowns
 - **Calendar** -- Visual payment schedule. Mark as paid or skip
 - **Global Search** -- `Cmd+K` to find anything
 - **Multi-Currency** -- 10 currencies with live conversion and cost normalization (daily/weekly/monthly/yearly)
@@ -49,7 +48,7 @@
 </p>
 
 <p align="center">
-  <em>Grid and list views with category badges, multi-currency conversion, and price change indicators</em>
+  <em>Grid and list views with category badges, multi-currency conversion, and pin controls</em>
 </p>
 
 ---
@@ -111,8 +110,10 @@ pnpm tauri build
 For local development instead of a production build:
 
 ```bash
-pnpm tauri dev
+pnpm start
 ```
+
+The dev desktop app launches as `Kessai Dev` with a separate app identity and data directory, so it does not collide with an installed production `Kessai` app.
 
 ---
 
@@ -147,7 +148,7 @@ kessai-mcp upcoming --days 14          # Upcoming payments
 ## Development
 
 ```bash
-pnpm tauri dev           # Start dev app
+pnpm start               # Start Kessai Dev desktop app
 pnpm check               # Lint + typecheck + format
 pnpm test:run            # Frontend tests
 cargo test --workspace   # Rust tests

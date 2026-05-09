@@ -86,13 +86,13 @@ The desktop logo helpers validate filenames in `src-tauri/src/lib.rs`: only `.we
 | `get_recent_price_changes` | Return recent price changes | optional `days` | Defaults to `90` days |
 | `list_latest_price_history` | Return the latest price change for many subscriptions | `subscription_ids` | Batch helper for list and dashboard views |
 
-## Analytics, settings, and data-management commands
+## Reporting, settings, and data-management commands
 
 | Command | Purpose | Key inputs | Notes |
 | --- | --- | --- | --- |
 | `get_monthly_spending` | Return monthly spending series | optional `months` | Defaults to `12` |
-| `get_year_summary` | Return a year summary | `year` | Analytics detail view |
-| `get_spending_velocity` | Return velocity metrics | none | Used by analytics cards |
+| `get_year_summary` | Return a year summary | `year` | Reporting data |
+| `get_spending_velocity` | Return velocity metrics | none | Reporting data |
 | `get_category_spending` | Return category breakdown | optional `months` | Defaults to `6` |
 | `get_settings` | Return the singleton settings row | none | Includes theme, currency, notifications, motion, and budget |
 | `update_settings` | Update the singleton settings row | `data: UpdateSettings` | Partial update DTO |

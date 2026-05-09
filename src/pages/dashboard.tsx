@@ -1,7 +1,7 @@
-import { useState, useEffect, useMemo, lazy, Suspense } from 'react'
+import { useEffect, useMemo } from 'react'
 import { useShallow } from 'zustand/react/shallow'
 import dayjs from 'dayjs'
-import { CalendarDays, Calendar, CalendarClock, CreditCard, FlaskConical } from 'lucide-react'
+import { CalendarDays, Calendar, CalendarClock, CreditCard } from 'lucide-react'
 import { useSubscriptionStore } from '@/stores/subscription-store'
 import { useCategoryStore } from '@/stores/category-store'
 import { useSettingsStore } from '@/stores/settings-store'
@@ -12,24 +12,15 @@ import { getUpcomingPayments } from '@/lib/date-utils'
 import { ProgressBar } from '@/components/ui/progress-bar'
 import { StatCard } from '@/components/dashboard/stat-card'
 import { UpcomingPaymentRow } from '@/components/dashboard/upcoming-payment-row'
-import { InsightsCard } from '@/components/dashboard/insights-card'
 import { SpendingTrends } from '@/components/dashboard/spending-trends'
 import { TrialsWidget } from '@/components/dashboard/trials-widget'
 import { BudgetWidget } from '@/components/dashboard/budget-widget'
 import { TrialAlertCard } from '@/components/dashboard/trial-alert-card'
-import { PriceChangesCard } from '@/components/dashboard/price-changes-card'
 import { DashboardSkeleton } from '@/components/dashboard/dashboard-skeleton'
 import { ReviewNudgeCard } from '@/components/dashboard/review-nudge-card'
-import { Button } from '@/components/ui/button'
 import { WebBackendBanner } from '@/components/ui/web-backend-banner'
 import { calculateNormalizedAmount, NORMALIZATION_SUFFIXES } from '@/types/subscription'
 import type { CurrencyCode } from '@/lib/currency'
-
-const WhatIfSimulator = lazy(() =>
-  import('@/components/dashboard/what-if-simulator').then((m) => ({
-    default: m.WhatIfSimulator,
-  }))
-)
 
 export function Dashboard() {
   // Use selective subscriptions for better performance
@@ -65,7 +56,6 @@ export function Dashboard() {
   } = useDashboardStats()
 
   const costNormalization = useUiStore((s) => s.costNormalization)
-  const [whatIfOpen, setWhatIfOpen] = useState(false)
   const isNormalized = costNormalization !== 'as-is'
 
   // Helper to convert totals-by-cycle to normalized amounts
@@ -119,17 +109,11 @@ export function Dashboard() {
 
   return (
     <div className="animate-fade-in-up flex min-h-full flex-col space-y-6">
-      <header className="flex flex-wrap items-end justify-between gap-4">
+      <header className="flex flex-col gap-1">
         <div className="flex flex-col gap-1">
           <h2 className="text-2xl font-bold tracking-tight">Dashboard</h2>
           <p className="text-muted-foreground text-sm">Here's your subscription overview</p>
         </div>
-        {activeCount > 0 && (
-          <Button variant="outline" size="sm" onClick={() => setWhatIfOpen(true)} className="gap-2">
-            <FlaskConical className="h-3.5 w-3.5" />
-            What If...
-          </Button>
-        )}
       </header>
 
       <WebBackendBanner error={subscriptionsError || categoriesError || settingsError} />
@@ -236,36 +220,24 @@ export function Dashboard() {
 
       <TrialAlertCard subscriptions={subscriptions} />
 
-      <section className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
-        <div className="flex flex-col gap-6">
-          <PriceChangesCard currency={currency} />
-
-          <div className="glass-card p-6">
-            <h3 className="mb-5 text-lg font-bold">Upcoming Payments</h3>
-            {upcomingPayments.length === 0 ? (
-              <div className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-[var(--color-border-hover)] bg-[var(--color-card)] py-12 text-center">
-                <div className="bg-success/10 animate-gentle-float mb-4 rounded-full p-4">
-                  <span className="text-3xl leading-none">🎉</span>
-                </div>
-                <p className="text-foreground mb-1 text-lg font-semibold">All caught up!</p>
-                <p className="text-muted-foreground text-sm">No payments due in the next 7 days</p>
-              </div>
-            ) : (
-              <div className="flex flex-col gap-3">
-                {upcomingPayments.slice(0, 4).map((sub) => (
-                  <UpcomingPaymentRow key={sub.id} subscription={sub} currency={currency} />
-                ))}
-              </div>
-            )}
+      <section className="glass-card p-6">
+        <h3 className="mb-5 text-lg font-bold">Upcoming Payments</h3>
+        {upcomingPayments.length === 0 ? (
+          <div className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-[var(--color-border-hover)] bg-[var(--color-card)] py-12 text-center">
+            <div className="bg-success/10 animate-gentle-float mb-4 rounded-full p-4">
+              <span className="text-3xl leading-none">🎉</span>
+            </div>
+            <p className="text-foreground mb-1 text-lg font-semibold">All caught up!</p>
+            <p className="text-muted-foreground text-sm">No payments due in the next 7 days</p>
           </div>
-        </div>
-
-        <InsightsCard activeCount={activeCount} totalMonthly={totalMonthly} currency={currency} />
+        ) : (
+          <div className="flex flex-col gap-3">
+            {upcomingPayments.slice(0, 4).map((sub) => (
+              <UpcomingPaymentRow key={sub.id} subscription={sub} currency={currency} />
+            ))}
+          </div>
+        )}
       </section>
-
-      <Suspense fallback={null}>
-        <WhatIfSimulator open={whatIfOpen} onOpenChange={setWhatIfOpen} currency={currency} />
-      </Suspense>
     </div>
   )
 }

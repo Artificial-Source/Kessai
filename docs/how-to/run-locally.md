@@ -15,10 +15,16 @@ pnpm install --reporter=silent
 ## Run desktop app (Tauri)
 
 ```bash
-pnpm tauri dev
+pnpm start
 ```
 
-This is the primary local app experience (React frontend + Tauri backend).
+This is the primary local app experience (React frontend + Tauri backend). It launches as `Kessai Dev` with the `com.asf.kessai.dev` app identity, so it can run alongside an installed production `Kessai` app without single-instance or app-data collisions.
+
+If you intentionally need to test development code with the production app identity and data path, run:
+
+```bash
+pnpm start:prod-id
+```
 
 ## Run browser mode (web + API)
 

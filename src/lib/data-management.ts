@@ -2,7 +2,6 @@ import { apiInvoke as invoke } from '@/lib/api'
 import type { Subscription } from '@/types/subscription'
 import type { Category } from '@/types/category'
 import type { Payment } from '@/types/payment'
-import type { PriceChange } from '@/types/price-history'
 import type { Tag } from '@/types/tag'
 import type { Settings } from '@/types/settings'
 
@@ -16,7 +15,15 @@ interface BackupData {
   subscriptions: Subscription[]
   categories: Category[]
   payments: Payment[]
-  price_history?: PriceChange[]
+  price_history?: {
+    id: string
+    subscription_id: string
+    old_amount: number
+    new_amount: number
+    old_currency: string
+    new_currency: string
+    changed_at: string
+  }[]
   tags?: Tag[]
   subscription_tags?: { subscription_id: string; tag_id: string }[]
   settings: Omit<Settings, 'id'>

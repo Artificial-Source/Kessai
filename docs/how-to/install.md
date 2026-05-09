@@ -46,7 +46,7 @@ Build and run:
 git clone https://github.com/Artificial-Source/Kessai.git
 cd Kessai
 pnpm install --reporter=silent
-pnpm tauri dev
+pnpm start
 ```
 
 ## Install MCP/CLI binary

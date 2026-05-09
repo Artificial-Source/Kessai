@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom'
-import { LayoutDashboard, CreditCard, Calendar, BarChart3, Settings } from 'lucide-react'
+import { LayoutDashboard, CreditCard, Calendar, Settings } from 'lucide-react'
 import { Search } from 'lucide-react'
 import { useUiStore } from '@/stores/ui-store'
 import kessaiLogo from '@/assets/kessai-logo.svg'
@@ -10,7 +10,6 @@ const navItems = [
   { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
   { to: '/subscriptions', icon: CreditCard, label: 'Subscriptions' },
   { to: '/calendar', icon: Calendar, label: 'Calendar' },
-  { to: '/analytics', icon: BarChart3, label: 'Analytics' },
   { to: '/settings', icon: Settings, label: 'Settings' },
 ]
 

@@ -33,7 +33,7 @@ The React frontend starts in `src/main.tsx` and renders `App` from `src/App.tsx`
 
 Inside `App`:
 
-- `BrowserRouter` defines the route set: `/`, `/subscriptions`, `/calendar`, `/analytics`, `/settings`.
+- `BrowserRouter` defines the route set: `/`, `/subscriptions`, `/calendar`, `/settings`.
 - `AppShell` in `src/components/layout/app-shell.tsx` mounts shared UI such as the sidebar, bottom tab bar, keyboard shortcuts, command palette, and notification scheduler.
 - Route-level pages load lazily from `src/pages/`.
 

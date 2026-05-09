@@ -1,7 +1,6 @@
 import { create } from 'zustand'
 import { apiInvoke as invoke } from '@/lib/api'
 import { logger } from '@/lib/logger'
-import { usePriceHistoryStore } from '@/stores/price-history-store'
 import {
   compareSubscriptionDisplayPriority,
   type Subscription,
@@ -126,11 +125,6 @@ export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
           .map((s) => (s.id === id ? updated : s))
           .sort(sortByPaymentDate),
       }))
-
-      if (data.amount !== undefined || data.currency !== undefined) {
-        usePriceHistoryStore.getState().invalidateLatest([id])
-        void usePriceHistoryStore.getState().fetchLatestForSubscriptions([id])
-      }
     } catch (error) {
       set({ subscriptions: previousSubscriptions })
       console.error('Failed to update subscription:', error)

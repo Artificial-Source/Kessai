@@ -1,17 +1,52 @@
-# AGENTS.md — Kessai AI Agent Guidelines
+# AGENTS.md - Kessai AI Agent Guidelines
 
 > Guidelines for AI agents working on the Kessai codebase.
 
 ## Project Overview
 
-Kessai is a Tauri 2 desktop subscription tracker (React + TypeScript + Rust + SQLite). See `CLAUDE.md` for full project context, tech stack, design system, and code conventions.
+Kessai is a local-first subscription tracker built with Tauri 2, React 19, TypeScript, Rust, and SQLite. The repo also includes browser/web and MCP/CLI surfaces through the Cargo workspace.
+
+## Tech Stack
+
+- Desktop: Tauri 2 with Rust commands in `src-tauri/`
+- Frontend: React 19, TypeScript, Vite 7, Tailwind CSS 4, shadcn/ui-style primitives
+- State/forms: Zustand, React Hook Form, Zod
+- Dates: dayjs
+- Database: SQLite via `rusqlite` in `crates/kessai-core`
+- Testing: Vitest, Testing Library, Playwright
+
+## Key Directories
+
+| Path | Purpose |
+| --- | --- |
+| `src-tauri/` | Desktop shell, Tauri commands, app setup |
+| `crates/kessai-core/` | SQLite persistence and shared business logic |
+| `crates/kessai-mcp/` | CLI and MCP server |
+| `crates/kessai-web/` | Local web/API server |
+| `src/components/` | React components |
+| `src/components/ui/` | Reusable UI primitives |
+| `src/pages/` | Main app pages/routes |
+| `src/hooks/` | Shared React hooks |
+| `src/stores/` | Zustand stores |
+| `src/types/` | TypeScript domain types and schemas |
+| `src/lib/` | Frontend utilities and API wrappers |
+| `docs/` | Maintainer and user documentation |
+
+## Design System
+
+- Use the ASF Brutalist Glassmorphic direction: dark-first, high contrast, glass cards, crisp edges, and restrained motion.
+- Use Space Grotesk, Outfit, and Space Mono. Do not introduce Inter.
+- Use centered `Dialog` modals, not Sheet-style side panels.
+- Use small/medium brutalist primary buttons rather than oversized rounded CTA patterns.
+- Reserve `backdrop-filter` for small fixed or overlay surfaces, not large scrolling content.
+- Prefer CSS transitions/animations. Do not add Framer Motion or heavy scroll animation libraries.
 
 ## Before Making Changes
 
-1. Read `CLAUDE.md` for project conventions and don'ts
-2. Run `pnpm check` to verify lint, typecheck, and formatting pass
-3. Run `pnpm test:run` to ensure tests pass
-4. For Rust changes, also run `cargo test --workspace`
+1. Check the relevant code and docs before editing.
+2. Run `pnpm check` to verify lint, typecheck, and formatting pass.
+3. Run `pnpm test:run` when frontend behavior, hooks, stores, or components change.
+4. For Rust changes, also run `cargo test --workspace`.
 
 ## Branching & Workflow
 
@@ -58,4 +93,7 @@ All of the above (except Rust) are bundled in `pnpm check`.
 - Components: PascalCase, one per file, kebab-case filenames
 - Imports use `@/` path alias
 - Use dayjs (not date-fns), Zustand (not Redux), Dialog (not Sheet)
-- See the "Don'ts" section in `CLAUDE.md` for things to avoid
+- Use stable React keys; never use array indexes when domain IDs exist
+- Avoid `as any`; keep Zod schemas and TypeScript types aligned
+- Keep expensive derived values out of render hot paths
+- Do not add Framer Motion, Inter, Redux, date-fns, or Sheet-style navigation unless explicitly approved

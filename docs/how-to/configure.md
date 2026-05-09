@@ -14,7 +14,7 @@ In **Appearance**:
 2. Set **Display Currency**.
 3. (Optional) Set **Monthly Budget**.
 
-These values drive totals shown in Dashboard, Subscriptions, and Analytics.
+These values drive totals shown in Dashboard and Subscriptions.
 
 ## Configure exchange-rate overrides
 

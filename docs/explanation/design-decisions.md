@@ -20,7 +20,6 @@ The practical result is one canonical implementation of:
 
 - migrations
 - CRUD behavior
-- analytics
 - backup import/export
 - lifecycle and price-history rules (with capture behavior in adapter paths)
 

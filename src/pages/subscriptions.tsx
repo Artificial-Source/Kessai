@@ -1,6 +1,5 @@
 import { useState, useEffect, useMemo, lazy, Suspense } from 'react'
 import { toast } from 'sonner'
-import { useShallow } from 'zustand/react/shallow'
 import dayjs from 'dayjs'
 import isSameOrBefore from 'dayjs/plugin/isSameOrBefore'
 import { Plus, Search } from 'lucide-react'
@@ -22,7 +21,6 @@ import { SORT_LABELS } from '@/components/subscriptions/subscriptions-sort'
 import type { SortOption } from '@/components/subscriptions/subscriptions-sort'
 import { CancelledSubscriptionsSection } from '@/components/subscriptions/cancelled-subscriptions-section'
 import { useTagStore } from '@/stores/tag-store'
-import { usePriceHistoryStore } from '@/stores/price-history-store'
 import { SubscriptionsSkeleton } from '@/components/subscriptions/subscriptions-skeleton'
 import { WebBackendBanner } from '@/components/ui/web-backend-banner'
 import type { CurrencyCode } from '@/lib/currency'
@@ -81,12 +79,6 @@ export function Subscriptions() {
   const [selectedCategories, setSelectedCategories] = useState<string[]>([])
   const [selectedTags, setSelectedTags] = useState<string[]>([])
   const { tags: allTags, fetch: fetchTags, fetchForSubscriptions, error: tagsError } = useTagStore()
-  const { latestBySubscription, fetchLatestForSubscriptions } = usePriceHistoryStore(
-    useShallow((state) => ({
-      latestBySubscription: state.latestBySubscription,
-      fetchLatestForSubscriptions: state.fetchLatestForSubscriptions,
-    }))
-  )
   const [subscriptionTagMap, setSubscriptionTagMap] = useState<Record<string, string[]>>({})
   const tagById = useMemo<Record<string, Tag>>(
     () => Object.fromEntries(allTags.map((tag) => [tag.id, tag])),
@@ -159,16 +151,6 @@ export function Subscriptions() {
     () => subscriptions.filter((sub) => sub.status !== 'cancelled'),
     [subscriptions]
   )
-  const activeSubscriptionIdsKey = useMemo(
-    () => JSON.stringify(activeSubscriptions.map((sub) => sub.id).sort()),
-    [activeSubscriptions]
-  )
-
-  useEffect(() => {
-    if (!activeSubscriptionIdsKey) return
-    void fetchLatestForSubscriptions(JSON.parse(activeSubscriptionIdsKey) as string[])
-  }, [activeSubscriptionIdsKey, fetchLatestForSubscriptions])
-
   const cancelledSubscriptions = useMemo(
     () =>
       subscriptions
@@ -471,7 +453,6 @@ export function Subscriptions() {
             canMarkAsPaid={canMarkAsPaid}
             tagById={tagById}
             subscriptionTagMap={subscriptionTagMap}
-            latestPriceChangeMap={latestBySubscription}
           />
         ) : (
           <SubscriptionsListView
@@ -487,7 +468,6 @@ export function Subscriptions() {
             onTogglePinned={handleTogglePinned}
             tagById={tagById}
             subscriptionTagMap={subscriptionTagMap}
-            latestPriceChangeMap={latestBySubscription}
           />
         )}
 

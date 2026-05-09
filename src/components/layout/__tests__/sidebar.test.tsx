@@ -62,17 +62,11 @@ describe('Sidebar', () => {
     expect(screen.getByRole('link', { name: /settings/i })).toBeInTheDocument()
   })
 
-  it('shows all 5 nav items', () => {
+  it('shows all 4 nav items', () => {
     renderSidebar()
 
     const navLinks = screen.getAllByRole('link')
-    expect(navLinks).toHaveLength(5)
-  })
-
-  it('shows Analytics nav item', () => {
-    renderSidebar()
-
-    expect(screen.getByRole('link', { name: /analytics/i })).toBeInTheDocument()
+    expect(navLinks).toHaveLength(4)
   })
 
   it('renders Kessai branding', () => {

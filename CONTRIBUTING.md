@@ -26,7 +26,7 @@ Thank you for your interest in contributing to Kessai! This document provides gu
 git clone https://github.com/Artificial-Source/Kessai.git
 cd Kessai
 pnpm install
-pnpm tauri dev
+pnpm start
 ```
 
 See the [Development section](README.md#development) in the README for prerequisites.

@@ -16,7 +16,7 @@ A subscription carries more than a name and price:
 - shared-cost count
 - pinned state, notes, and optional logo
 
-Most screens derive from that record. Dashboard totals, calendar entries, analytics, notifications, and upcoming-payment lists all start from the current subscription set.
+Most screens derive from that record. Dashboard totals, calendar entries, notifications, and upcoming-payment lists all start from the current subscription set.
 
 ## Payments record outcomes, not plans
 
@@ -34,7 +34,7 @@ Kessai currently uses both:
 - `is_active`: a direct active/paused toggle used by commands like `toggle_subscription_active`
 - `status`: a lifecycle enum with `trial`, `active`, `paused`, `pending_cancellation`, `grace_period`, and `cancelled`
 
-The shared core also defines `SubscriptionStatus::is_billable()`, which treats `trial`, `active`, and `grace_period` as billable states for totals and analytics. That is why a subscription can be non-cancelled but still not count toward spending if its state is not billable.
+The shared core also defines `SubscriptionStatus::is_billable()`, which treats `trial`, `active`, and `grace_period` as billable states for totals. That is why a subscription can be non-cancelled but still not count toward spending if its state is not billable.
 
 ## Categories, tags, and cards solve different problems
 

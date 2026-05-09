@@ -8,7 +8,6 @@ import { useCategories } from '@/hooks/use-categories'
 import { usePaymentCardStore } from '@/stores/payment-card-store'
 import { useSettingsStore } from '@/stores/settings-store'
 import { useLogoFetch } from '@/hooks/use-logo-fetch'
-import { usePriceHistory } from '@/hooks/use-price-history'
 import { pickAndSaveLogo, getLogoDataUrl } from '@/lib/logo-storage'
 import { SUBSCRIPTION_TEMPLATES, getTemplateLogo } from '@/data/subscription-templates'
 import { CreditCard, Upload, X, Loader2, Users, Check, Globe, ChevronDown, Pin } from 'lucide-react'
@@ -22,7 +21,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { PriceHistoryTimeline } from '@/components/subscriptions/price-history-timeline'
 import {
   subscriptionFormSchema,
   SUBSCRIPTION_COLORS,
@@ -81,9 +79,6 @@ export function SubscriptionForm({
   const { fetchedLogoPreview, isFetchingLogo, fetchedLogoFilename, fetchLogo, clearFetchedLogo } =
     useLogoFetch(500)
   const prevNameRef = useRef(subscription?.name ?? '')
-  const [showPriceHistory, setShowPriceHistory] = useState(false)
-
-  const { changes: priceHistory } = usePriceHistory(subscription?.id)
 
   // Only fetch cards if not already loaded
   useEffect(() => {
@@ -690,28 +685,6 @@ export function SubscriptionForm({
             {...form.register('notes')}
           />
         </div>
-
-        {/* Price History (edit mode only) */}
-        {isEditing && priceHistory.length > 0 && (
-          <div className="space-y-2">
-            <button
-              type="button"
-              onClick={() => setShowPriceHistory(!showPriceHistory)}
-              className="text-muted-foreground hover:text-foreground text-sm transition-colors"
-            >
-              {showPriceHistory ? 'Hide' : 'Show'} price history ({priceHistory.length} change
-              {priceHistory.length !== 1 ? 's' : ''})
-            </button>
-            {showPriceHistory && (
-              <div className="border-border rounded-lg border bg-[var(--color-subtle-overlay)] p-4">
-                <PriceHistoryTimeline
-                  changes={priceHistory}
-                  currency={(subscription?.currency || 'USD') as CurrencyCode}
-                />
-              </div>
-            )}
-          </div>
-        )}
       </div>
 
       <div className="flex gap-3 pt-4">

@@ -1,0 +1,18 @@
+{
+  "productName": "Kessai Dev",
+  "identifier": "com.asf.kessai.dev",
+  "app": {
+    "windows": [
+      {
+        "title": "Kessai Dev",
+        "width": 1200,
+        "height": 800,
+        "minWidth": 900,
+        "minHeight": 600,
+        "center": true,
+        "decorations": false,
+        "transparent": false
+      }
+    ]
+  }
+}

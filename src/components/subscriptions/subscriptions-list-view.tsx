@@ -9,13 +9,11 @@ import type { NormalizationPeriod } from '@/types/subscription'
 import { Badge } from '@/components/ui/badge'
 import { SubscriptionLogo } from '@/components/ui/subscription-logo'
 import { TrialBadge } from '@/components/subscriptions/trial-badge'
-import { PriceHistoryBadge } from '@/components/subscriptions/price-history-badge'
 import type { BadgeVariant } from '@/components/ui/badge'
 import type { CurrencyCode } from '@/lib/currency'
 import type { Subscription } from '@/types/subscription'
 import type { Category } from '@/types/category'
 import type { Tag } from '@/types/tag'
-import type { PriceChange } from '@/types/price-history'
 import { TagBadge } from '@/components/tags/tag-badge'
 
 interface SubscriptionsListViewProps {
@@ -31,7 +29,6 @@ interface SubscriptionsListViewProps {
   onTogglePinned: (sub: Subscription) => void
   tagById?: Record<string, Tag>
   subscriptionTagMap?: Record<string, string[]>
-  latestPriceChangeMap?: Record<string, PriceChange | null>
 }
 
 function getCategoryVariant(categoryName?: string): BadgeVariant {
@@ -52,7 +49,6 @@ export const SubscriptionsListView = memo(function SubscriptionsListView({
   onTogglePinned,
   tagById = {},
   subscriptionTagMap = {},
-  latestPriceChangeMap = {},
 }: SubscriptionsListViewProps) {
   const isNormalized = costNormalization !== 'as-is'
   return (
@@ -195,12 +191,6 @@ export const SubscriptionsListView = memo(function SubscriptionsListView({
                       {sub.status === 'trial' && (
                         <TrialBadge trialEndDate={sub.trial_end_date ?? null} />
                       )}
-                      <PriceHistoryBadge
-                        subscriptionId={sub.id}
-                        currency={currency}
-                        latestChange={latestPriceChangeMap[sub.id]}
-                        disableFallbackFetch
-                      />
                     </div>
                   </td>
                   <td className="px-4 py-4">

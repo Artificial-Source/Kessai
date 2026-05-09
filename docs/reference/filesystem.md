@@ -14,6 +14,8 @@ The desktop app uses Tauri's app data directory via `app_handle.path().app_data_
 | macOS | `~/Library/Application Support/com.asf.kessai/` |
 | Windows | `%APPDATA%/com.asf.kessai/` |
 
+Local desktop development via `pnpm start` uses `src-tauri/tauri.dev.conf.json`, which changes the app identity to `com.asf.kessai.dev`. That gives the dev app its own platform app data directory, separate from the installed production app. Use `pnpm start:prod-id` only when you intentionally want development code to use the production identity and data path.
+
 ### Files and subdirectories under the desktop root
 
 | Path | Purpose |

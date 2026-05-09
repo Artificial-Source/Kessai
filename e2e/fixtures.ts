@@ -40,35 +40,6 @@ const MOCK_CATEGORIES = [
   { id: 'cat-other', name: 'Other', color: '#6b7280', icon: 'box', is_default: true },
 ]
 
-const MOCK_ANALYTICS_MONTHLY = [
-  { month: '2026-01', total: 89.97, count: 5 },
-  { month: '2026-02', total: 94.97, count: 5 },
-  { month: '2026-03', total: 99.97, count: 6 },
-]
-
-const MOCK_ANALYTICS_YEAR_SUMMARY = {
-  year: 2026,
-  total_spent: 1079.64,
-  monthly_average: 89.97,
-  most_expensive_month: '2026-03',
-  most_expensive_amount: 99.97,
-  subscription_count: 6,
-}
-
-const MOCK_ANALYTICS_VELOCITY = {
-  current_monthly: 99.97,
-  previous_monthly: 89.97,
-  change_percent: 11.1,
-  trend: 'up',
-}
-
-const MOCK_ANALYTICS_CATEGORY = [
-  { category_id: 'cat-streaming', category_name: 'Streaming', color: '#e50914', total: 35.98, percentage: 36.0 },
-  { category_id: 'cat-music', category_name: 'Music', color: '#1db954', total: 19.99, percentage: 20.0 },
-  { category_id: 'cat-gaming', category_name: 'Gaming', color: '#9147ff', total: 14.99, percentage: 15.0 },
-  { category_id: 'cat-productivity', category_name: 'Productivity', color: '#0078d4', total: 29.01, percentage: 29.0 },
-]
-
 // IPC mock handler script injected into the browser
 const MOCK_IPC_SCRIPT = `
   const SETTINGS = ${JSON.stringify(MOCK_SETTINGS)};
@@ -78,11 +49,6 @@ const MOCK_IPC_SCRIPT = `
   const CARDS = [];
   const TAGS = [];
   const SUBSCRIPTION_TAGS = {};
-
-  const ANALYTICS_MONTHLY = ${JSON.stringify(MOCK_ANALYTICS_MONTHLY)};
-  const ANALYTICS_YEAR_SUMMARY = ${JSON.stringify(MOCK_ANALYTICS_YEAR_SUMMARY)};
-  const ANALYTICS_VELOCITY = ${JSON.stringify(MOCK_ANALYTICS_VELOCITY)};
-  const ANALYTICS_CATEGORY = ${JSON.stringify(MOCK_ANALYTICS_CATEGORY)};
 
   window.__TAURI_INTERNALS__ = window.__TAURI_INTERNALS__ || {};
   window.__TAURI_EVENT_PLUGIN_INTERNALS__ = window.__TAURI_EVENT_PLUGIN_INTERNALS__ || {};
@@ -300,16 +266,6 @@ const MOCK_IPC_SCRIPT = `
       // System tray
       case 'update_tray_badge':
         return null;
-
-      // Analytics
-      case 'get_monthly_spending':
-        return [...ANALYTICS_MONTHLY];
-      case 'get_year_summary':
-        return { ...ANALYTICS_YEAR_SUMMARY };
-      case 'get_spending_velocity':
-        return { ...ANALYTICS_VELOCITY };
-      case 'get_category_spending':
-        return [...ANALYTICS_CATEGORY];
 
       default:
         console.warn('[TAURI MOCK] Unhandled command:', cmd, args);

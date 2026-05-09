@@ -22,7 +22,8 @@
   ],
   "type": "module",
   "scripts": {
-    "start": "tauri dev",
+    "start": "tauri dev --config src-tauri/tauri.dev.conf.json",
+    "start:prod-id": "tauri dev",
     "dev": "vite",
     "dev:web": "sh -c 'cargo run -p kessai-web -- --dist-dir dist --port 3000 & backend=$!; pnpm dev; status=$?; kill $backend; wait $backend 2>/dev/null; exit $status'",
     "build": "tsc && vite build",
