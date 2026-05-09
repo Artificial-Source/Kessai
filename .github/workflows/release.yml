@@ -59,6 +59,20 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile --reporter=silent
 
+      - name: Read release notes
+        id: release_notes
+        shell: bash
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          notes_file="$RUNNER_TEMP/release-notes.md"
+          node scripts/extract-release-notes.js "$version" > "$notes_file"
+
+          {
+            echo 'body<<EOF'
+            cat "$notes_file"
+            echo 'EOF'
+          } >> "$GITHUB_OUTPUT"
+
       - name: Build and publish desktop artifacts
         uses: tauri-apps/tauri-action@v0
         env:
@@ -68,12 +82,13 @@ jobs:
         with:
           tagName: v__VERSION__
           releaseName: 'Kessai v__VERSION__'
-          releaseBody: 'Installers and updater artifacts for Kessai.'
+          releaseBody: ${{ steps.release_notes.outputs.body }}
           releaseDraft: false
           prerelease: false
           args: ${{ matrix.args }}
 
   publish-mcp:
+    needs: publish-tauri
     permissions:
       contents: write
     strategy:

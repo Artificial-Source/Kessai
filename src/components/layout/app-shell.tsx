@@ -6,6 +6,7 @@ import { useMotionSettings } from '@/hooks/use-motion-settings'
 import { useKeyboardShortcuts } from '@/hooks/use-keyboard-shortcuts'
 import { useNotificationScheduler } from '@/hooks/use-notification-scheduler'
 import { KeyboardShortcutsDialog } from '@/components/ui/keyboard-shortcuts-dialog'
+import { UpdateAvailableDialog } from '@/components/ui/update-available-dialog'
 import { CommandPalette } from '@/components/command-palette/command-palette'
 
 export function AppShell() {
@@ -40,6 +41,7 @@ export function AppShell() {
 
       <BottomTabBar />
       <KeyboardShortcutsDialog />
+      <UpdateAvailableDialog />
       <CommandPalette />
     </div>
   )
