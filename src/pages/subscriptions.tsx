@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback, lazy, Suspense } from 'react'
+import { useState, useEffect, useMemo, useCallback, useRef, lazy, Suspense } from 'react'
 import { toast } from 'sonner'
 import dayjs from 'dayjs'
 import isSameOrBefore from 'dayjs/plugin/isSameOrBefore'
@@ -11,6 +11,12 @@ import { useUiStore } from '@/stores/ui-store'
 import { useSettingsStore } from '@/stores/settings-store'
 import { usePaymentStore } from '@/stores/payment-store'
 import { formatPaymentDate } from '@/lib/date-utils'
+import {
+  findSubscriptionFocus,
+  neighborSubscriptionId,
+  pageHeading,
+  refocusIfLost,
+} from '@/lib/focus'
 import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/ui/empty-state'
 import { SubscriptionBento } from '@/components/subscriptions/subscription-bento'
@@ -98,6 +104,10 @@ export function Subscriptions() {
   const [deleteTarget, setDeleteTarget] = useState<Subscription | null>(null)
   const [deleteOpen, setDeleteOpen] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
+  // Where focus goes when a confirmed delete or cancel closes its dialog: the first of these
+  // rows still rendered, else the page heading. Unset when nothing changed, so focus returns
+  // to the opener as usual.
+  const focusAfterCloseRef = useRef<string[] | undefined>(undefined)
   const [cancelTarget, setCancelTarget] = useState<Subscription | null>(null)
   const [cancelOpen, setCancelOpen] = useState(false)
   const [isCancelling, setIsCancelling] = useState(false)
@@ -292,6 +302,8 @@ export function Subscriptions() {
     } catch {
       toast.error('Error', { description: 'Failed to record payment.' })
     }
+    // Mark paid is gone once the payment is recorded; keep focus on the row (it may have moved).
+    refocusIfLost(() => findSubscriptionFocus(sub.id) ?? pageHeading())
   }
 
   const canMarkAsPaid = (sub: Subscription): boolean => {
@@ -304,8 +316,11 @@ export function Subscriptions() {
   const handleDelete = async () => {
     if (!deleteTarget) return
     setIsDeleting(true)
+    // Read before the row unmounts: the row that takes its place gets focus.
+    const neighbor = neighborSubscriptionId(deleteTarget.id)
     try {
       await remove(deleteTarget.id)
+      focusAfterCloseRef.current = neighbor ? [neighbor] : []
       toast.success('Subscription deleted', {
         description: `${deleteTarget.name} has been removed.`,
       })
@@ -315,6 +330,15 @@ export function Subscriptions() {
       setIsDeleting(false)
       setDeleteOpen(false)
     }
+  }
+
+  const restoreFocusAfterClose = (event: Event) => {
+    const candidates = focusAfterCloseRef.current
+    if (!candidates) return
+    focusAfterCloseRef.current = undefined
+    event.preventDefault()
+    const target = candidates.map((id) => findSubscriptionFocus(id)).find(Boolean) ?? pageHeading()
+    target?.focus()
   }
 
   const handleTogglePinned = async (sub: Subscription) => {
@@ -330,8 +354,11 @@ export function Subscriptions() {
 
   const handleCancel = async (id: string, reason?: string) => {
     setIsCancelling(true)
+    // The row leaves the active list: its neighbor takes focus, else the row in Cancelled.
+    const neighbor = neighborSubscriptionId(id)
     try {
       await cancel(id, reason)
+      focusAfterCloseRef.current = neighbor ? [neighbor, id] : [id]
       const sub = cancelTarget
       toast.success('Subscription cancelled', {
         description: `${sub?.name ?? 'Subscription'} has been cancelled.`,
@@ -380,6 +407,8 @@ export function Subscriptions() {
             : 'Nothing changed. Try again.',
       })
     }
+    // The row moves between the cancelled and active lists; focus follows it.
+    refocusIfLost(() => findSubscriptionFocus(sub.id) ?? pageHeading())
   }
 
   const requestDelete = (sub: Subscription) => {
@@ -569,6 +598,7 @@ export function Subscriptions() {
           variant="destructive"
           isLoading={isDeleting}
           onConfirm={handleDelete}
+          onCloseAutoFocus={restoreFocusAfterClose}
         />
       </Suspense>
 
@@ -579,6 +609,7 @@ export function Subscriptions() {
           subscription={cancelTarget}
           isLoading={isCancelling}
           onConfirm={handleCancel}
+          onCloseAutoFocus={restoreFocusAfterClose}
         />
       </Suspense>
     </>

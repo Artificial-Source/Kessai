@@ -27,7 +27,7 @@
 
 ## Features
 
-- **Dashboard** -- Budget progress, trial alerts, category breakdown, and upcoming renewals. Spending totals use your share of active, billable subscriptions in the display currency; other currencies are listed as excluded ("Excludes 2 in EUR, JPY")
+- **Dashboard** -- A renewal ledger: every charge in the next 30 days from the calendar projection (weekly plans once per due date), with Mark paid and Skip on each row, the full charge plus "your share" on shared plans, and a subtotal that names the currencies it leaves out. Beside it, Decisions (trials ending within 7 days, grace periods, recorded price increases) and a short "Worth reviewing" list. One summary states the monthly equivalent of your share in the display currency against an optional monthly target, with the exact variance
 - **Subscriptions** -- Grid, responsive list, and bento views. Search, sort, filter by category or tags, pin favorites, and reactivate cancelled subscriptions
 - **Custom logos** -- Upload PNG, JPEG, WebP, or GIF (5 MiB, 4096 px per side); stored as WebP. Desktop and browser. SVG excluded
 - **Calendar** -- Core-computed recurring occurrences, including every weekly renewal and recorded payments for cancelled subscriptions. Amounts are the full recorded or projected charges in the display currency, with other currencies listed as excluded. Mark as paid or skip; a paid or skipped outcome on the current due date advances the schedule atomically to the next unsettled period, while retries, historical payments, payments recorded ahead of time, and manual edits do not

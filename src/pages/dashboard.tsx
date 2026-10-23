@@ -1,48 +1,46 @@
-import { useEffect, useId, useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useShallow } from 'zustand/react/shallow'
-import { AlertTriangle, CalendarCheck, RotateCw } from 'lucide-react'
+import dayjs from 'dayjs'
+import { AlertTriangle, Plus, RotateCw } from 'lucide-react'
 import { useSubscriptionStore } from '@/stores/subscription-store'
 import { useCategoryStore } from '@/stores/category-store'
 import { useSettingsStore } from '@/stores/settings-store'
 import { useUiStore } from '@/stores/ui-store'
 import { useDashboardStats } from '@/hooks/use-dashboard-stats'
-import { formatCurrency } from '@/lib/currency'
-import { excludedCurrenciesNote } from '@/lib/totals'
-import { cn } from '@/lib/utils'
+import { useRecentPriceChanges } from '@/hooks/use-recent-price-changes'
+import { useRenewalLedger } from '@/hooks/use-renewal-ledger'
+import { useToday } from '@/hooks/use-today'
+import { isWebApiUnavailableError } from '@/lib/api'
+import { buildDecisions, buildReviewCandidates } from '@/lib/dashboard-decisions'
+import { nextRenewalAfter } from '@/lib/renewal-ledger'
 import { Button } from '@/components/ui/button'
-import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card } from '@/components/ui/card'
 import { EmptyState } from '@/components/ui/empty-state'
-import { StatCard } from '@/components/dashboard/stat-card'
-import { UpcomingPaymentRow } from '@/components/dashboard/upcoming-payment-row'
-import { TrialsWidget } from '@/components/dashboard/trials-widget'
-import { BudgetWidget } from '@/components/dashboard/budget-widget'
-import { CategoryBreakdown } from '@/components/dashboard/category-breakdown'
-import { DashboardSkeleton } from '@/components/dashboard/dashboard-skeleton'
-import { FirstRunEmptyState } from '@/components/subscriptions/first-run-empty-state'
-import {
-  BILLED_MONTHLY_LABEL,
-  BILLED_YEARLY_LABEL,
-  periodTotalLabel,
-  periodTotalSuffix,
-} from '@/components/subscriptions/subscription-display'
 import { WebBackendBanner } from '@/components/ui/web-backend-banner'
-import { calculateNormalizedAmount, NORMALIZATION_SUFFIXES } from '@/types/subscription'
-import type { CurrencyCode } from '@/lib/currency'
+import { CommitmentSummary } from '@/components/dashboard/commitment-summary'
+import { DashboardSkeleton } from '@/components/dashboard/dashboard-skeleton'
+import { DecisionRail } from '@/components/dashboard/decision-rail'
+import { RenewalLedger } from '@/components/dashboard/renewal-ledger'
+import { UrgentDecisions } from '@/components/dashboard/urgent-decisions'
+import { FirstRunEmptyState } from '@/components/subscriptions/first-run-empty-state'
 
-/** Shown instead of a figure when the data behind it failed to load. */
-const NOT_LOADED = '—'
+/** The full Decisions heading in the rail; the phone preview moves focus to it. */
+const DECISIONS_HEADING_ID = 'dashboard-decisions'
 
+/**
+ * Home: what charges next and what needs a decision before it does. One commitment summary
+ * (monthly equivalent, target), the 30-day renewal ledger with in-place Mark paid / Skip,
+ * and a rail of Decisions, Worth reviewing and this month's records.
+ */
 export function Dashboard() {
   const {
     subscriptions,
-    isLoading,
-    error: subscriptionsError,
+    fetchError,
     fetch: fetchSubscriptions,
   } = useSubscriptionStore(
     useShallow((state) => ({
       subscriptions: state.subscriptions,
-      isLoading: state.isLoading,
-      error: state.error,
+      fetchError: state.fetchError,
       fetch: state.fetch,
     }))
   )
@@ -50,203 +48,166 @@ export function Dashboard() {
   const categoriesError = useCategoryStore((state) => state.error)
   const fetchSettings = useSettingsStore((state) => state.fetch)
   const settingsError = useSettingsStore((state) => state.error)
-  const currency = useSettingsStore((state) => (state.settings?.currency || 'USD') as CurrencyCode)
-  const monthlyBudget = useSettingsStore((state) => state.settings?.monthly_budget ?? null)
-  const {
-    categorySpending,
-    totalMonthly,
-    excludedCurrencies,
-    activeCount,
-    monthlySubsTotal,
-    monthlySubsCount,
-    monthlySubsExcludedCurrencies,
-    yearlySubsTotal,
-    yearlySubsCount,
-    yearlySubsExcludedCurrencies,
-    upcomingPayments,
-    upcomingTotal,
-    upcomingExcludedCurrencies,
-  } = useDashboardStats()
-  const totalsNote = excludedCurrenciesNote(excludedCurrencies)
-  const monthlySubsNote = excludedCurrenciesNote(monthlySubsExcludedCurrencies)
-  const yearlySubsNote = excludedCurrenciesNote(yearlySubsExcludedCurrencies)
-  const upcomingNote = excludedCurrenciesNote(upcomingExcludedCurrencies)
-  const upcomingTitleId = useId()
+  const settings = useSettingsStore((state) => state.settings)
+  const openSubscriptionDialog = useUiStore((state) => state.openSubscriptionDialog)
+  const currency = settings?.currency || 'USD'
+  const monthlyBudget = settings?.monthly_budget ?? null
 
-  const costNormalization = useUiStore((s) => s.costNormalization)
-  const isNormalized = costNormalization !== 'as-is'
-  const normSuffix = isNormalized ? NORMALIZATION_SUFFIXES[costNormalization] : ''
-
-  const normalizedMonthly = isNormalized
-    ? calculateNormalizedAmount(monthlySubsTotal, 'monthly', costNormalization)
-    : monthlySubsTotal
-  const normalizedYearly = isNormalized
-    ? calculateNormalizedAmount(yearlySubsTotal, 'yearly', costNormalization)
-    : yearlySubsTotal
-  const periodTotal = isNormalized
-    ? calculateNormalizedAmount(totalMonthly, 'monthly', costNormalization)
-    : totalMonthly
-
-  const trials = useMemo(
-    () => subscriptions.filter((s) => s.status === 'trial' && s.is_active),
+  const today = useToday()
+  const stats = useDashboardStats()
+  const schedule = useRenewalLedger(today, currency)
+  // An amount or currency edit is what records a price change: read the history again then.
+  const priceRevision = useMemo(
+    () => subscriptions.map((s) => `${s.id}:${s.amount}:${s.currency}`).join('|'),
     [subscriptions]
   )
+  const priceChanges = useRecentPriceChanges(priceRevision)
+  const decisions = useMemo(
+    () => buildDecisions(subscriptions, priceChanges.changes, today),
+    [subscriptions, priceChanges.changes, today]
+  )
+  const candidates = useMemo(
+    () =>
+      buildReviewCandidates(subscriptions, {
+        today,
+        displayCurrency: currency,
+        exclude: new Set(decisions.map((decision) => decision.subscription.id)),
+      }),
+    [subscriptions, today, currency, decisions]
+  )
+  const nextRenewal = useMemo(
+    () => nextRenewalAfter(subscriptions, schedule.ledger.window.end),
+    [subscriptions, schedule.ledger.window.end]
+  )
 
+  // The first fetch decides between first run and data; until then a stored list (from
+  // another route) renders right away and an empty one shows the skeleton.
+  const [loadedOnce, setLoadedOnce] = useState(false)
   useEffect(() => {
-    fetchSubscriptions()
+    let live = true
+    void fetchSubscriptions().finally(() => {
+      if (live) setLoadedOnce(true)
+    })
     fetchCategories()
     fetchSettings()
+    return () => {
+      live = false
+    }
   }, [fetchSubscriptions, fetchCategories, fetchSettings])
 
-  // The dashboard refetches on mount, so an error here means its own load failed:
-  // show that plainly instead of zeros or "nothing due".
-  const loadFailed = Boolean(subscriptionsError)
-  const showSkeleton = isLoading && subscriptions.length === 0 && !loadFailed
-  const isFirstRun = !loadFailed && !isLoading && subscriptions.length === 0
-  const hasBudget = monthlyBudget !== null && monthlyBudget > 0
-  const showSideColumn =
-    !loadFailed && (hasBudget || trials.length > 0 || categorySpending.length > 0)
-  const countLabel = (count: number, noun = 'subscription') =>
-    `${count} ${noun}${count === 1 ? '' : 's'}`
+  const hasSubscriptions = subscriptions.length > 0
+  const showSkeleton = !hasSubscriptions && !loadedOnce && !fetchError
+  // Failure is not emptiness: without a list there is nothing honest to total.
+  const loadFailed = !hasSubscriptions && Boolean(fetchError)
+  const isFirstRun = !hasSubscriptions && loadedOnce && !fetchError
+  const settingsUnavailable = !settings && Boolean(settingsError)
 
   return (
-    <div className="animate-fade-in-up flex min-h-full flex-col gap-6">
-      <header className="flex flex-col gap-1">
-        <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
-        <p className="text-muted-foreground text-sm">
-          Totals use your share in {currency}. Other currencies are not converted.
-        </p>
+    <div className="animate-fade-in-up flex min-h-full flex-col gap-5 xl:gap-6">
+      <header className="flex items-start justify-between gap-4">
+        <div className="flex min-w-0 flex-col gap-1">
+          <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
+          <p className="text-muted-foreground text-sm">
+            <time dateTime={today}>{dayjs(today).format('dddd, MMMM D')}</time>
+          </p>
+        </div>
+        {isFirstRun ? null : (
+          <Button
+            variant="glow"
+            className="max-sm:size-11 max-sm:px-0"
+            onClick={() => openSubscriptionDialog()}
+          >
+            <Plus aria-hidden="true" />
+            <span className="max-sm:sr-only">Add Subscription</span>
+          </Button>
+        )}
       </header>
 
-      <WebBackendBanner error={subscriptionsError || categoriesError || settingsError} />
+      <WebBackendBanner error={fetchError || categoriesError || settingsError} />
 
       {showSkeleton ? (
         <DashboardSkeleton />
+      ) : loadFailed ? (
+        <EmptyState
+          icon={AlertTriangle}
+          tone="danger"
+          title="Couldn’t load your subscriptions"
+          description="Monthly figures and upcoming charges show once Kessai can read your data."
+          action={
+            <Button variant="outline" onClick={() => void fetchSubscriptions()}>
+              <RotateCw aria-hidden="true" />
+              Retry
+            </Button>
+          }
+        />
+      ) : isFirstRun ? (
+        <FirstRunEmptyState />
       ) : (
         <>
-          <section
-            aria-label="Totals"
-            className="stagger-children grid grid-cols-2 gap-3 md:gap-5 lg:grid-cols-4 xl:gap-6"
-          >
-            <StatCard
-              label={periodTotalLabel(costNormalization)}
-              value={loadFailed ? NOT_LOADED : formatCurrency(periodTotal, currency)}
-              unit={loadFailed ? undefined : periodTotalSuffix(costNormalization)}
-              subtitle={loadFailed ? undefined : countLabel(activeCount, 'active subscription')}
-              note={loadFailed ? null : totalsNote}
-            />
-            <StatCard
-              label={BILLED_MONTHLY_LABEL}
-              value={loadFailed ? NOT_LOADED : formatCurrency(normalizedMonthly, currency)}
-              unit={loadFailed ? undefined : normSuffix || '/mo'}
-              subtitle={loadFailed ? undefined : countLabel(monthlySubsCount)}
-              note={loadFailed ? null : monthlySubsNote}
-            />
-            <StatCard
-              label={BILLED_YEARLY_LABEL}
-              value={loadFailed ? NOT_LOADED : formatCurrency(normalizedYearly, currency)}
-              unit={loadFailed ? undefined : normSuffix || '/yr'}
-              subtitle={loadFailed ? undefined : countLabel(yearlySubsCount)}
-              note={loadFailed ? null : yearlySubsNote}
-            />
-            <StatCard
-              label="Due this week"
-              value={loadFailed ? NOT_LOADED : upcomingPayments.length.toString()}
-              subtitle={
-                !loadFailed && upcomingPayments.length > 0
-                  ? `${formatCurrency(upcomingTotal, currency)} total`
-                  : undefined
-              }
-              note={loadFailed ? null : upcomingNote}
-            />
-          </section>
+          {fetchError && !isWebApiUnavailableError(fetchError) ? (
+            <Card
+              tone="warning"
+              padding="sm"
+              role="alert"
+              className="flex flex-col gap-3 sm:flex-row sm:items-center"
+            >
+              <p className="text-foreground min-w-0 flex-1 text-sm">
+                Couldn&rsquo;t refresh your subscriptions. Showing what was last loaded.
+              </p>
+              <Button
+                variant="outline"
+                size="sm"
+                className="self-start sm:self-center"
+                onClick={() => void fetchSubscriptions()}
+              >
+                <RotateCw aria-hidden="true" />
+                Retry
+              </Button>
+            </Card>
+          ) : null}
+
+          <CommitmentSummary
+            monthly={stats.totalMonthly}
+            yearly={stats.totalYearly}
+            currency={currency}
+            countedCount={stats.countedCount}
+            trialCount={stats.trialCount}
+            excludedCurrencies={stats.excludedCurrencies}
+            target={monthlyBudget}
+            settingsUnavailable={settingsUnavailable}
+            onRetrySettings={() => void fetchSettings()}
+            categories={stats.categorySpending}
+          />
+
+          <UrgentDecisions
+            className="lg:hidden"
+            decisions={decisions}
+            onReview={openSubscriptionDialog}
+            decisionsHeadingId={DECISIONS_HEADING_ID}
+          />
 
           {/* Grid items default to min-width: auto, so one long name in a truncating row would
-              widen the whole column past a phone screen; every track and item here is min-w-0. */}
-          <div
-            className={cn(
-              'grid grid-cols-1 items-start gap-4 md:gap-5 xl:gap-6',
-              showSideColumn && 'lg:grid-cols-5'
-            )}
-          >
-            <Card asChild className={cn('min-w-0', showSideColumn && 'lg:col-span-3')}>
-              <section aria-labelledby={upcomingTitleId}>
-                <CardHeader
-                  action={
-                    !loadFailed && upcomingPayments.length > 0 ? (
-                      <div className="text-right">
-                        <p className="text-foreground font-[family-name:var(--font-mono)] text-base font-bold tabular-nums">
-                          {formatCurrency(upcomingTotal, currency)}
-                        </p>
-                        <p className="type-label text-muted-foreground">Due total</p>
-                      </div>
-                    ) : null
-                  }
-                >
-                  <CardTitle id={upcomingTitleId}>Upcoming payments</CardTitle>
-                  <CardDescription>Next 7 days</CardDescription>
-                  {!loadFailed && upcomingNote && (
-                    <p className="text-muted-foreground text-xs">{upcomingNote}</p>
-                  )}
-                </CardHeader>
-
-                {loadFailed ? (
-                  <EmptyState
-                    icon={AlertTriangle}
-                    tone="danger"
-                    variant="plain"
-                    size="compact"
-                    headingLevel="h3"
-                    title="Couldn’t load your subscriptions"
-                    description="Totals and upcoming payments will show once Kessai can read your data."
-                    action={
-                      <Button variant="outline" onClick={() => fetchSubscriptions()}>
-                        <RotateCw aria-hidden="true" />
-                        Retry
-                      </Button>
-                    }
-                  />
-                ) : isFirstRun ? (
-                  <FirstRunEmptyState variant="plain" headingLevel="h3" />
-                ) : upcomingPayments.length === 0 ? (
-                  <EmptyState
-                    icon={CalendarCheck}
-                    variant="plain"
-                    size="compact"
-                    headingLevel="h3"
-                    title="Nothing due in the next 7 days"
-                    description="Renewals show up here a week before they bill."
-                  />
-                ) : (
-                  <ul className="divide-border mt-2 divide-y">
-                    {upcomingPayments.slice(0, 6).map((sub) => (
-                      <UpcomingPaymentRow key={sub.id} subscription={sub} currency={currency} />
-                    ))}
-                  </ul>
-                )}
-              </section>
-            </Card>
-
-            {showSideColumn && (
-              <div className="flex min-w-0 flex-col gap-4 md:gap-5 lg:col-span-2 xl:gap-6">
-                {hasBudget && monthlyBudget !== null && (
-                  <BudgetWidget
-                    budget={monthlyBudget}
-                    currentSpend={totalMonthly}
-                    currency={currency}
-                    note={totalsNote}
-                  />
-                )}
-                <TrialsWidget trials={trials} />
-                {categorySpending.length > 0 && (
-                  <CategoryBreakdown
-                    categories={categorySpending}
-                    currency={currency}
-                    note={totalsNote}
-                  />
-                )}
-              </div>
-            )}
+              widen the column past a phone screen; every track and item here is min-w-0. */}
+          <div className="grid grid-cols-1 items-start gap-5 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)] xl:gap-6">
+            <RenewalLedger
+              ledger={schedule.ledger}
+              displayCurrency={currency}
+              isLoading={schedule.isLoading}
+              error={schedule.error}
+              onRetry={schedule.refetch}
+              nextRenewal={nextRenewal}
+            />
+            <DecisionRail
+              decisions={decisions}
+              priceChangesError={priceChanges.error}
+              candidates={candidates}
+              displayCurrency={currency}
+              today={today}
+              records={schedule.records}
+              recordsState={schedule.isLoading ? 'loading' : schedule.error ? 'error' : 'ready'}
+              onReview={openSubscriptionDialog}
+              decisionsHeadingId={DECISIONS_HEADING_ID}
+            />
           </div>
         </>
       )}

@@ -47,20 +47,25 @@ export function calculateDisplayTotals(
     totals.count++
   }
 
+  totals.monthly = roundToCurrencyUnits(totals.monthly, displayCurrency)
+  totals.yearly = roundToCurrencyUnits(totals.yearly, displayCurrency)
+  return totals
+}
+
+/** Rounds a summed amount to the currency's minor units (2 for USD, 0 for JPY). */
+export function roundToCurrencyUnits(amount: number, currency: string): number {
   let fractionDigits = 2
   try {
     fractionDigits =
       new Intl.NumberFormat('en-US', {
         style: 'currency',
-        currency: displayCurrency,
+        currency,
       }).resolvedOptions().maximumFractionDigits ?? 2
   } catch {
     // Match formatCurrency's two-decimal fallback for invalid legacy currency codes.
   }
   const scale = 10 ** fractionDigits
-  totals.monthly = Math.round((totals.monthly + Number.EPSILON) * scale) / scale
-  totals.yearly = Math.round((totals.yearly + Number.EPSILON) * scale) / scale
-  return totals
+  return Math.round((amount + Number.EPSILON) * scale) / scale
 }
 
 /** "Excludes 2 in EUR, JPY": what a display-currency total leaves out, or null when nothing is. */

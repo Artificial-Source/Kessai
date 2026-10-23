@@ -19,7 +19,7 @@ test.describe('Settings', () => {
   })
 
   test('should show currency options', async ({ page }) => {
-    await expect(page.getByText('Default currency', { exact: true })).toBeVisible()
+    await expect(page.getByText('Display currency', { exact: true })).toBeVisible()
   })
 
   test('should show data management section', async ({ page }) => {

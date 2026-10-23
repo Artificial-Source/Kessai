@@ -215,7 +215,9 @@ describe('Cancelled subscriptions section', () => {
     await screen.findByRole('button', { name: 'More actions for Stream Club' })
     await cancelledNames()
 
-    fireEvent.click(screen.getByRole('button', { name: 'Reactivate Old Stream' }))
+    const reactivate = screen.getByRole('button', { name: 'Reactivate Old Stream' })
+    reactivate.focus()
+    fireEvent.click(reactivate)
 
     await waitFor(() =>
       expect(invoke).toHaveBeenCalledWith('transition_subscription_status', {
@@ -227,6 +229,10 @@ describe('Cancelled subscriptions section', () => {
       await screen.findByRole('button', { name: 'More actions for Old Stream' })
     ).toBeInTheDocument()
     expect(await cancelledNames()).toEqual(['Old Forge'])
+    // The pressed button left with the cancelled row; focus followed the row to the active list.
+    await waitFor(() =>
+      expect(document.activeElement).toHaveAttribute('data-subscription-focus', 'old-stream')
+    )
     expect(toast.success).toHaveBeenCalledWith(
       'Reactivated Old Stream',
       expect.objectContaining({ description: expect.stringMatching(/^Next payment /) })

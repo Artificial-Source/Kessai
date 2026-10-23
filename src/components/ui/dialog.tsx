@@ -65,7 +65,8 @@ const DialogContent = React.forwardRef<
         {...props}
       >
         {children}
-        <DialogPrimitive.Close className="text-muted-foreground hover:bg-accent-muted hover:text-foreground absolute top-3 right-3 inline-flex size-9 items-center justify-center rounded-md transition-colors disabled:pointer-events-none">
+        {/* 36px on fine pointers; 44px on touch, re-centered on the same glyph position. */}
+        <DialogPrimitive.Close className="text-muted-foreground hover:bg-accent-muted hover:text-foreground absolute top-3 right-3 inline-flex size-9 items-center justify-center rounded-md transition-colors disabled:pointer-events-none pointer-coarse:top-2 pointer-coarse:right-2 pointer-coarse:size-11">
           <X className="h-4 w-4" aria-hidden="true" />
           <span className="sr-only">Close</span>
         </DialogPrimitive.Close>

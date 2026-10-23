@@ -1,6 +1,7 @@
 import { createRequire } from 'node:module'
 import type { Page } from '@playwright/test'
-import { test, expect, openNewSubscriptionForm } from './fixtures'
+import dayjs from 'dayjs'
+import { test, expect, openNewSubscriptionForm, seedSubscriptions } from './fixtures'
 
 const require = createRequire(import.meta.url)
 let axeModule: string | undefined
@@ -33,6 +34,13 @@ async function assertAccessibilityContracts(page: Page) {
   ).toEqual([])
 }
 
+async function assertNoAxeViolations(page: Page) {
+  if (!axeModule) return
+  // Optional scanner may not exist on this machine; a static import would fail discovery.
+  const { default: AxeBuilder } = await import(axeModule)
+  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([])
+}
+
 for (const [route, title] of [
   ['/', 'Dashboard'],
   ['/subscriptions', 'My Subscriptions'],
@@ -44,11 +52,7 @@ for (const [route, title] of [
     await page.goto(route)
     await expect(page.getByRole('heading', { name: title, level: 1 })).toBeVisible()
     await assertAccessibilityContracts(page)
-    if (axeModule) {
-      // Optional scanner may not exist on this machine; a static import would fail discovery.
-      const { default: AxeBuilder } = await import(axeModule)
-      expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([])
-    }
+    await assertNoAxeViolations(page)
     await page.keyboard.press('?')
     await expect(page.getByRole('dialog', { name: 'Keyboard Shortcuts' })).toBeVisible()
     await assertAccessibilityContracts(page)
@@ -65,3 +69,30 @@ for (const [route, title] of [
     }
   })
 }
+
+test('accessibility smoke: dashboard with renewals and decisions', async ({ page }) => {
+  await seedSubscriptions(page, [
+    {
+      id: 'sub-trial',
+      name: 'Trial Studio',
+      status: 'trial',
+      trial_end_date: dayjs().add(3, 'day').format('YYYY-MM-DD'),
+      next_payment_date: dayjs().add(3, 'day').format('YYYY-MM-DD'),
+    },
+    {
+      id: 'sub-due',
+      name: 'Due Tomorrow',
+      amount: 12,
+      shared_count: 3,
+      next_payment_date: dayjs().add(1, 'day').format('YYYY-MM-DD'),
+    },
+    { id: 'sub-yen', name: 'Yen Lessons', amount: 3200, currency: 'JPY', next_payment_date: null },
+  ])
+  await page.goto('/')
+  await expect(page.getByRole('heading', { name: 'Dashboard', level: 1 })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Upcoming charges', level: 2 })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Decisions', level: 2 })).toBeVisible()
+  await page.getByRole('button', { name: 'Breakdown' }).click()
+  await assertAccessibilityContracts(page)
+  await assertNoAxeViolations(page)
+})

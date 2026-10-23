@@ -4,7 +4,6 @@ import {
   formatPaymentDate,
   formatShortDate,
   getDaysUntil,
-  getUpcomingPayments,
 } from '../date-utils'
 import dayjs from 'dayjs'
 
@@ -126,55 +125,5 @@ describe('getDaysUntil', () => {
     expect(getDaysUntil('2026-03-09')).toBe(1)
     expect(formatPaymentDate('2026-03-08')).toBe('Mar 8, 2026')
     expect(formatShortDate('2026-03-08')).toBe('Mar 8')
-  })
-})
-
-describe('getUpcomingPayments', () => {
-  beforeEach(() => {
-    vi.useFakeTimers()
-    vi.setSystemTime(new Date(2025, 0, 15, 12, 0, 0))
-  })
-
-  afterEach(() => {
-    vi.useRealTimers()
-  })
-
-  const mockSubscriptions = [
-    { id: '1', name: 'Netflix', next_payment_date: '2025-01-20' },
-    { id: '2', name: 'Spotify', next_payment_date: '2025-01-16' },
-    { id: '3', name: 'AWS', next_payment_date: '2025-02-01' },
-    { id: '4', name: 'Inactive', next_payment_date: null },
-    { id: '5', name: 'Past', next_payment_date: '2025-01-10' },
-  ]
-
-  it('filters payments within the specified days', () => {
-    const upcoming = getUpcomingPayments(mockSubscriptions, 7)
-    expect(upcoming).toHaveLength(2)
-  })
-
-  it('sorts by payment date ascending', () => {
-    const upcoming = getUpcomingPayments(mockSubscriptions, 7)
-    expect(upcoming[0].name).toBe('Spotify')
-    expect(upcoming[1].name).toBe('Netflix')
-  })
-
-  it('excludes subscriptions with null payment date', () => {
-    const upcoming = getUpcomingPayments(mockSubscriptions, 30)
-    expect(upcoming.find((s) => s.name === 'Inactive')).toBeUndefined()
-  })
-
-  it('excludes past payment dates', () => {
-    const upcoming = getUpcomingPayments(mockSubscriptions, 30)
-    expect(upcoming.find((s) => s.name === 'Past')).toBeUndefined()
-  })
-
-  it('returns empty array when no upcoming payments', () => {
-    const upcoming = getUpcomingPayments([], 7)
-    expect(upcoming).toHaveLength(0)
-  })
-
-  it('includes charges due today after midnight', () => {
-    const today = { id: 'today', next_payment_date: '2025-01-15' }
-    expect(getUpcomingPayments([today], 0)).toEqual([today])
   })
 })

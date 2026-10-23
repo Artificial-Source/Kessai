@@ -92,6 +92,8 @@ beforeEach(() => {
       case 'list_calendar_payments':
         if (calendarError) throw calendarError
         return []
+      case 'get_recent_price_changes':
+        return []
       case 'mark_payment_paid':
         if (advanceSchedule)
           subscriptions = subscriptions.map((sub) =>
@@ -113,11 +115,20 @@ beforeEach(() => {
 
 describe('canonical frontend totals and payment outcomes', () => {
   it('shows identical monthly user-share totals on dashboard and subscriptions, excluding JPY', async () => {
+    vi.stubGlobal(
+      'matchMedia',
+      vi.fn(() => ({ matches: true, addEventListener: vi.fn(), removeEventListener: vi.fn() }))
+    )
     const dashboard = render(<Dashboard />, { wrapper: MemoryRouter })
-    const total = await screen.findByRole('group', { name: 'Monthly total' })
-    await waitFor(() => expect(within(total).getByText('$15.00')).toBeInTheDocument())
-    expect(screen.getAllByText('Excludes 1 in JPY').length).toBeGreaterThan(0)
+    const summary = await screen.findByRole('region', { name: 'Monthly equivalent' })
+    await waitFor(() => expect(within(summary).getByText('$15.00')).toBeInTheDocument())
+    expect(
+      within(summary).getByText(
+        '1 subscription in JPY is not included. Kessai does not convert currencies.'
+      )
+    ).toBeInTheDocument()
     dashboard.unmount()
+    vi.unstubAllGlobals()
 
     render(<Subscriptions />, { wrapper: MemoryRouter })
     const heading = await screen.findByRole('heading', { name: 'My Subscriptions' })

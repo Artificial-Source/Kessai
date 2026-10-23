@@ -14,10 +14,10 @@ This tutorial walks you through a complete first session in Kessai: launch the a
 1. Go to **Settings** in the left navigation.
 2. In **Appearance**:
    - Set your **Theme** (`Dark`, `Light`, or `System`).
-   - Set your **Default Currency**.
+   - Set your **Display currency**.
 3. (Optional) In the separate **Budget** section, set **Monthly budget**.
 
-Why this matters: Dashboard totals and budgets use your share of active, billable subscriptions in the default currency; new subscriptions default to that currency. Other currencies are listed as excluded, not converted.
+Why this matters: Dashboard totals and budgets use your share of active, billable subscriptions in the display currency; new subscriptions default to that currency. Other currencies are listed as excluded, not converted.
 
 ## 2) Add your first subscription
 
@@ -37,8 +37,8 @@ You should now see the subscription in your list/grid view.
 ## 3) Verify Dashboard reflects your data
 
 1. Go to **Dashboard**.
-2. Confirm your new subscription appears in summary stats (for example, active count and totals).
-3. Check **Upcoming Payments** for the next 7 days.
+2. Confirm the **Monthly equivalent** summary includes your new subscription (its share in the display currency, and the count of billable subscriptions).
+3. Check **Upcoming charges**: renewals in the next 30 days are listed by date, each with **Mark paid** and **Skip**.
 
 ## 4) Verify Calendar payment schedule
 

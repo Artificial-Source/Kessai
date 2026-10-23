@@ -11,10 +11,10 @@ In the app sidebar, select **Settings**.
 In **Appearance**:
 
 1. Set **Theme** (`Dark`, `Light`, `System`).
-2. Set **Default currency**.
+2. Set **Display currency**.
 3. (Optional) In the separate **Budget** section, set **Monthly budget**.
 
-Default currency drives new subscription defaults, budget formatting, and spending totals. Totals include only your share of active, billable subscriptions in that currency and identify other currencies as excluded; Kessai does not convert them. Individual charges keep their own currency and use its standard minor units (for example, yen has no decimal places).
+The display currency drives new subscription defaults, budget formatting, and spending totals. Totals include only your share of active, billable subscriptions in that currency and identify other currencies as excluded; Kessai does not convert them. Individual charges keep their own currency and use its standard minor units (for example, yen has no decimal places).
 
 ## Configure notifications (desktop behavior)
 

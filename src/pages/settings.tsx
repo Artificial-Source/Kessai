@@ -346,12 +346,12 @@ export function SettingsPage() {
     )
   }
 
-  const handleDefaultCurrencyChange = async (value: CurrencyCode) => {
+  const handleDisplayCurrencyChange = async (value: CurrencyCode) => {
     try {
       await update({ currency: value })
       toast.success(`Totals now in ${value}`)
     } catch {
-      toast.error("Couldn't change the default currency", { description: 'Try again.' })
+      toast.error("Couldn't change the display currency", { description: 'Try again.' })
     }
   }
 
@@ -400,11 +400,11 @@ export function SettingsPage() {
             </div>
 
             <div className="border-border flex flex-col gap-2 border-t pt-5">
-              <Label htmlFor="currency">Default currency</Label>
+              <Label htmlFor="currency">Display currency</Label>
               <CurrencySelect
                 id="currency"
                 value={settings.currency}
-                onValueChange={(value) => void handleDefaultCurrencyChange(value)}
+                onValueChange={(value) => void handleDisplayCurrencyChange(value)}
                 className="sm:max-w-md"
               />
               <FieldHint>

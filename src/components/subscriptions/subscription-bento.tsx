@@ -408,7 +408,8 @@ const BentoTile = memo(function BentoTile({
       color={subscription.color || category?.color}
       size={size}
       decorative
-      className={cn(className, !subscription.is_active && 'opacity-50 grayscale')}
+      dimmed={!subscription.is_active}
+      className={className}
     />
   )
 

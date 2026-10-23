@@ -15,10 +15,14 @@ function waitForOkGet(page: Page, pathname: string) {
 test.describe('Web smoke', () => {
   test('loads dashboard using web REST path @web-smoke', async ({ page }) => {
     const name = `Logo persistence ${randomUUID()}`
+    const now = new Date()
     const dashboardRequests = Promise.all([
       waitForOkGet(page, '/api/subscriptions'),
       waitForOkGet(page, '/api/categories'),
       waitForOkGet(page, '/api/settings'),
+      // The renewal ledger reads the calendar projection and recorded price changes.
+      waitForOkGet(page, `/api/payments/calendar/${now.getFullYear()}/${now.getMonth() + 1}`),
+      waitForOkGet(page, '/api/price-history/recent'),
     ])
 
     await page.goto('/')

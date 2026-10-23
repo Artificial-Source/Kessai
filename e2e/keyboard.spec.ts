@@ -1,5 +1,6 @@
+import dayjs from 'dayjs'
 import type { Locator, Page } from '@playwright/test'
-import { test, expect } from './fixtures'
+import { test, expect, seedSubscriptions } from './fixtures'
 
 async function tabTo(page: Page, target: Locator) {
   for (let tabs = 0; tabs < 80; tabs++) {
@@ -107,4 +108,76 @@ test('keyboard shortcuts restore focus and navigate through the palette', async 
   await expect(palette).not.toBeVisible()
   await expect(page.getByRole('heading', { name: 'Settings', level: 1 })).toBeVisible()
   await expect(page).toHaveURL(/\/settings$/)
+})
+
+test('in-place actions keep keyboard focus on the page', async ({ page }) => {
+  const today = dayjs()
+  await seedSubscriptions(
+    page,
+    ['Alpha', 'Bravo', 'Charlie', 'Delta', 'Echo'].map((name) => ({
+      id: `sub-${name.toLowerCase()}`,
+      name: `Focus ${name}`,
+      next_payment_date: today.format('YYYY-MM-DD'),
+    }))
+  )
+  /** Focus must never fall back to <body>, and the ring must show for keyboard users. */
+  const expectVisibleFocus = async (target: Locator, action: string) => {
+    await expect(target, `${action}: focus target`).toBeFocused()
+    expect(
+      await page.evaluate(() => document.activeElement !== document.body),
+      `${action}: focus fell back to <body>`
+    ).toBe(true)
+    expect(await target.evaluate((element) => element.matches(':focus-visible'))).toBe(true)
+  }
+  const press = async (control: Locator) => {
+    await control.focus()
+    await page.keyboard.press('Enter')
+  }
+
+  await page.goto('/subscriptions')
+  await page.getByRole('button', { name: 'List view' }).click()
+
+  await press(page.getByRole('button', { name: 'Mark paid for Focus Alpha', exact: true }))
+  await expect(page.getByText('Payment recorded', { exact: true })).toBeVisible()
+  await expectVisibleFocus(page.locator('[data-subscription-focus="sub-alpha"]'), 'list Mark paid')
+
+  // Confirmed delete and cancel remove the row: the neighbouring row takes focus.
+  await press(page.getByRole('button', { name: 'More actions for Focus Alpha' }))
+  await press(page.getByRole('menuitem', { name: 'Delete', exact: true }))
+  const confirmDelete = page.getByRole('dialog', { name: 'Delete Focus Alpha?' })
+  await press(confirmDelete.getByRole('button', { name: 'Delete subscription', exact: true }))
+  await expect(confirmDelete).not.toBeVisible()
+  await expectVisibleFocus(page.locator('[data-subscription-focus]:focus'), 'delete')
+
+  await press(page.getByRole('button', { name: 'More actions for Focus Bravo' }))
+  await press(page.getByRole('menuitem', { name: 'Cancel subscription', exact: true }))
+  const confirmCancel = page.getByRole('dialog', { name: 'Cancel subscription' })
+  await press(confirmCancel.getByRole('button', { name: 'Cancel subscription', exact: true }))
+  await expect(confirmCancel).not.toBeVisible()
+  await expectVisibleFocus(page.locator('[data-subscription-focus]:focus'), 'cancel')
+
+  await page.getByRole('link', { name: 'Calendar', exact: true }).click()
+  const day = today.format('dddd, MMMM D')
+  await page.getByRole('button', { name: new RegExp(`^${day},`) }).click()
+  const panel = page.getByRole('complementary', { name: day })
+
+  await press(
+    panel
+      .getByRole('listitem')
+      .filter({ hasText: 'Focus Charlie' })
+      .getByRole('button', { name: 'Mark paid', exact: true })
+  )
+  await expect(page.getByText('Marked Focus Charlie as paid', { exact: true })).toBeVisible()
+  await expectVisibleFocus(
+    panel.locator('[data-subscription-focus="sub-charlie"]'),
+    'day Mark paid'
+  )
+
+  await press(panel.getByRole('button', { name: 'Skip payment for Focus Delta', exact: true }))
+  await expect(page.getByText('Skipped Focus Delta', { exact: true })).toBeVisible()
+  await expectVisibleFocus(panel.locator('[data-subscription-focus="sub-delta"]'), 'day Skip')
+
+  await press(panel.getByRole('button', { name: 'Mark all as paid', exact: true }))
+  await expect(page.getByText('Marked 1 payment as paid', { exact: true })).toBeVisible()
+  await expectVisibleFocus(panel.getByRole('heading', { name: day, level: 2 }), 'Mark all')
 })

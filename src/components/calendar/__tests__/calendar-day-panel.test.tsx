@@ -1,4 +1,5 @@
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { useState } from 'react'
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import { toast } from 'sonner'
 import { CalendarDayPanel } from '../calendar-day-panel'
@@ -183,5 +184,57 @@ describe('CalendarDayPanel payment actions', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Close' }))
     expect(onClose).toHaveBeenCalled()
+  })
+
+  it('keeps focus on the payment, then on the day heading, as actions remove their buttons', async () => {
+    const paid = new Set<string>()
+    const onMarkPaid = vi.fn(async (subscriptionId: string) => {
+      paid.add(subscriptionId)
+      return { ...recorded, subscription_id: subscriptionId }
+    })
+    function RefreshingPanel() {
+      const [payments, setPayments] = useState([
+        occurrence('one', 'Netflix'),
+        occurrence('two', 'Spotify'),
+      ])
+      return (
+        <CalendarDayPanel
+          isOpen
+          selectedDate={new Date(2026, 9, 10)}
+          payments={payments}
+          onClose={vi.fn()}
+          onMarkPaid={onMarkPaid}
+          onSkip={vi.fn()}
+          onEdit={vi.fn()}
+          // A recorded payment comes back with its own id, so the item remounts.
+          onRefresh={async () =>
+            setPayments((current) =>
+              current.map((payment) =>
+                paid.has(payment.subscription.id)
+                  ? { ...payment, id: `paid-${payment.subscription.id}`, isPaid: true }
+                  : payment
+              )
+            )
+          }
+        />
+      )
+    }
+    render(<RefreshingPanel />)
+
+    const [netflix] = screen.getAllByRole('listitem')
+    const markNetflix = within(netflix).getByRole('button', { name: 'Mark paid' })
+    markNetflix.focus()
+    fireEvent.click(markNetflix)
+    await waitFor(() =>
+      expect(screen.getByRole('heading', { name: 'Netflix', level: 3 })).toHaveFocus()
+    )
+
+    const markAll = screen.getByRole('button', { name: 'Mark all as paid' })
+    markAll.focus()
+    fireEvent.click(markAll)
+    await waitFor(() =>
+      expect(screen.getByRole('heading', { name: 'Saturday, October 10', level: 2 })).toHaveFocus()
+    )
+    expect(document.activeElement).not.toBe(document.body)
   })
 })

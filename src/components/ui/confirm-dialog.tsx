@@ -18,6 +18,8 @@ type ConfirmDialogProps = {
   variant?: 'default' | 'destructive'
   isLoading?: boolean
   onConfirm: () => void | Promise<void>
+  /** Runs as the dialog closes; call `preventDefault()` and focus a target when the opener is gone. */
+  onCloseAutoFocus?: (event: Event) => void
 }
 
 export function ConfirmDialog({
@@ -30,6 +32,7 @@ export function ConfirmDialog({
   variant = 'default',
   isLoading = false,
   onConfirm,
+  onCloseAutoFocus,
 }: ConfirmDialogProps) {
   const handleConfirm = async () => {
     await onConfirm()
@@ -38,7 +41,7 @@ export function ConfirmDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md" onCloseAutoFocus={onCloseAutoFocus}>
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>{description}</DialogDescription>

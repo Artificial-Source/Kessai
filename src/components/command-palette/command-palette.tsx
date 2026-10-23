@@ -189,7 +189,7 @@ export function CommandPalette() {
               Esc
             </Kbd>
             <DialogPrimitive.Close
-              className="text-muted-foreground hover:bg-accent-muted hover:text-foreground -mr-2 inline-flex size-10 shrink-0 items-center justify-center rounded-md sm:hidden"
+              className="text-muted-foreground hover:bg-accent-muted hover:text-foreground -mr-2 inline-flex size-10 shrink-0 items-center justify-center rounded-md sm:hidden pointer-coarse:size-11"
               aria-label="Close"
             >
               <X size={18} aria-hidden="true" />

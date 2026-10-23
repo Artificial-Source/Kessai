@@ -4,6 +4,7 @@ import { formatCurrency } from '@/lib/currency'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { SubscriptionLogo } from '@/components/ui/subscription-logo'
+import { subscriptionFocusProps } from '@/lib/focus'
 import type { CalendarSubscription } from '@/hooks/use-calendar-stats'
 
 interface DayPaymentItemProps {
@@ -44,7 +45,8 @@ export const DayPaymentItem = memo(function DayPaymentItem({
         <div className="min-w-0 flex-1">
           <h3
             id={nameId}
-            className="text-foreground truncate font-[family-name:var(--font-sans)] text-sm font-medium"
+            {...subscriptionFocusProps(subscription.id)}
+            className="text-foreground truncate rounded-sm font-[family-name:var(--font-sans)] text-sm font-medium focus-visible:outline-offset-1"
             title={subscription.name}
           >
             {subscription.name}

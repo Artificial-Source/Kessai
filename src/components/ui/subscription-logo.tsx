@@ -11,6 +11,12 @@ interface SubscriptionLogoProps {
   className?: string
   /** Empty alt when the name is already rendered as text next to the logo. */
   decorative?: boolean
+  /**
+   * Inactive (paused or cancelled) subscription. Images are faded to grayscale; letter tiles
+   * drop the brand fill for the neutral tile and muted ink, which keeps the initial readable
+   * where fading the whole tile would sink it to about 2.5:1.
+   */
+  dimmed?: boolean
 }
 
 const sizeClasses = {
@@ -27,6 +33,7 @@ export function SubscriptionLogo({
   size = 'md',
   className,
   decorative = false,
+  dimmed = false,
 }: SubscriptionLogoProps) {
   const [state, setState] = useState<{ dataUrl: string | null; isLoading: boolean }>({
     dataUrl: null,
@@ -77,10 +84,17 @@ export function SubscriptionLogo({
         alt={decorative ? '' : name}
         loading="lazy"
         decoding="async"
-        className={cn(sizeClass, 'border-border-hover border object-cover', className)}
+        className={cn(
+          sizeClass,
+          'border-border-hover border object-cover',
+          dimmed && 'opacity-50 grayscale',
+          className
+        )}
       />
     )
   }
+
+  const fill = dimmed ? null : color
 
   return (
     <div
@@ -88,13 +102,13 @@ export function SubscriptionLogo({
       className={cn(
         sizeClass,
         'flex items-center justify-center font-bold',
-        color && 'border-border-hover border',
-        !color && 'text-foreground',
+        fill && 'border-border-hover border',
+        !fill && (dimmed ? 'text-muted-foreground' : 'text-foreground'),
         className
       )}
       style={{
-        backgroundColor: color || 'var(--color-surface-highest)',
-        ...(color ? { color: readableInkOn(color) } : {}),
+        backgroundColor: fill || 'var(--color-surface-highest)',
+        ...(fill ? { color: readableInkOn(fill) } : {}),
       }}
     >
       {name.charAt(0).toUpperCase()}

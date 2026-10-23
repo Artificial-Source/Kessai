@@ -1,6 +1,7 @@
 import type * as React from 'react'
 import { Pin } from 'lucide-react'
 import { SubscriptionLogo } from '@/components/ui/subscription-logo'
+import { subscriptionFocusProps } from '@/lib/focus'
 import { cn } from '@/lib/utils'
 import type { Subscription } from '@/types/subscription'
 
@@ -74,11 +75,16 @@ export function SubscriptionRow({
           color={subscription.color || logoColor}
           size="md"
           decorative
-          className={cn('shrink-0 rounded-lg', dimmed && 'opacity-50 grayscale')}
+          dimmed={dimmed}
+          className="shrink-0 rounded-lg"
         />
         <div className="flex min-w-0 flex-col gap-1">
           <p className="flex min-w-0 items-center gap-1.5">
-            <span className="text-foreground truncate font-medium" title={subscription.name}>
+            <span
+              {...subscriptionFocusProps(subscription.id)}
+              className="text-foreground truncate rounded-sm font-medium focus-visible:outline-offset-1"
+              title={subscription.name}
+            >
               {subscription.name}
             </span>
             {subscription.is_pinned && (

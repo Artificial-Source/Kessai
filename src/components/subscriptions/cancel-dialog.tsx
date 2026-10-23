@@ -21,6 +21,8 @@ interface CancelDialogProps {
   subscription: Subscription | null
   isLoading?: boolean
   onConfirm: (id: string, reason?: string) => void | Promise<void>
+  /** Runs as the dialog closes; call `preventDefault()` and focus a target when the opener is gone. */
+  onCloseAutoFocus?: (event: Event) => void
 }
 
 export function CancelDialog({
@@ -29,6 +31,7 @@ export function CancelDialog({
   subscription,
   isLoading = false,
   onConfirm,
+  onCloseAutoFocus,
 }: CancelDialogProps) {
   // One choice at a time: a preset, or "Other" with the user's own words.
   const [choice, setChoice] = useState<string | null>(null)
@@ -70,6 +73,7 @@ export function CancelDialog({
           event.preventDefault()
           keepRef.current?.focus()
         }}
+        onCloseAutoFocus={onCloseAutoFocus}
       >
         <DialogHeader>
           <DialogTitle>Cancel subscription</DialogTitle>

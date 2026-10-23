@@ -197,7 +197,7 @@ Bento ramps (`--color-bento-*`) are neutral tile fills with light-theme override
 - Spacing rhythm: 4px base; 8 (tight groups), 16 (card internals), 20 (card padding `md`), 24 (between sections). More space above a heading than below it.
 - Breakpoints: Tailwind defaults; `md` (768px) switches rail vs tab bar; `lg` (1024px) opens two-column section layouts and the calendar side panel.
 - Density: Operate density. Lists and tables over card grids when the user is comparing; card grids only for overviews.
-- Touch: on coarse pointers every Button, Input, Select, and rail item grows to at least 44px (`pointer-coarse:` variants in the primitives). Phone layouts must not depend on hover or horizontal scrolling.
+- Touch: on coarse pointers every Button, Input, Select, rail item, and dialog Close is at least 44×44px (`pointer-coarse:` variants in the primitives), matching PRODUCT.md's phone target floor. Compact glyphs stay compact; only the hit box grows. Phone layouts must not depend on hover or horizontal scrolling.
 
 ## Elevation & Depth
 
@@ -223,7 +223,7 @@ All primitives live in `src/components/ui/`; pages compose them and do not resty
 
 ### Buttons
 
-- **Shape:** 8px corners; heights 40px (`default`), 36px (`sm`), 40px/32px squares (`icon`/`icon-sm`); 44px minimum on coarse pointers. No `lg`/`xl` sizes: Kessai has no oversized CTAs.
+- **Shape:** 8px corners; heights 40px (`default`), 36px (`sm`), 40px/32px squares (`icon`/`icon-sm`); at least 44×44px on coarse pointers, whatever the size or label length. No `lg`/`xl` sizes: Kessai has no oversized CTAs.
 - **Primary (`default`)**: inverted ink block. **`glow`**: primary plus ambient glow, for the single page-level create action.
 - **Outline / Secondary / Ghost / Link / Destructive**: outline uses the field edge; ghost is text-only until hover; destructive is danger red.
 - **States:** 150ms color transition, `translate-y-px` on press, 50% opacity when disabled, `aria-busy` shows a progress cursor; focus uses the global ring. Default `type="button"`; icon sizes require `aria-label` (type-enforced).
@@ -249,7 +249,7 @@ Space Mono 11px uppercase, 4px corners, 1px tinted edge on a 12% tint. Tones: `d
 
 ### Dialogs
 
-Centered `Dialog` only (never side sheets). Panel: slate-elevated at 90% with blur, 16px corners, 24px padding, 20px gap, max height `100dvh - 2rem` with internal scroll, inset 16px from phone edges. Header left-aligned (title in Space Grotesk 20px, muted description), close button 36px top-right. `DialogFooter` stacks on phone (primary on top) and right-aligns on wider screens; callers must not add gap utilities. `ConfirmDialog` for destructive confirmation; the confirm button keeps its label and adds a spinner while busy.
+Centered `Dialog` only (never side sheets). Panel: slate-elevated at 90% with blur, 16px corners, 24px padding, 20px gap, max height `100dvh - 2rem` with internal scroll, inset 16px from phone edges. Header left-aligned (title in Space Grotesk 20px, muted description), close button top-right: 36px on fine pointers, 44px on coarse pointers with the 16px glyph in the same place. `DialogFooter` stacks on phone (primary on top) and right-aligns on wider screens; callers must not add gap utilities. `ConfirmDialog` for destructive confirmation; the confirm button keeps its label and adds a spinner while busy.
 
 ### Empty, Loading, Error
 
@@ -264,6 +264,17 @@ Centered `Dialog` only (never side sheets). Panel: slate-elevated at 90% with bl
 - **Bottom tab bar (below md):** docked, opaque graphite, hairline top edge, four equal columns ≥64px tall; active item shows an inverted chip behind the icon and an ink label.
 - **Command palette:** centered at 16vh, combobox + grouped listbox (Subscriptions, Pages, Actions), empty-result state, keyboard footer, close button on phones.
 - **Keyboard:** every shortcut is listed in the shortcuts dialog; `Kbd` renders keys with the platform modifier (⌘ or Ctrl).
+
+### Dashboard
+
+The home route is a renewal ledger, not a KPI grid. It answers "what charges next, and what should I decide before it does?" (`src/pages/dashboard.tsx`, `src/components/dashboard/`).
+
+- **Commitment summary:** one glass section. **Monthly equivalent** (user share, display currency, Space Grotesk figure 30–36px that steps down a size for long amounts and never wraps mid-number), the count of billable subscriptions it covers (trials included at their recorded price), and the optional **Monthly target** as a linear meter scaled to the larger amount: neutral fill, a target marker, red only for the part above it, with the exact variance ("$80.53 above target", "At target"). One currency-scope note for the whole section; yearly equivalent and categories (neutral bars, category color as a dot) fold under **Breakdown**. Never call the equivalent "spent".
+- **Upcoming charges:** the next 30 days (today through today + 29), from the same calendar month projections as Calendar, so weekly plans appear once per due date. Groups Today / Next 7 days / Later; paid and skipped occurrences leave the list. Rows show the full charge in its own currency (code beside foreign amounts) and "Your share … · split N ways" on its own line; the subtotal is labeled "USD full charges" and names the currencies it leaves out (all-foreign periods say so instead of showing $0). First 6 rows, then **View all N charges**; **Open calendar** beside it. Unrecorded earlier dates of the current month fold into "Earlier this month · no payment recorded" and never count as coming charges.
+- **Row actions:** visible **Mark paid** and **Skip** with a More menu (Edit subscription) from 640px; below that, Mark paid plus a 44px More menu that holds Skip. Rows are two lines in narrow containers, one line from 36rem, with a date column from 46rem (container queries). Writes show a spinner and `aria-busy`, then a "Marked paid"/"Skipped" badge until the refreshed schedule drops the row; failures stay inline (`role="alert"`) and in a toast. Focus stays on the row's name, then moves to the row that took its place.
+- **Decisions rail** (right third from lg, under the ledger below it): **Decisions** (trials ending within 7 days or ended, with recorded price and next payment, "Check dates" when the next payment precedes the trial end; grace periods; recorded price increases or currency changes newer than the last review) with Review (the subscription dialog) and Keep / Mark reviewed; **Worth reviewing** (not reviewed for 30 days, counted from `last_reviewed_at ?? created_at`, pending cancellations first), three shown with **Review all N**; and **{Month} records** (marked paid / not recorded yet / skipped by due date, full charges). An empty Decisions list is one line ("No decisions due in the next 7 days"), never an empty card.
+- **Below lg:** order is summary, a one-line preview of the most urgent decision (two from md) with "show all", then the ledger, then the rail. On phones the summary keeps the figure, the variance and the scope note; count and target links move into Breakdown.
+- **States:** no subscriptions → the shared first-run empty state alone (no zero cards, no header Add); subscription load failure → danger empty state with Retry; schedule failure → its own Retry inside Upcoming charges while the summary stays; settings failure → the target is not shown and the summary says which currency it fell back to.
 
 ### Motion
 

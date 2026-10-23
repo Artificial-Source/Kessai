@@ -2,14 +2,8 @@ import { useMemo } from 'react'
 import { useSubscriptionStore } from '@/stores/subscription-store'
 import { useCategoryStore } from '@/stores/category-store'
 import { useSettingsStore } from '@/stores/settings-store'
-import { getUpcomingPayments } from '@/lib/date-utils'
 import { calculateDisplayTotals } from '@/lib/totals'
-import type { DisplayTotals } from '@/lib/totals'
-import { BILLING_CYCLE_MULTIPLIERS, isBillableStatus } from '@/types/subscription'
-import type { BillingCycle, Subscription } from '@/types/subscription'
-
-/** Days ahead covered by the dashboard's upcoming payments list. */
-const UPCOMING_WINDOW_DAYS = 7
+import type { Subscription } from '@/types/subscription'
 
 /**
  * Spending data aggregated by category.
@@ -28,13 +22,6 @@ export type CategorySpending = {
   percentage: number
 }
 
-/** One as-billed charge per subscription: user share, display currency, not normalized. */
-export type AsBilledTotal = {
-  amount: number
-  count: number
-  excludedCurrencies: DisplayTotals['excludedCurrencies']
-}
-
 function groupBy<K>(
   subscriptions: readonly Subscription[],
   keyOf: (subscription: Subscription) => K
@@ -50,50 +37,28 @@ function groupBy<K>(
 }
 
 /**
- * Sums each subscription's next charge as billed (user share, display currency only).
- * Each billing cycle is totalled by calculateDisplayTotals, then its yearly amount is
- * divided back into one charge, so billable, share and currency rules live in one place.
- */
-export function calculateAsBilledTotal(
-  subscriptions: readonly Subscription[],
-  displayCurrency: string
-): AsBilledTotal {
-  const total: AsBilledTotal = { amount: 0, count: 0, excludedCurrencies: {} }
-  for (const [cycle, group] of groupBy<BillingCycle>(subscriptions, (s) => s.billing_cycle)) {
-    const totals = calculateDisplayTotals(group, displayCurrency)
-    total.amount += totals.yearly / BILLING_CYCLE_MULTIPLIERS[cycle]
-    total.count += totals.count
-    for (const [code, count] of Object.entries(totals.excludedCurrencies)) {
-      total.excludedCurrencies[code] = (total.excludedCurrencies[code] ?? 0) + count
-    }
-  }
-  return total
-}
-
-/**
- * Hook for computing dashboard statistics from subscriptions.
+ * The dashboard's commitment figures: monthly and yearly equivalents of the user's share of
+ * active billable subscriptions in the settings currency, and the same split by category.
+ * Other currencies are counted in `excludedCurrencies`, never converted. These are
+ * normalized commitments, not payments: see `useRenewalLedger` for scheduled charges.
  *
- * Every total is the user's share of active billable subscriptions in the settings
- * currency; other currencies are counted in the matching `excludedCurrencies` record.
- *
- * @returns Dashboard statistics object
  * @example
  * const { totalMonthly, categorySpending } = useDashboardStats()
  */
 export function useDashboardStats() {
-  // Use selective subscriptions for better performance
   const subscriptions = useSubscriptionStore((state) => state.subscriptions)
   const categories = useCategoryStore((state) => state.categories)
   const currency = useSettingsStore((state) => state.settings?.currency || 'USD')
 
-  // Listed and counted rows match the subscriptions the totals can include.
-  const activeSubscriptions = useMemo(
-    () => subscriptions.filter((s) => s.is_active && isBillableStatus(s.status)),
-    [subscriptions]
-  )
-
   const totals = useMemo(
     () => calculateDisplayTotals(subscriptions, currency),
+    [subscriptions, currency]
+  )
+
+  const trialCount = useMemo(
+    () =>
+      subscriptions.filter((s) => s.is_active && s.status === 'trial' && s.currency === currency)
+        .length,
     [subscriptions, currency]
   )
 
@@ -123,48 +88,15 @@ export function useDashboardStats() {
       .sort((a, b) => b.amount - a.amount)
   }, [subscriptions, categories, currency])
 
-  // Separate as-billed totals by billing cycle.
-  const monthlySubs = useMemo(
-    () =>
-      calculateAsBilledTotal(
-        subscriptions.filter((sub) => sub.billing_cycle === 'monthly'),
-        currency
-      ),
-    [subscriptions, currency]
-  )
-
-  const yearlySubs = useMemo(
-    () =>
-      calculateAsBilledTotal(
-        subscriptions.filter((sub) => sub.billing_cycle === 'yearly'),
-        currency
-      ),
-    [subscriptions, currency]
-  )
-
-  // Upcoming rows keep their own currency; the due total is as billed, not normalized.
-  const { upcomingPayments, upcomingDue } = useMemo(() => {
-    const payments = getUpcomingPayments(activeSubscriptions, UPCOMING_WINDOW_DAYS)
-    return { upcomingPayments: payments, upcomingDue: calculateAsBilledTotal(payments, currency) }
-  }, [activeSubscriptions, currency])
-
   return {
     categorySpending,
     totalMonthly: totals.monthly,
     totalYearly: totals.yearly,
     excludedCurrencies: totals.excludedCurrencies,
-    activeCount: activeSubscriptions.length,
+    /** Billable subscriptions counted in the totals (display currency only). */
+    countedCount: totals.count,
+    /** Of `countedCount`, trials: their recorded price is part of the totals. */
+    trialCount,
     totalCount: subscriptions.length,
-    // Separate by billing cycle
-    monthlySubsTotal: monthlySubs.amount,
-    monthlySubsCount: monthlySubs.count,
-    monthlySubsExcludedCurrencies: monthlySubs.excludedCurrencies,
-    yearlySubsTotal: yearlySubs.amount,
-    yearlySubsCount: yearlySubs.count,
-    yearlySubsExcludedCurrencies: yearlySubs.excludedCurrencies,
-    // Next charges in the upcoming window
-    upcomingPayments,
-    upcomingTotal: upcomingDue.amount,
-    upcomingExcludedCurrencies: upcomingDue.excludedCurrencies,
   }
 }

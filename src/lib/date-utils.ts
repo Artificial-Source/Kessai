@@ -83,30 +83,3 @@ export function formatShortDate(date: Date | string): string {
 export function getDaysUntil(date: Date | string): number {
   return dayjs(date).startOf('day').diff(dayjs().startOf('day'), 'day')
 }
-
-/**
- * Filters and sorts subscriptions by upcoming payment date.
- * @template T - Subscription type with next_payment_date
- * @param subscriptions - Array of subscriptions to filter
- * @param days - Number of days to look ahead
- * @returns Sorted array of subscriptions with payments within the window
- * @example
- * getUpcomingPayments(subscriptions, 7) // Payments in next 7 days
- */
-export function getUpcomingPayments<T extends { next_payment_date: string | null }>(
-  subscriptions: T[],
-  days: number
-): T[] {
-  const now = dayjs().startOf('day')
-  const cutoff = now.add(days, 'day').endOf('day')
-
-  return subscriptions
-    .filter((sub) => {
-      if (!sub.next_payment_date) return false
-      const date = dayjs(sub.next_payment_date)
-      return date.isSameOrBefore(cutoff) && date.isSameOrAfter(now)
-    })
-    .sort((a, b) => {
-      return dayjs(a.next_payment_date!).valueOf() - dayjs(b.next_payment_date!).valueOf()
-    })
-}

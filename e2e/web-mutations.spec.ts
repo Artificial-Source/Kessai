@@ -167,7 +167,7 @@ test('subscription mutations and full-backup restore refresh every domain @web-s
     await expect(page.getByRole('spinbutton', { name: 'Monthly budget', exact: true })).toHaveValue(
       '55'
     )
-    await expect(page.getByRole('button', { name: 'Default currency', exact: true })).toContainText(
+    await expect(page.getByRole('button', { name: 'Display currency', exact: true })).toContainText(
       'EUR'
     )
     await page.getByRole('link', { name: 'Subscriptions', exact: true }).click()

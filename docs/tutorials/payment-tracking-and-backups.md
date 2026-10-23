@@ -36,7 +36,7 @@ Kessai writes payment history through the `mark_payment_paid` / `skip_payment` f
 ## 3) Confirm updates in your overview
 
 1. Open **Dashboard**.
-2. Check updated totals and upcoming counts.
+2. Check **Upcoming charges**: the occurrence you recorded is gone from the 30-day list, and the month records show it as marked paid or skipped. You can also record payments right there with **Mark paid** or **Skip**.
 3. Open **Subscriptions** and confirm the subscription still has the expected next payment schedule.
 
 ## 4) Export a backup snapshot
@@ -62,7 +62,7 @@ After import:
 
 - Open **Subscriptions** and confirm expected records exist.
 - Open **Calendar** and verify payment entries are present.
-- Open **Settings** to confirm DB-backed preferences (for example, default currency, monthly budget, categories, and tags).
+- Open **Settings** to confirm DB-backed preferences (for example, display currency, monthly budget, categories, and tags).
 
 ## See also
 

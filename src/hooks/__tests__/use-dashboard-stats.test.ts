@@ -1,7 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { renderHook } from '@testing-library/react'
-import dayjs from 'dayjs'
-import { calculateAsBilledTotal, useDashboardStats } from '../use-dashboard-stats'
+import { useDashboardStats } from '../use-dashboard-stats'
 import { useSubscriptionStore } from '@/stores/subscription-store'
 import { useCategoryStore } from '@/stores/category-store'
 import { useSettingsStore } from '@/stores/settings-store'
@@ -135,8 +134,6 @@ const subscription = (overrides: Partial<Subscription> = {}): Subscription => ({
   ...overrides,
 })
 
-const inDays = (days: number) => dayjs().add(days, 'day').format('YYYY-MM-DD')
-
 const setDisplayCurrency = (currency: string) =>
   useSettingsStore.setState({
     settings: { id: 'singleton', ...DEFAULT_SETTINGS, currency },
@@ -162,11 +159,12 @@ describe('useDashboardStats', () => {
     setDisplayCurrency('USD')
   })
 
-  it('calculates activeCount correctly', () => {
+  it('counts the billable subscriptions behind the totals', () => {
     const { result } = renderHook(() => useDashboardStats())
 
     // Only active subscriptions: Netflix, Spotify, Amazon Prime (Adobe CC is inactive)
-    expect(result.current.activeCount).toBe(3)
+    expect(result.current.countedCount).toBe(3)
+    expect(result.current.trialCount).toBe(0)
   })
 
   it('calculates totalCount correctly', () => {
@@ -233,13 +231,11 @@ describe('useDashboardStats', () => {
 
     const { result } = renderHook(() => useDashboardStats())
 
-    expect(result.current.activeCount).toBe(0)
+    expect(result.current.countedCount).toBe(0)
     expect(result.current.totalCount).toBe(0)
     expect(result.current.totalMonthly).toBe(0)
     expect(result.current.totalYearly).toBe(0)
     expect(result.current.categorySpending).toHaveLength(0)
-    expect(result.current.upcomingPayments).toHaveLength(0)
-    expect(result.current.upcomingTotal).toBe(0)
     expect(result.current.excludedCurrencies).toEqual({})
   })
 
@@ -257,11 +253,9 @@ describe('useDashboardStats', () => {
 
     const { result } = renderHook(() => useDashboardStats())
 
-    expect(result.current.activeCount).toBe(0)
+    expect(result.current.countedCount).toBe(0)
     expect(result.current.totalMonthly).toBe(0)
     expect(result.current.categorySpending).toHaveLength(0)
-    expect(result.current.monthlySubsCount).toBe(0)
-    expect(result.current.yearlySubsCount).toBe(0)
   })
 
   describe('user share in the display currency', () => {
@@ -299,19 +293,9 @@ describe('useDashboardStats', () => {
       expect(result.current.totalMonthly).toBeCloseTo(35, 10)
       expect(result.current.totalYearly).toBeCloseTo(420, 10)
       expect(result.current.excludedCurrencies).toEqual({ JPY: 1, EUR: 1 })
-      // Active count lists every billable subscription, whatever its currency.
-      expect(result.current.activeCount).toBe(5)
-    })
-
-    it('keeps per-cycle totals as billed, with counts and exclusions per cycle', () => {
-      const { result } = renderHook(() => useDashboardStats())
-
-      expect(result.current.monthlySubsTotal).toBeCloseTo(30, 10)
-      expect(result.current.monthlySubsCount).toBe(2)
-      expect(result.current.monthlySubsExcludedCurrencies).toEqual({ JPY: 1 })
-      expect(result.current.yearlySubsTotal).toBeCloseTo(60, 10)
-      expect(result.current.yearlySubsCount).toBe(1)
-      expect(result.current.yearlySubsExcludedCurrencies).toEqual({ EUR: 1 })
+      // Counted subscriptions are the display-currency ones; trials at their recorded price.
+      expect(result.current.countedCount).toBe(3)
+      expect(result.current.trialCount).toBe(1)
     })
 
     it('breaks categories down by user share, dropping other-currency-only categories', () => {
@@ -336,94 +320,10 @@ describe('useDashboardStats', () => {
       const { result } = renderHook(() => useDashboardStats())
 
       expect(result.current.totalMonthly).toBe(1200)
-      expect(result.current.monthlySubsTotal).toBe(1200)
-      expect(result.current.monthlySubsExcludedCurrencies).toEqual({ USD: 2 })
+      expect(result.current.countedCount).toBe(1)
+      expect(result.current.trialCount).toBe(0)
       expect(result.current.excludedCurrencies).toEqual({ USD: 3, EUR: 1 })
       expect(result.current.categorySpending.map((c) => c.name)).toEqual(['Streaming'])
     })
-  })
-
-  describe('upcoming payments', () => {
-    beforeEach(() => {
-      useSubscriptionStore.setState({
-        subscriptions: [
-          subscription({ id: 'stream', amount: 30, shared_count: 3, next_payment_date: inDays(2) }),
-          subscription({
-            id: 'tunes',
-            amount: 120,
-            billing_cycle: 'yearly',
-            shared_count: 2,
-            next_payment_date: inDays(3),
-          }),
-          subscription({
-            id: 'locker',
-            amount: 26,
-            billing_cycle: 'weekly',
-            next_payment_date: inDays(4),
-          }),
-          subscription({
-            id: 'anime',
-            amount: 1500,
-            currency: 'JPY',
-            next_payment_date: inDays(1),
-          }),
-          subscription({
-            id: 'paused',
-            amount: 50,
-            is_active: false,
-            status: 'paused',
-            next_payment_date: inDays(2),
-          }),
-          subscription({ id: 'later', amount: 80, next_payment_date: inDays(20) }),
-        ],
-        isLoading: false,
-        error: null,
-      })
-    })
-
-    it('lists billable charges in the window in their own currency', () => {
-      const { result } = renderHook(() => useDashboardStats())
-
-      expect(
-        result.current.upcomingPayments.map(({ id, amount, currency }) => ({
-          id,
-          amount,
-          currency,
-        }))
-      ).toEqual([
-        { id: 'anime', amount: 1500, currency: 'JPY' },
-        { id: 'stream', amount: 30, currency: 'USD' },
-        { id: 'tunes', amount: 120, currency: 'USD' },
-        { id: 'locker', amount: 26, currency: 'USD' },
-      ])
-    })
-
-    it('sums the as-billed user share due, excluding other currencies', () => {
-      const { result } = renderHook(() => useDashboardStats())
-
-      // $10 (30 / 3) + $60 (120 / 2, yearly charge, not normalized) + $26 weekly charge
-      expect(result.current.upcomingTotal).toBeCloseTo(96, 10)
-      expect(result.current.upcomingExcludedCurrencies).toEqual({ JPY: 1 })
-    })
-  })
-})
-
-describe('calculateAsBilledTotal', () => {
-  it('sums one user-share charge per subscription without normalizing cycles', () => {
-    expect(
-      calculateAsBilledTotal(
-        [
-          subscription({ amount: 30, shared_count: 3 }),
-          subscription({ amount: 90, billing_cycle: 'quarterly', shared_count: 3 }),
-          subscription({ amount: 120, billing_cycle: 'yearly', shared_count: 2 }),
-          subscription({ amount: 26, billing_cycle: 'weekly', status: 'grace_period' }),
-          subscription({ amount: 15, billing_cycle: 'custom' }),
-          subscription({ amount: 500, currency: 'GBP' }),
-          subscription({ amount: 999, is_active: false, status: 'cancelled' }),
-          subscription({ amount: 999, status: 'pending_cancellation' }),
-        ],
-        'USD'
-      )
-    ).toEqual({ amount: 141, count: 5, excludedCurrencies: { GBP: 1 } })
   })
 })

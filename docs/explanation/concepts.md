@@ -40,7 +40,7 @@ Kessai currently uses both:
 
 The shared core also defines `SubscriptionStatus::is_billable()`, which treats `trial`, `active`, and `grace_period` as billable states for totals. That is why a subscription can be non-cancelled but still not count toward spending if its state is not billable.
 
-Dashboard, Subscriptions, bento totals, and CLI/MCP statistics count only active, billable subscriptions and use your share (`amount / shared_count`) in the display currency. Other currencies are counted as excluded, not added together or converted. Dashboard upcoming-payment totals follow the same rule. Calendar totals answer a different question: the full amount charged on each date, using the recorded payment amount when present or the projected charge otherwise, again excluding other currencies. Calendar occurrences refetch after writes.
+Dashboard, Subscriptions, bento totals, and CLI/MCP statistics count only active, billable subscriptions and use your share (`amount / shared_count`) in the display currency. Other currencies are counted as excluded, not added together or converted. Calendar totals answer a different question: the full amount charged on each date, using the recorded payment amount when present or the projected charge otherwise, again excluding other currencies. The dashboard's **Upcoming charges** ledger uses the calendar's rule (full charges from the month projections, recorded amounts first, paid and skipped occurrences left out) and shows "your share" beside each shared charge; only its **Monthly equivalent** summary uses the share-based totals. Calendar occurrences refetch after writes.
 
 ## Categories, tags, and cards solve different problems
 
@@ -54,7 +54,7 @@ You can think of categories as the main taxonomy, tags as lightweight overlays, 
 
 ## Currency values are entered as-is
 
-Each subscription stores a billing currency, and the app stores one default currency in `settings.currency` for totals, budgets, and new subscription defaults.
+Each subscription stores a billing currency, and the app stores one display currency in `settings.currency` for totals, budgets, and new subscription defaults.
 
 Kessai does not fetch exchange rates or convert mixed-currency subscriptions. Enter each charge in its own billing currency. Spending totals include only the selected display currency and state what they leave out, for example **Excludes 2 in EUR, JPY**. Amounts use each currency's minor units and configured locale through `Intl.NumberFormat`, not a fixed two-decimal format.
 

@@ -19,7 +19,7 @@ import {
 } from '@/components/subscriptions/subscriptions-list-view'
 import { TrialBadge } from '@/components/subscriptions/trial-badge'
 import { TagBadge } from '@/components/tags/tag-badge'
-import { cn } from '@/lib/utils'
+import { subscriptionFocusProps } from '@/lib/focus'
 import type { CurrencyCode } from '@/lib/currency'
 import type { Subscription } from '@/types/subscription'
 import type { Category } from '@/types/category'
@@ -77,7 +77,8 @@ export const SubscriptionsGridView = memo(function SubscriptionsGridView({
                     color={sub.color || category?.color}
                     size="lg"
                     decorative
-                    className={cn('shrink-0 rounded-xl', !sub.is_active && 'opacity-50 grayscale')}
+                    dimmed={!sub.is_active}
+                    className="shrink-0 rounded-xl"
                   />
                   {sub.status === 'trial' && sub.is_active ? (
                     <TrialBadge trialEndDate={sub.trial_end_date ?? null} />
@@ -88,7 +89,11 @@ export const SubscriptionsGridView = memo(function SubscriptionsGridView({
 
                 <div className="flex min-w-0 flex-col gap-2">
                   <h2 className="flex min-w-0 items-center gap-1.5 text-lg leading-tight font-bold tracking-tight">
-                    <span className="truncate" title={sub.name}>
+                    <span
+                      {...subscriptionFocusProps(sub.id)}
+                      className="truncate rounded-sm focus-visible:outline-offset-1"
+                      title={sub.name}
+                    >
                       {sub.name}
                     </span>
                     {sub.is_pinned && (

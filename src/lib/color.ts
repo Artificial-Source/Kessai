@@ -1,4 +1,7 @@
-/** White or near-black, whichever reads better on a brand color (hex). */
+/**
+ * White or near-black ink for a brand-colored tile (hex): whichever has the higher WCAG 2
+ * contrast ratio against it, so mid-tones like teal get the ink that actually reads best.
+ */
 export function readableInkOn(background: string): string {
   const hex = background.trim().replace('#', '')
   const full =

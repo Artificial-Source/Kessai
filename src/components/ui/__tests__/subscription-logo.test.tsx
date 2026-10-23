@@ -126,4 +126,30 @@ describe('SubscriptionLogo', () => {
     const el = container.firstChild as HTMLElement
     expect(el).toHaveStyle({ backgroundColor: 'var(--color-surface-highest)' })
   })
+
+  it('sets the higher-contrast ink on a brand-colored tile', () => {
+    const { container } = render(<SubscriptionLogo logoUrl={null} name="Gym" color="#14b8a6" />)
+
+    expect(container.firstChild as HTMLElement).toHaveStyle({ color: '#131313' })
+  })
+
+  it('drops the brand fill for the neutral tile and muted ink when dimmed', () => {
+    const { container } = render(
+      <SubscriptionLogo logoUrl={null} name="Gym" color="#14b8a6" dimmed />
+    )
+
+    const el = container.firstChild as HTMLElement
+    expect(el).toHaveStyle({ backgroundColor: 'var(--color-surface-highest)' })
+    expect(el).toHaveClass('text-muted-foreground')
+    expect(el).not.toHaveClass('opacity-50')
+  })
+
+  it('fades a dimmed logo image to grayscale', async () => {
+    mockGetLogoDataUrl.mockResolvedValue('data:image/png;base64,xyz')
+
+    render(<SubscriptionLogo logoUrl="logos/test.png" name="Test" dimmed />)
+
+    const img = await waitFor(() => screen.getByRole('img'))
+    expect(img).toHaveClass('opacity-50', 'grayscale')
+  })
 })

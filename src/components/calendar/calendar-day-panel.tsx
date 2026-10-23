@@ -14,6 +14,7 @@ import {
 import { EmptyState } from '@/components/ui/empty-state'
 import { Skeleton } from '@/components/ui/skeleton'
 import { formatCurrency } from '@/lib/currency'
+import { findSubscriptionFocus, refocusIfLost } from '@/lib/focus'
 import { excludedCurrenciesNote } from '@/lib/totals'
 import { useSubscriptionStore } from '@/stores/subscription-store'
 import { DayPaymentItem } from './day-payment-item'
@@ -56,6 +57,8 @@ export function CalendarDayPanel({
   onRefresh,
 }: CalendarDayPanelProps) {
   const titleId = useId()
+  const panelRef = useRef<HTMLDivElement>(null)
+  const headingRef = useRef<HTMLHeadingElement>(null)
   const running = useRef(false)
   const [isRunning, setIsRunning] = useState(false)
   const summary = useMemo(() => summarizeDay(payments, currency), [payments, currency])
@@ -104,6 +107,12 @@ export function CalendarDayPanel({
     } finally {
       running.current = false
       setIsRunning(false)
+      // The buttons were disabled while saving and are gone once the payment is recorded:
+      // keep focus on this payment rather than letting it fall to the page.
+      refocusIfLost(
+        () => findSubscriptionFocus(id, panelRef.current) ?? headingRef.current,
+        panelRef.current
+      )
     }
   }
 
@@ -150,6 +159,8 @@ export function CalendarDayPanel({
     } finally {
       running.current = false
       setIsRunning(false)
+      // Mark all is gone once the day is resolved: the day heading and its summary are next.
+      refocusIfLost(() => headingRef.current, panelRef.current)
     }
   }
 
@@ -229,17 +240,21 @@ export function CalendarDayPanel({
     return (
       <Dialog open onOpenChange={(open) => !open && onClose()}>
         <DialogContent
+          ref={panelRef}
           className="flex flex-col overflow-hidden sm:max-w-md"
           {...(description ? {} : { 'aria-describedby': undefined })}
         >
           <DialogHeader>
-            <DialogTitle>{title}</DialogTitle>
+            <DialogTitle ref={headingRef} tabIndex={-1} className="rounded-sm">
+              {title}
+            </DialogTitle>
             {description ? <DialogDescription>{description}</DialogDescription> : null}
             {ready && exclusionNote ? (
               <p className="text-muted-foreground text-xs">{exclusionNote}</p>
             ) : null}
           </DialogHeader>
-          <div className="-mx-6 min-h-0 flex-1 overflow-y-auto px-6">{body}</div>
+          {/* 4px of block padding keeps a focused item's ring clear of the scroll edge. */}
+          <div className="-mx-6 -my-1 min-h-0 flex-1 overflow-y-auto px-6 py-1">{body}</div>
           {markAll ? <DialogFooter>{markAll}</DialogFooter> : null}
         </DialogContent>
       </Dialog>
@@ -248,14 +263,17 @@ export function CalendarDayPanel({
 
   return (
     <aside
+      ref={panelRef}
       aria-labelledby={titleId}
       className="glass-overlay animate-slide-in-right flex max-h-[calc(100dvh-5.5rem)] w-full flex-col overflow-hidden lg:sticky lg:top-0 lg:w-[22rem] lg:shrink-0"
     >
       <header className="border-border flex items-start justify-between gap-3 border-b p-5">
         <div className="flex min-w-0 flex-col gap-1">
           <h2
+            ref={headingRef}
             id={titleId}
-            className="text-foreground text-xl leading-tight font-bold tracking-tight"
+            tabIndex={-1}
+            className="text-foreground rounded-sm text-xl leading-tight font-bold tracking-tight"
           >
             {title}
           </h2>
