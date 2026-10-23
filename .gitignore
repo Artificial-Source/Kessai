@@ -1,0 +1,75 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+dist-ssr/
+target/
+src-tauri/target/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# IDE
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# OS
+.DS_Store
+Thumbs.db
+*.bak
+*~
+
+# Database (dev)
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+
+# Environment
+.env
+.env.local
+.env.*.local
+*.local
+
+# Testing
+coverage/
+playwright-report/
+test-results/
+blob-report/
+
+# Misc
+*.tgz
+.cache/
+.turbo/
+.vercel/
+.netlify/
+
+# AI tools
+.delta9/
+.cursor/
+.aider*
+.continue/
+.claude/
+.worktrees/
+.swarm/
+.mcp.json
+
+# Package manager
+.pnpm-store/
+.pnpm-buildinfo.json
+
+# Tauri
+src-tauri/gen/
+# Cargo uses the workspace-root lockfile, including desktop builds.
+src-tauri/Cargo.lock
+src-tauri/WixTools/

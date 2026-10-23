@@ -1,0 +1,272 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing stable release tag (vX.Y.Z); never a branch
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ inputs.tag || github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  preflight:
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.tag.outputs.tag }}
+      sha: ${{ steps.tag.outputs.sha }}
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: 22
+      - name: Resolve an existing release tag
+        id: tag
+        env:
+          RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
+        shell: bash
+        run: |
+          [[ "$RELEASE_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo 'Expected an existing vX.Y.Z tag'; exit 1; }
+          sha=$(git rev-parse --verify "refs/tags/$RELEASE_TAG^{commit}")
+          echo "tag=$RELEASE_TAG" >> "$GITHUB_OUTPUT"
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: ${{ steps.tag.outputs.sha }}
+      - name: Validate tag, product manifests, lockfile and changelog
+        env:
+          RELEASE_TAG: ${{ steps.tag.outputs.tag }}
+        run: node scripts/release-dry-run.js --check "$RELEASE_TAG"
+
+  quality-gates:
+    needs: preflight
+    uses: ./.github/workflows/ci.yml
+    with:
+      ref: ${{ needs.preflight.outputs.sha }}
+
+  draft:
+    needs: [preflight, quality-gates]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      release-id: ${{ steps.draft.outputs.release-id }}
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GH_REPO: ${{ github.repository }}
+      RELEASE_TAG: ${{ needs.preflight.outputs.tag }}
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: ${{ needs.preflight.outputs.sha }}
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: 22
+      - name: Create or resume a draft, never modify a public release
+        id: draft
+        shell: bash
+        run: |
+          node scripts/extract-release-notes.js "$RELEASE_TAG" > "$RUNNER_TEMP/release-notes.md"
+          if draft=$(gh release view "$RELEASE_TAG" --json isDraft --jq .isDraft); then
+            [[ "$draft" == true ]] || { echo 'Release is already public; refusing to replace artifacts'; exit 1; }
+            gh release edit "$RELEASE_TAG" --notes-file "$RUNNER_TEMP/release-notes.md"
+          else
+            gh release create "$RELEASE_TAG" --verify-tag --draft --title "Kessai $RELEASE_TAG" --notes-file "$RUNNER_TEMP/release-notes.md"
+          fi
+          # REST "releases/tags/<tag>" only returns published releases; `gh release view` also finds drafts.
+          id=$(gh release view "$RELEASE_TAG" --json databaseId --jq .databaseId)
+          [[ "$id" =~ ^[0-9]+$ ]] || { echo "Could not resolve the draft release id for $RELEASE_TAG"; exit 1; }
+          echo "release-id=$id" >> "$GITHUB_OUTPUT"
+
+  publish-tauri:
+    needs: [preflight, draft]
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: ubuntu-22.04
+            args: ''
+          - platform: windows-latest
+            args: ''
+          - platform: macos-latest
+            args: '--target x86_64-apple-darwin'
+          - platform: macos-latest
+            args: '--target aarch64-apple-darwin'
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: ${{ needs.preflight.outputs.sha }}
+      - name: Setup pnpm
+        uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6
+        with:
+          version: 10
+      - name: Setup Node
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: 22
+          cache: pnpm
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # stable
+        with:
+          targets: x86_64-apple-darwin,aarch64-apple-darwin
+      - name: Rust cache
+        uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2
+      - name: Install Linux system dependencies
+        if: matrix.platform == 'ubuntu-22.04'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libgtk-3-dev libayatana-appindicator3-dev librsvg2-dev patchelf
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile --reporter=silent
+      - name: Build and upload desktop artifacts to the draft
+        uses: tauri-apps/tauri-action@84b9d35b5fc46c1e45415bdb6144030364f7ebc5 # v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        with:
+          releaseId: ${{ needs.draft.outputs.release-id }}
+          tagName: ${{ needs.preflight.outputs.tag }}
+          releaseDraft: true
+          prerelease: false
+          args: ${{ matrix.args }} -- --locked
+
+  publish-mcp:
+    needs: [preflight, draft]
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: ubuntu-22.04
+            target: x86_64-unknown-linux-gnu
+            binary_extension: ''
+          - platform: windows-latest
+            target: x86_64-pc-windows-msvc
+            binary_extension: .exe
+          - platform: macos-latest
+            target: x86_64-apple-darwin
+            binary_extension: ''
+          - platform: macos-latest
+            target: aarch64-apple-darwin
+            binary_extension: ''
+    runs-on: ${{ matrix.platform }}
+    env:
+      RELEASE_TAG: ${{ needs.preflight.outputs.tag }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: ${{ needs.preflight.outputs.sha }}
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # stable
+        with:
+          targets: ${{ matrix.target }}
+      - name: Rust cache
+        uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2
+      - name: Build kessai-mcp
+        shell: bash
+        run: cargo build --locked --release -p kessai-mcp --target "${{ matrix.target }}"
+      - name: Package kessai-mcp (Windows)
+        if: matrix.platform == 'windows-latest'
+        shell: pwsh
+        run: |
+          $version = $env:RELEASE_TAG.Substring(1)
+          $packageDir = "kessai-mcp-$version-${{ matrix.target }}"
+          $binaryName = "kessai-mcp${{ matrix.binary_extension }}"
+          $tempPackageDir = Join-Path $env:RUNNER_TEMP $packageDir
+          New-Item -ItemType Directory -Force -Path (Join-Path $tempPackageDir "skills") | Out-Null
+          Copy-Item "target/${{ matrix.target }}/release/$binaryName" "$tempPackageDir/$binaryName"
+          Copy-Item "LICENSE" "$tempPackageDir/LICENSE"
+          Copy-Item "skills/kessai" "$tempPackageDir/skills/kessai" -Recurse -Force
+          Copy-Item "skills/kessai/README.md" "$tempPackageDir/README.md"
+          $archivePath = Join-Path $env:RUNNER_TEMP "$packageDir.zip"
+          Compress-Archive -Path $tempPackageDir -DestinationPath $archivePath -Force
+          $hash = (Get-FileHash -Path $archivePath -Algorithm SHA256).Hash.ToLowerInvariant()
+          $checksumPath = "$archivePath.sha256"
+          $archiveBase = [System.IO.Path]::GetFileName($archivePath)
+          [System.IO.File]::WriteAllText($checksumPath, "$hash  $archiveBase`n")
+          "archive_path=$archivePath" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "checksum_path=$checksumPath" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+      - name: Package kessai-mcp (Unix)
+        if: matrix.platform != 'windows-latest'
+        shell: bash
+        run: |
+          version="${RELEASE_TAG#v}"
+          package_dir="kessai-mcp-${version}-${{ matrix.target }}"
+          binary_name="kessai-mcp${{ matrix.binary_extension }}"
+          staging="$RUNNER_TEMP/$package_dir"
+          mkdir -p "$staging/skills"
+          cp "target/${{ matrix.target }}/release/$binary_name" "$staging/$binary_name"
+          chmod 755 "$staging/$binary_name"
+          cp LICENSE "$staging/LICENSE"
+          cp -R skills/kessai "$staging/skills/kessai"
+          cp skills/kessai/README.md "$staging/README.md"
+          archive_path="$RUNNER_TEMP/$package_dir.tar.gz"
+          tar -C "$RUNNER_TEMP" -czf "$archive_path" "$package_dir"
+          if command -v sha256sum >/dev/null 2>&1; then
+            hash=$(sha256sum "$archive_path")
+          else
+            hash=$(shasum -a 256 "$archive_path")
+          fi
+          checksum_path="${archive_path}.sha256"
+          printf '%s  %s\n' "${hash%% *}" "$(basename "$archive_path")" > "$checksum_path"
+          echo "archive_path=$archive_path" >> "$GITHUB_ENV"
+          echo "checksum_path=$checksum_path" >> "$GITHUB_ENV"
+      - name: Upload kessai-mcp assets to the draft
+        uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2
+        with:
+          tag_name: ${{ needs.preflight.outputs.tag }}
+          draft: true
+          fail_on_unmatched_files: true
+          files: |
+            ${{ env.archive_path }}
+            ${{ env.checksum_path }}
+
+  publish:
+    needs: [preflight, draft, publish-tauri, publish-mcp]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GH_REPO: ${{ github.repository }}
+      RELEASE_TAG: ${{ needs.preflight.outputs.tag }}
+      RELEASE_SHA: ${{ needs.preflight.outputs.sha }}
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: ${{ needs.preflight.outputs.sha }}
+          fetch-depth: 0
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: 22
+      - name: Validate complete draft and publish once
+        shell: bash
+        run: |
+          [[ "$(git rev-parse --verify "refs/tags/$RELEASE_TAG^{commit}")" == "$RELEASE_SHA" ]] || { echo 'Release tag moved during build'; exit 1; }
+          [[ "$(gh release view "$RELEASE_TAG" --json isDraft --jq .isDraft)" == true ]]
+          assets="$RUNNER_TEMP/release-assets"
+          mkdir -p "$assets"
+          gh release download "$RELEASE_TAG" --dir "$assets"
+          node scripts/release-dry-run.js --desktop-checksums "$assets" "$RELEASE_TAG"
+          gh release upload "$RELEASE_TAG" "$assets"/Kessai*.sha256 --clobber
+          gh release download "$RELEASE_TAG" --dir "$assets" --pattern '*.sha256' --clobber
+          node scripts/release-dry-run.js --verify-artifacts "$assets" "$RELEASE_TAG"
+          gh release edit "$RELEASE_TAG" --draft=false --latest

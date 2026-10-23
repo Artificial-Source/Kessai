@@ -1,0 +1,5694 @@
+[
+  {
+    "annotations": {
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": true
+    },
+    "description": "Current-state summary: normalized monthly/yearly totals of the user's share of active billable subscriptions in the display currency only; `excluded_currencies` counts subscriptions left out because conversion is not performed; `category_spending` breakdown.",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {},
+      "type": "object"
+    },
+    "name": "analytics_dashboard",
+    "outputSchema": {
+      "$defs": {
+        "CategorySpending": {
+          "properties": {
+            "amount": {
+              "description": "Normalized monthly share in display currency.",
+              "format": "double",
+              "type": "number"
+            },
+            "color": {
+              "description": "Category display color.",
+              "type": "string"
+            },
+            "id": {
+              "description": "Category id or core's uncategorized identity.",
+              "type": "string"
+            },
+            "name": {
+              "description": "Category display name.",
+              "type": "string"
+            },
+            "percentage": {
+              "description": "Percentage of included dashboard spending.",
+              "format": "double",
+              "type": "number"
+            }
+          },
+          "required": [
+            "id",
+            "name",
+            "color",
+            "amount",
+            "percentage"
+          ],
+          "type": "object"
+        }
+      },
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "active_count": {
+          "description": "Included active billable subscriptions in display currency.",
+          "format": "uint",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "average_per_subscription": {
+          "description": "Mean normalized monthly share among included active subscriptions.",
+          "format": "double",
+          "type": "number"
+        },
+        "category_spending": {
+          "description": "Display-currency monthly share by category.",
+          "items": {
+            "$ref": "#/$defs/CategorySpending"
+          },
+          "type": "array"
+        },
+        "display_currency": {
+          "description": "Currency of all dashboard monetary totals.",
+          "type": "string"
+        },
+        "excluded_currencies": {
+          "additionalProperties": {
+            "format": "uint",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "description": "Active subscriptions excluded from monetary totals, counted by currency.",
+          "type": "object"
+        },
+        "total_count": {
+          "description": "All tracked subscriptions.",
+          "format": "uint",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "total_monthly": {
+          "description": "Normalized monthly cost of the user's share, display currency only.",
+          "format": "double",
+          "type": "number"
+        },
+        "total_yearly": {
+          "description": "Normalized yearly cost of the user's share, display currency only.",
+          "format": "double",
+          "type": "number"
+        }
+      },
+      "required": [
+        "display_currency",
+        "total_monthly",
+        "total_yearly",
+        "active_count",
+        "total_count",
+        "average_per_subscription",
+        "category_spending",
+        "excluded_currencies"
+      ],
+      "type": "object"
+    }
+  },
+  {
+    "annotations": {
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": true
+    },
+    "description": "Ledger-based history over the last N months: `monthly` series, `by_category`, and `velocity` (month-over-month change, projected annual). Sums *paid* rows by due date across all currencies without conversion — say so if the user has mixed currencies (see `settings_get`).",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "months": {
+          "default": 12,
+          "description": "Number of trailing ledger months, 1–60; default 12. No currency conversion.",
+          "format": "int32",
+          "maximum": 60,
+          "minimum": 1,
+          "type": [
+            "integer",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "name": "analytics_spending",
+    "outputSchema": {
+      "$defs": {
+        "CategorySpend": {
+          "properties": {
+            "category_id": {
+              "description": "Category id or null for uncategorized rows.",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "category_name": {
+              "description": "Category display name.",
+              "type": "string"
+            },
+            "percentage": {
+              "description": "Percentage of paid spending.",
+              "format": "double",
+              "type": "number"
+            },
+            "total": {
+              "description": "Paid ledger total without currency conversion.",
+              "format": "double",
+              "type": "number"
+            }
+          },
+          "required": [
+            "category_name",
+            "total",
+            "percentage"
+          ],
+          "type": "object"
+        },
+        "MonthlySpend": {
+          "properties": {
+            "count": {
+              "description": "Number of paid ledger rows.",
+              "format": "int32",
+              "type": "integer"
+            },
+            "month": {
+              "description": "Due-date month, YYYY-MM.",
+              "type": "string"
+            },
+            "total": {
+              "description": "Paid ledger amounts summed without currency conversion.",
+              "format": "double",
+              "type": "number"
+            }
+          },
+          "required": [
+            "month",
+            "total",
+            "count"
+          ],
+          "type": "object"
+        },
+        "SpendingVelocity": {
+          "properties": {
+            "change_percent": {
+              "description": "Percentage change from the previous month.",
+              "format": "double",
+              "type": "number"
+            },
+            "current_month": {
+              "description": "Current month paid total, without conversion.",
+              "format": "double",
+              "type": "number"
+            },
+            "previous_month": {
+              "description": "Previous month paid total, without conversion.",
+              "format": "double",
+              "type": "number"
+            },
+            "projected_annual": {
+              "description": "Current month annualized, without conversion.",
+              "format": "double",
+              "type": "number"
+            }
+          },
+          "required": [
+            "current_month",
+            "previous_month",
+            "change_percent",
+            "projected_annual"
+          ],
+          "type": "object"
+        }
+      },
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "by_category": {
+          "description": "Paid ledger category totals without currency conversion.",
+          "items": {
+            "$ref": "#/$defs/CategorySpend"
+          },
+          "type": "array"
+        },
+        "monthly": {
+          "description": "Paid ledger monthly series without currency conversion.",
+          "items": {
+            "$ref": "#/$defs/MonthlySpend"
+          },
+          "type": "array"
+        },
+        "months": {
+          "description": "Number of requested trailing months, 1–60.",
+          "format": "int32",
+          "type": "integer"
+        },
+        "velocity": {
+          "$ref": "#/$defs/SpendingVelocity",
+          "description": "Current and previous month trend, without currency conversion."
+        }
+      },
+      "required": [
+        "months",
+        "monthly",
+        "by_category",
+        "velocity"
+      ],
+      "type": "object"
+    }
+  },
+  {
+    "annotations": {
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": true
+    },
+    "description": "One calendar year of ledger totals: total spent, average month, highest month, category breakdown. Same no-conversion caveat.",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "year": {
+          "description": "Calendar year, 1900–9998; paid amounts are summed without currency conversion.",
+          "format": "int32",
+          "maximum": 9998,
+          "minimum": 1900,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "year"
+      ],
+      "type": "object"
+    },
+    "name": "analytics_year",
+    "outputSchema": {
+      "$defs": {
+        "CategorySpend": {
+          "properties": {
+            "category_id": {
+              "description": "Category id or null for uncategorized rows.",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "category_name": {
+              "description": "Category display name.",
+              "type": "string"
+            },
+            "percentage": {
+              "description": "Percentage of paid spending.",
+              "format": "double",
+              "type": "number"
+            },
+            "total": {
+              "description": "Paid ledger total without currency conversion.",
+              "format": "double",
+              "type": "number"
+            }
+          },
+          "required": [
+            "category_name",
+            "total",
+            "percentage"
+          ],
+          "type": "object"
+        }
+      },
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "avg_monthly": {
+          "description": "Mean monthly paid ledger total, without conversion.",
+          "format": "double",
+          "type": "number"
+        },
+        "category_breakdown": {
+          "description": "Paid spending by category, without conversion.",
+          "items": {
+            "$ref": "#/$defs/CategorySpend"
+          },
+          "type": "array"
+        },
+        "highest_amount": {
+          "description": "Highest monthly paid total, without conversion.",
+          "format": "double",
+          "type": "number"
+        },
+        "highest_month": {
+          "description": "Highest-spending month, YYYY-MM.",
+          "type": "string"
+        },
+        "total_spent": {
+          "description": "Paid ledger total without currency conversion.",
+          "format": "double",
+          "type": "number"
+        },
+        "year": {
+          "description": "Calendar year, 1900–9998.",
+          "format": "int32",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "year",
+        "total_spent",
+        "avg_monthly",
+        "highest_month",
+        "highest_amount",
+        "category_breakdown"
+      ],
+      "type": "object"
+    }
+  },
+  {
+    "annotations": {
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": false
+    },
+    "description": "Write a full JSON backup (version 1.2.0) of the local database to `path` on this machine and return its size and record counts. Refuses to overwrite unless `overwrite=true`. Use this instead of reading all tables into the conversation.",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "overwrite": {
+          "default": false,
+          "description": "Allow replacing an existing backup file; default false.",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "path": {
+          "description": "Backup destination on this machine; absolute or relative to server working directory.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "path"
+      ],
+      "type": "object"
+    },
+    "name": "backup_export",
+    "outputSchema": {
+      "$defs": {
+        "BackupCounts": {
+          "properties": {
+            "cards": {
+              "description": "Card rows.",
+              "format": "uint",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "categories": {
+              "description": "Category rows.",
+              "format": "uint",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "payments": {
+              "description": "Payment rows.",
+              "format": "uint",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "price_history": {
+              "description": "Price history rows.",
+              "format": "uint",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "subscriptions": {
+              "description": "Subscription rows.",
+              "format": "uint",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "tag_links": {
+              "description": "Subscription-tag links.",
+              "format": "uint",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "tags": {
+              "description": "Tag rows.",
+              "format": "uint",
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          "required": [
+            "subscriptions",
+            "categories",
+            "cards",
+            "payments",
+            "price_history",
+            "tags",
+            "tag_links"
+          ],
+          "type": "object"
+        }
+      },
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "bytes": {
+          "description": "Number of UTF-8 bytes written.",
+          "format": "uint64",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "counts": {
+          "$ref": "#/$defs/BackupCounts",
+          "description": "Exported record counts by collection."
+        },
+        "path": {
+          "description": "Absolute destination path on this machine.",
+          "type": "string"
+        },
+        "version": {
+          "description": "Backup format version.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "path",
+        "bytes",
+        "version",
+        "counts"
+      ],
+      "type": "object"
+    }
+  },
+  {
+    "annotations": {
+      "destructiveHint": true,
+      "idempotentHint": false,
+      "openWorldHint": false,
+      "readOnlyHint": false
+    },
+    "description": "Restore from a backup file. `mode=\"merge\"` (default) upserts by id and keeps everything else; `mode=\"replace\"` deletes all existing data first. Validation errors are reported before anything is written; the import itself is one transaction. Two-step: `dry_run=true` returns counts and id collisions; `confirm=true` is required for `replace` and for merges that overwrite existing ids.",
+    "inputSchema": {
+      "$defs": {
+        "ImportMode": {
+          "enum": [
+            "merge",
+            "replace"
+          ],
+          "type": "string"
+        }
+      },
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "confirm": {
+          "default": false,
+          "description": "Apply only after the user approves; required for replace or overwriting merge collisions.",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "dry_run": {
+          "default": false,
+          "description": "Validate and preview record/collision counts without changing domain data; default false.",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "mode": {
+          "$ref": "#/$defs/ImportMode",
+          "default": "merge",
+          "description": "Merge upserts by id; replace first removes existing data. Defaults to merge."
+        },
+        "path": {
+          "description": "Existing backup file on this machine; absolute or server-working-directory relative.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "path"
+      ],
+      "type": "object"
+    },
+    "name": "backup_import",
+    "outputSchema": {
+      "$defs": {
+        "BackupCounts": {
+          "properties": {
+            "cards": {
+              "description": "Card rows.",
+              "format": "uint",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "categories": {
+              "description": "Category rows.",
+              "format": "uint",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "payments": {
+              "description": "Payment rows.",
+              "format": "uint",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "price_history": {
+              "description": "Price history rows.",
+              "format": "uint",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "subscriptions": {
+              "description": "Subscription rows.",
+              "format": "uint",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "tag_links": {
+              "description": "Subscription-tag links.",
+              "format": "uint",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "tags": {
+              "description": "Tag rows.",
+              "format": "uint",
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          "required": [
+            "subscriptions",
+            "categories",
+            "cards",
+            "payments",
+            "price_history",
+            "tags",
+            "tag_links"
+          ],
+          "type": "object"
+        },
+        "ImportMode": {
+          "enum": [
+            "merge",
+            "replace"
+          ],
+          "type": "string"
+        },
+        "ImportOutcome": {
+          "properties": {
+            "counts": {
+              "$ref": "#/$defs/BackupCounts",
+              "description": "Incoming records applied by collection, not resulting database totals."
+            },
+            "imported": {
+              "description": "Always true after the import transaction commits.",
+              "type": "boolean"
+            },
+            "mode": {
+              "$ref": "#/$defs/ImportMode",
+              "description": "Applied import mode."
+            },
+            "version": {
+              "description": "Imported backup format version.",
+              "type": "string"
+            }
+          },
+          "required": [
+            "imported",
+            "mode",
+            "version",
+            "counts"
+          ],
+          "type": "object"
+        },
+        "ImportPreview": {
+          "properties": {
+            "collisions": {
+              "$ref": "#/$defs/BackupCounts",
+              "description": "Incoming records whose ids already exist; identical protected defaults are excluded."
+            },
+            "dry_run": {
+              "description": "Always true; no domain changes were made.",
+              "type": "boolean"
+            },
+            "incoming": {
+              "$ref": "#/$defs/BackupCounts",
+              "description": "Incoming record counts by collection."
+            },
+            "mode": {
+              "$ref": "#/$defs/ImportMode",
+              "description": "Merge upserts by id; replace first removes existing data."
+            },
+            "requires_confirmation": {
+              "description": "Whether applying this import needs explicit approval.",
+              "type": "boolean"
+            },
+            "version": {
+              "description": "Backup format version.",
+              "type": "string"
+            }
+          },
+          "required": [
+            "dry_run",
+            "mode",
+            "version",
+            "incoming",
+            "collisions",
+            "requires_confirmation"
+          ],
+          "type": "object"
+        }
+      },
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "oneOf": [
+        {
+          "$ref": "#/$defs/ImportPreview"
+        },
+        {
+          "$ref": "#/$defs/ImportOutcome"
+        }
+      ],
+      "type": "object"
+    }
+  },
+  {
+    "annotations": {
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": true
+    },
+    "description": "Project all charges due in a calendar month — every renewal occurrence of active/billable subscriptions plus any recorded rows — with `totals_by_currency` already summed (projected vs paid/skipped/pending). This answers \"what is due / how much will I pay this month\" without the model adding numbers. Currencies are never converted.",
+    "inputSchema": {
+      "$defs": {
+        "YearMonth": {
+          "description": "A validated calendar month. Deserialize and CLI parsing share the exact contract.",
+          "type": "string"
+        }
+      },
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "cursor": {
+          "description": "Opaque next_cursor from the same month; omit for the first page.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "limit": {
+          "default": 200,
+          "description": "Page size, 1–500; default 200. Totals cover the full month before pagination.",
+          "format": "uint",
+          "maximum": 500,
+          "minimum": 1,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "month": {
+          "$ref": "#/$defs/YearMonth",
+          "description": "Calendar month, YYYY-MM, between 1900-01 and 9998-12.",
+          "pattern": "^[0-9]{4}-[0-9]{2}$"
+        }
+      },
+      "required": [
+        "month"
+      ],
+      "type": "object"
+    },
+    "name": "calendar_month",
+    "outputSchema": {
+      "$defs": {
+        "BillingCycle": {
+          "enum": [
+            "weekly",
+            "monthly",
+            "quarterly",
+            "yearly",
+            "custom"
+          ],
+          "type": "string"
+        },
+        "CalendarOccurrence": {
+          "properties": {
+            "billing_cycle": {
+              "$ref": "#/$defs/BillingCycle",
+              "description": "Renewal cadence."
+            },
+            "currency": {
+              "description": "Currency shared by projected_amount and payment.amount.",
+              "type": "string"
+            },
+            "due_date": {
+              "description": "Occurrence date, YYYY-MM-DD.",
+              "type": "string"
+            },
+            "name": {
+              "description": "Subscription display name.",
+              "type": "string"
+            },
+            "payment": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/CalendarPayment"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Recorded ledger outcome or null for an unrecorded projection."
+            },
+            "projected_amount": {
+              "description": "Current subscription price; payment.amount is authoritative when present.",
+              "format": "double",
+              "type": "number"
+            },
+            "status": {
+              "$ref": "#/$defs/SubscriptionStatus",
+              "description": "Current subscription lifecycle status."
+            },
+            "subscription_id": {
+              "description": "Subscription id.",
+              "type": "string"
+            }
+          },
+          "required": [
+            "subscription_id",
+            "name",
+            "due_date",
+            "currency",
+            "projected_amount",
+            "status",
+            "billing_cycle"
+          ],
+          "type": "object"
+        },
+        "CalendarPayment": {
+          "properties": {
+            "amount": {
+              "description": "Actual recorded amount in decimal major currency units.",
+              "format": "double",
+              "type": "number"
+            },
+            "id": {
+              "description": "Recorded ledger row id.",
+              "type": "string"
+            },
+            "status": {
+              "$ref": "#/$defs/PaymentStatus",
+              "description": "Recorded ledger status."
+            }
+          },
+          "required": [
+            "id",
+            "status",
+            "amount"
+          ],
+          "type": "object"
+        },
+        "CurrencyTotals": {
+          "properties": {
+            "paid": {
+              "description": "Sum of actual paid ledger amounts.",
+              "format": "double",
+              "type": "number"
+            },
+            "pending": {
+              "description": "Sum of pending ledger amounts plus unrecorded projected amounts.",
+              "format": "double",
+              "type": "number"
+            },
+            "projected": {
+              "description": "Sum of current-price projections for every occurrence in the full month.",
+              "format": "double",
+              "type": "number"
+            },
+            "skipped": {
+              "description": "Sum of actual skipped ledger amounts.",
+              "format": "double",
+              "type": "number"
+            }
+          },
+          "required": [
+            "projected",
+            "paid",
+            "skipped",
+            "pending"
+          ],
+          "type": "object"
+        },
+        "PaymentStatus": {
+          "enum": [
+            "paid",
+            "skipped",
+            "pending"
+          ],
+          "type": "string"
+        },
+        "SubscriptionStatus": {
+          "enum": [
+            "trial",
+            "active",
+            "paused",
+            "pending_cancellation",
+            "grace_period",
+            "cancelled"
+          ],
+          "type": "string"
+        }
+      },
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "items": {
+          "description": "Occurrences on this page, ordered by date, name, subscription id and payment id.",
+          "items": {
+            "$ref": "#/$defs/CalendarOccurrence"
+          },
+          "type": "array"
+        },
+        "month": {
+          "description": "Requested calendar month, YYYY-MM.",
+          "type": "string"
+        },
+        "next_cursor": {
+          "description": "Continuation token, or null when complete.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "total": {
+          "description": "Number of occurrences before pagination.",
+          "format": "uint",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "totals_by_currency": {
+          "additionalProperties": {
+            "$ref": "#/$defs/CurrencyTotals"
+          },
+          "description": "Full-month totals per currency, before pagination; currencies are never converted.",
+          "type": "object"
+        }
+      },
+      "required": [
+        "month",
+        "items",
+        "total",
+        "totals_by_currency"
+      ],
+      "type": "object"
+    }
+  },
+  {
+    "annotations": {
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "openWorldHint": false,
+      "readOnlyHint": false
+    },
+    "description": "Add a card. Store only `last_four`; never full numbers.",
+    "inputSchema": {
+      "$defs": {
+        "CardType": {
+          "enum": [
+            "credit",
+            "debit"
+          ],
+          "type": "string"
+        }
+      },
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "card_type": {
+          "$ref": "#/$defs/CardType",
+          "description": "Credit or debit."
+        },
+        "color": {
+          "default": "#6b7280",
+          "description": "Display color in #RRGGBB form; defaults to #6b7280.",
+          "pattern": "^#[0-9a-fA-F]{6}$",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "credit_limit": {
+          "description": "Nonnegative credit limit in decimal major units.",
+          "format": "double",
+          "minimum": 0,
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "last_four": {
+          "description": "Exactly four digits; never supply a full card number.",
+          "pattern": "^[0-9]{4}$",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "name": {
+          "description": "Nonempty display name, at most 100 characters.",
+          "maxLength": 100,
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "card_type"
+      ],
+      "type": "object"
+    },
+    "name": "cards_create",
+    "outputSchema": {
+      "$defs": {
+        "CardType": {
+          "enum": [
+            "credit",
+            "debit"
+          ],
+          "type": "string"
+        }
+      },
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "card_type": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CardType"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Card type; null for categories and tags."
+        },
+        "color": {
+          "description": "Display color in #RRGGBB form.",
+          "type": "string"
+        },
+        "credit_limit": {
+          "description": "Credit limit in decimal major units or null.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "icon": {
+          "description": "Category icon; null for tags and cards.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "id": {
+          "description": "Reference entity id.",
+          "type": "string"
+        },
+        "is_default": {
+          "description": "Whether this is a protected default category; null for tags and cards.",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "last_four": {
+          "description": "Last four card digits or null.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "name": {
+          "description": "Display name.",
+          "type": "string"
+        },
+        "subscription_count": {
+          "description": "Number of subscriptions referencing this entity.",
+          "format": "uint",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "color",
+        "subscription_count"
+      ],
+      "type": "object"
+    }
+  },
+  {
+    "annotations": {
+      "destructiveHint": true,
+      "idempotentHint": false,
+      "openWorldHint": false,
+      "readOnlyHint": false
+    },
+    "description": "Delete a card; subscriptions using it keep existing without a card. Two-step.",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "confirm": {
+          "default": false,
+          "description": "Apply deletion only after the user approves the preview; default false.",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "dry_run": {
+          "default": false,
+          "description": "Preview the target and cascade without changing any records; default false.",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "id": {
+          "description": "Opaque record id returned by the corresponding list tool.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "type": "object"
+    },
+    "name": "cards_delete",
+    "outputSchema": {
+      "$defs": {
+        "CascadeCount": {
+          "properties": {
+            "count": {
+              "description": "Total affected rows.",
+              "format": "uint",
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          "required": [
+            "count"
+          ],
+          "type": "object"
+        },
+        "CascadePreview": {
+          "properties": {
+            "count": {
+              "description": "Total affected rows, which may exceed the number of preview ids.",
+              "format": "uint",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "ids": {
+              "description": "Up to twenty affected ids in sorted order.",
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            }
+          },
+          "required": [
+            "count",
+            "ids"
+          ],
+          "type": "object"
+        },
+        "DeleteOutcome": {
+          "properties": {
+            "cascade": {
+              "additionalProperties": {
+                "$ref": "#/$defs/CascadeCount"
+              },
+              "description": "Counts of cascaded or detached rows by kind.",
+              "type": "object"
+            },
+            "deleted": {
+              "description": "Always true after successful deletion.",
+              "type": "boolean"
+            },
+            "target": {
+              "$ref": "#/$defs/NamedRef",
+              "description": "Deleted entity identity."
+            }
+          },
+          "required": [
+            "deleted",
+            "target",
+            "cascade"
+          ],
+          "type": "object"
+        },
+        "DeletePreview": {
+          "properties": {
+            "cascade": {
+              "additionalProperties": {
+                "$ref": "#/$defs/CascadePreview"
+              },
+              "description": "Cascaded or detached rows by kind, with bounded example ids.",
+              "type": "object"
+            },
+            "dry_run": {
+              "description": "Always true; this result made no domain changes.",
+              "type": "boolean"
+            },
+            "requires_confirmation": {
+              "description": "Always true; execute only after explicit user approval.",
+              "type": "boolean"
+            },
+            "target": {
+              "$ref": "#/$defs/NamedRef",
+              "description": "Entity that would be deleted."
+            }
+          },
+          "required": [
+            "dry_run",
+            "target",
+            "cascade",
+            "requires_confirmation"
+          ],
+          "type": "object"
+        },
+        "NamedRef": {
+          "properties": {
+            "id": {
+              "description": "Reference entity id.",
+              "type": "string"
+            },
+            "name": {
+              "description": "Reference entity display name.",
+              "type": "string"
+            }
+          },
+          "required": [
+            "id",
+            "name"
+          ],
+          "type": "object"
+        }
+      },
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "oneOf": [
+        {
+          "$ref": "#/$defs/DeletePreview"
+        },
+        {
+          "$ref": "#/$defs/DeleteOutcome"
+        }
+      ],
+      "type": "object"
+    }
+  },
+  {
+    "annotations": {
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": true
+    },
+    "description": "List payment cards (name, type, last four, credit limit, `subscription_count`).",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "cursor": {
+          "description": "Opaque next_cursor from this same collection; omit for the first page.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "limit": {
+          "default": 100,
+          "description": "Page size, 1–200; default 100.",
+          "format": "uint",
+          "maximum": 200,
+          "minimum": 1,
+          "type": [
+            "integer",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "name": "cards_list",
+    "outputSchema": {
+      "$defs": {
+        "CardType": {
+          "enum": [
+            "credit",
+            "debit"
+          ],
+          "type": "string"
+        },
+        "RefItem": {
+          "properties": {
+            "card_type": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/CardType"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Card type; null for categories and tags."
+            },
+            "color": {
+              "description": "Display color in #RRGGBB form.",
+              "type": "string"
+            },
+            "credit_limit": {
+              "description": "Credit limit in decimal major units or null.",
+              "format": "double",
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "icon": {
+              "description": "Category icon; null for tags and cards.",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "id": {
+              "description": "Reference entity id.",
+              "type": "string"
+            },
+            "is_default": {
+              "description": "Whether this is a protected default category; null for tags and cards.",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "last_four": {
+              "description": "Last four card digits or null.",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "name": {
+              "description": "Display name.",
+              "type": "string"
+            },
+            "subscription_count": {
+              "description": "Number of subscriptions referencing this entity.",
+              "format": "uint",
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          "required": [
+            "id",
+            "name",
+            "color",
+            "subscription_count"
+          ],
+          "type": "object"
+        }
+      },
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "items": {
+          "description": "Rows on this page, in deterministic order.",
+          "items": {
+            "$ref": "#/$defs/RefItem"
+          },
+          "type": "array"
+        },
+        "next_cursor": {
+          "description": "Opaque continuation token, or null when the list is complete.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "total": {
+          "description": "Matching rows before pagination.",
+          "format": "uint",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "warnings": {
+          "description": "Non-fatal qualifications affecting this result.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "items",
+        "total",
+        "warnings"
+      ],
+      "type": "object"
+    }
+  },
+  {
+    "annotations": {
+      "destructiveHint": true,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": false
+    },
+    "description": "Change card fields; `clear_fields` blanks last_four/credit_limit.",
+    "inputSchema": {
+      "$defs": {
+        "CardClearField": {
+          "enum": [
+            "last_four",
+            "credit_limit"
+          ],
+          "type": "string"
+        },
+        "CardType": {
+          "enum": [
+            "credit",
+            "debit"
+          ],
+          "type": "string"
+        }
+      },
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "card_type": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CardType"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Desired credit or debit type."
+        },
+        "clear_fields": {
+          "default": [],
+          "description": "Nullable card fields to blank; cannot also be set.",
+          "items": {
+            "$ref": "#/$defs/CardClearField"
+          },
+          "type": "array"
+        },
+        "color": {
+          "default": null,
+          "description": "Replacement #RRGGBB color.",
+          "pattern": "^#[0-9a-fA-F]{6}$",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "credit_limit": {
+          "default": null,
+          "description": "Nonnegative credit limit; clear through clear_fields.",
+          "format": "double",
+          "minimum": 0,
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "id": {
+          "description": "Opaque card id from cards_list.",
+          "type": "string"
+        },
+        "last_four": {
+          "default": null,
+          "description": "Exactly four digits; clear through clear_fields.",
+          "pattern": "^[0-9]{4}$",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "name": {
+          "default": null,
+          "description": "Replacement display name, at most 100 characters.",
+          "maxLength": 100,
+          "minLength": 1,
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "type": "object"
+    },
+    "name": "cards_update",
+    "outputSchema": {
+      "$defs": {
+        "CardType": {
+          "enum": [
+            "credit",
+            "debit"
+          ],
+          "type": "string"
+        }
+      },
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "card_type": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CardType"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Card type; null for categories and tags."
+        },
+        "color": {
+          "description": "Display color in #RRGGBB form.",
+          "type": "string"
+        },
+        "credit_limit": {
+          "description": "Credit limit in decimal major units or null.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "icon": {
+          "description": "Category icon; null for tags and cards.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "id": {
+          "description": "Reference entity id.",
+          "type": "string"
+        },
+        "is_default": {
+          "description": "Whether this is a protected default category; null for tags and cards.",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "last_four": {
+          "description": "Last four card digits or null.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "name": {
+          "description": "Display name.",
+          "type": "string"
+        },
+        "subscription_count": {
+          "description": "Number of subscriptions referencing this entity.",
+          "format": "uint",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "color",
+        "subscription_count"
+      ],
+      "type": "object"
+    }
+  },
+  {
+    "annotations": {
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "openWorldHint": false,
+      "readOnlyHint": false
+    },
+    "description": "Create a category. `color` is `#rrggbb`; `icon` is an icon name shown in the UI.",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "color": {
+          "description": "Category display color, #RRGGBB.",
+          "pattern": "^#[0-9a-fA-F]{6}$",
+          "type": "string"
+        },
+        "icon": {
+          "description": "Icon name shown in the Kessai UI.",
+          "type": "string"
+        },
+        "name": {
+          "description": "Nonempty category display name; at most 100 characters.",
+          "maxLength": 100,
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "color",
+        "icon"
+      ],
+      "type": "object"
+    },
+    "name": "categories_create",
+    "outputSchema": {
+      "$defs": {
+        "CardType": {
+          "enum": [
+            "credit",
+            "debit"
+          ],
+          "type": "string"
+        }
+      },
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "card_type": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CardType"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Card type; null for categories and tags."
+        },
+        "color": {
+          "description": "Display color in #RRGGBB form.",
+          "type": "string"
+        },
+        "credit_limit": {
+          "description": "Credit limit in decimal major units or null.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "icon": {
+          "description": "Category icon; null for tags and cards.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "id": {
+          "description": "Reference entity id.",
+          "type": "string"
+        },
+        "is_default": {
+          "description": "Whether this is a protected default category; null for tags and cards.",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "last_four": {
+          "description": "Last four card digits or null.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "name": {
+          "description": "Display name.",
+          "type": "string"
+        },
+        "subscription_count": {
+          "description": "Number of subscriptions referencing this entity.",
+          "format": "uint",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "color",
+        "subscription_count"
+      ],
+      "type": "object"
+    }
+  },
+  {
+    "annotations": {
+      "destructiveHint": true,
+      "idempotentHint": false,
+      "openWorldHint": false,
+      "readOnlyHint": false
+    },
+    "description": "Delete a non-default category; linked subscriptions keep existing but lose the category (cascade shows how many). Default categories return `conflict`. Two-step dry_run/confirm.",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "confirm": {
+          "default": false,
+          "description": "Apply deletion only after the user approves the preview; default false.",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "dry_run": {
+          "default": false,
+          "description": "Preview the target and cascade without changing any records; default false.",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "id": {
+          "description": "Opaque record id returned by the corresponding list tool.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "type": "object"
+    },
+    "name": "categories_delete",
+    "outputSchema": {
+      "$defs": {
+        "CascadeCount": {
+          "properties": {
+            "count": {
+              "description": "Total affected rows.",
+              "format": "uint",
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          "required": [
+            "count"
+          ],
+          "type": "object"
+        },
+        "CascadePreview": {
+          "properties": {
+            "count": {
+              "description": "Total affected rows, which may exceed the number of preview ids.",
+              "format": "uint",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "ids": {
+              "description": "Up to twenty affected ids in sorted order.",
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            }
+          },
+          "required": [
+            "count",
+            "ids"
+          ],
+          "type": "object"
+        },
+        "DeleteOutcome": {
+          "properties": {
+            "cascade": {
+              "additionalProperties": {
+                "$ref": "#/$defs/CascadeCount"
+              },
+              "description": "Counts of cascaded or detached rows by kind.",
+              "type": "object"
+            },
+            "deleted": {
+              "description": "Always true after successful deletion.",
+              "type": "boolean"
+            },
+            "target": {
+              "$ref": "#/$defs/NamedRef",
+              "description": "Deleted entity identity."
+            }
+          },
+          "required": [
+            "deleted",
+            "target",
+            "cascade"
+          ],
+          "type": "object"
+        },
+        "DeletePreview": {
+          "properties": {
+            "cascade": {
+              "additionalProperties": {
+                "$ref": "#/$defs/CascadePreview"
+              },
+              "description": "Cascaded or detached rows by kind, with bounded example ids.",
+              "type": "object"
+            },
+            "dry_run": {
+              "description": "Always true; this result made no domain changes.",
+              "type": "boolean"
+            },
+            "requires_confirmation": {
+              "description": "Always true; execute only after explicit user approval.",
+              "type": "boolean"
+            },
+            "target": {
+              "$ref": "#/$defs/NamedRef",
+              "description": "Entity that would be deleted."
+            }
+          },
+          "required": [
+            "dry_run",
+            "target",
+            "cascade",
+            "requires_confirmation"
+          ],
+          "type": "object"
+        },
+        "NamedRef": {
+          "properties": {
+            "id": {
+              "description": "Reference entity id.",
+              "type": "string"
+            },
+            "name": {
+              "description": "Reference entity display name.",
+              "type": "string"
+            }
+          },
+          "required": [
+            "id",
+            "name"
+          ],
+          "type": "object"
+        }
+      },
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "oneOf": [
+        {
+          "$ref": "#/$defs/DeletePreview"
+        },
+        {
+          "$ref": "#/$defs/DeleteOutcome"
+        }
+      ],
+      "type": "object"
+    }
+  },
+  {
+    "annotations": {
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": true
+    },
+    "description": "List categories with `subscription_count`. Needed to pick a `category_id`.",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "cursor": {
+          "description": "Opaque next_cursor from this same collection; omit for the first page.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "limit": {
+          "default": 100,
+          "description": "Page size, 1–200; default 100.",
+          "format": "uint",
+          "maximum": 200,
+          "minimum": 1,
+          "type": [
+            "integer",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "name": "categories_list",
+    "outputSchema": {
+      "$defs": {
+        "CardType": {
+          "enum": [
+            "credit",
+            "debit"
+          ],
+          "type": "string"
+        },
+        "RefItem": {
+          "properties": {
+            "card_type": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/CardType"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Card type; null for categories and tags."
+            },
+            "color": {
+              "description": "Display color in #RRGGBB form.",
+              "type": "string"
+            },
+            "credit_limit": {
+              "description": "Credit limit in decimal major units or null.",
+              "format": "double",
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "icon": {
+              "description": "Category icon; null for tags and cards.",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "id": {
+              "description": "Reference entity id.",
+              "type": "string"
+            },
+            "is_default": {
+              "description": "Whether this is a protected default category; null for tags and cards.",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "last_four": {
+              "description": "Last four card digits or null.",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "name": {
+              "description": "Display name.",
+              "type": "string"
+            },
+            "subscription_count": {
+              "description": "Number of subscriptions referencing this entity.",
+              "format": "uint",
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          "required": [
+            "id",
+            "name",
+            "color",
+            "subscription_count"
+          ],
+          "type": "object"
+        }
+      },
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "items": {
+          "description": "Rows on this page, in deterministic order.",
+          "items": {
+            "$ref": "#/$defs/RefItem"
+          },
+          "type": "array"
+        },
+        "next_cursor": {
+          "description": "Opaque continuation token, or null when the list is complete.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "total": {
+          "description": "Matching rows before pagination.",
+          "format": "uint",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "warnings": {
+          "description": "Non-fatal qualifications affecting this result.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "items",
+        "total",
+        "warnings"
+      ],
+      "type": "object"
+    }
+  },
+  {
+    "annotations": {
+      "destructiveHint": true,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": false
+    },
+    "description": "Rename/recolor a category; omitted fields unchanged.",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "color": {
+          "description": "Replacement display color, #RRGGBB.",
+          "pattern": "^#[0-9a-fA-F]{6}$",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "icon": {
+          "description": "Replacement icon name shown in the UI.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "id": {
+          "description": "Opaque category id from categories_list.",
+          "type": "string"
+        },
+        "name": {
+          "description": "Replacement nonempty display name; at most 100 characters.",
+          "maxLength": 100,
+          "minLength": 1,
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "type": "object"
+    },
+    "name": "categories_update",
+    "outputSchema": {
+      "$defs": {
+        "CardType": {
+          "enum": [
+            "credit",
+            "debit"
+          ],
+          "type": "string"
+        }
+      },
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "card_type": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CardType"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Card type; null for categories and tags."
+        },
+        "color": {
+          "description": "Display color in #RRGGBB form.",
+          "type": "string"
+        },
+        "credit_limit": {
+          "description": "Credit limit in decimal major units or null.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "icon": {
+          "description": "Category icon; null for tags and cards.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "id": {
+          "description": "Reference entity id.",
+          "type": "string"
+        },
+        "is_default": {
+          "description": "Whether this is a protected default category; null for tags and cards.",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "last_four": {
+          "description": "Last four card digits or null.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "name": {
+          "description": "Display name.",
+          "type": "string"
+        },
+        "subscription_count": {
+          "description": "Number of subscriptions referencing this entity.",
+          "format": "uint",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "color",
+        "subscription_count"
+      ],
+      "type": "object"
+    }
+  },
+  {
+    "annotations": {
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "openWorldHint": false,
+      "readOnlyHint": false
+    },
+    "description": "Insert a ledger row directly (backfill history, add a `pending` row, or a date that is not the current due date). Does not advance the schedule and is not idempotent — prefer `payments_record` for \"I paid X\".",
+    "inputSchema": {
+      "$defs": {
+        "PaymentStatus": {
+          "enum": [
+            "paid",
+            "skipped",
+            "pending"
+          ],
+          "type": "string"
+        }
+      },
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "amount": {
+          "description": "Nonnegative amount in decimal major currency units.",
+          "format": "double",
+          "minimum": 0,
+          "type": "number"
+        },
+        "due_date": {
+          "description": "Due date, YYYY-MM-DD.",
+          "format": "date",
+          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+          "type": "string"
+        },
+        "notes": {
+          "description": "Notes, at most 500 characters.",
+          "maxLength": 500,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "paid_at": {
+          "description": "RFC 3339 paid timestamp; defaults to now.",
+          "format": "date-time",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "status": {
+          "$ref": "#/$defs/PaymentStatus",
+          "description": "Ledger status; creating a row never advances the schedule."
+        },
+        "subscription_id": {
+          "description": "Subscription id from subscriptions_list.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "subscription_id",
+        "amount",
+        "due_date",
+        "status"
+      ],
+      "type": "object"
+    },
+    "name": "payments_create",
+    "outputSchema": {
+      "$defs": {
+        "PaymentStatus": {
+          "enum": [
+            "paid",
+            "skipped",
+            "pending"
+          ],
+          "type": "string"
+        }
+      },
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "amount": {
+          "description": "Recorded amount in decimal major units.",
+          "format": "double",
+          "type": "number"
+        },
+        "currency": {
+          "description": "Current subscription currency; ledger amounts are not converted.",
+          "type": "string"
+        },
+        "due_date": {
+          "description": "Due date, YYYY-MM-DD.",
+          "type": "string"
+        },
+        "id": {
+          "description": "Ledger row id.",
+          "type": "string"
+        },
+        "notes": {
+          "description": "Notes or null.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "paid_at": {
+          "description": "Paid timestamp, RFC 3339.",
+          "type": "string"
+        },
+        "status": {
+          "$ref": "#/$defs/PaymentStatus",
+          "description": "Recorded ledger status."
+        },
+        "subscription_id": {
+          "description": "Owning subscription id.",
+          "type": "string"
+        },
+        "subscription_name": {
+          "description": "Current subscription display name.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "subscription_id",
+        "subscription_name",
+        "currency",
+        "amount",
+        "status",
+        "due_date",
+        "paid_at"
+      ],
+      "type": "object"
+    }
+  },
+  {
+    "annotations": {
+      "destructiveHint": true,
+      "idempotentHint": false,
+      "openWorldHint": false,
+      "readOnlyHint": false
+    },
+    "description": "Delete one ledger row (does not rewind the subscription's next_payment_date). Same dry_run/confirm two-step as other deletes.",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "confirm": {
+          "default": false,
+          "description": "Apply deletion only after the user approves the preview; default false.",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "dry_run": {
+          "default": false,
+          "description": "Preview the target and cascade without changing any records; default false.",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "id": {
+          "description": "Opaque record id returned by the corresponding list tool.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "type": "object"
+    },
+    "name": "payments_delete",
+    "outputSchema": {
+      "$defs": {
+        "CascadeCount": {
+          "properties": {
+            "count": {
+              "description": "Total affected rows.",
+              "format": "uint",
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          "required": [
+            "count"
+          ],
+          "type": "object"
+        },
+        "CascadePreview": {
+          "properties": {
+            "count": {
+              "description": "Total affected rows, which may exceed the number of preview ids.",
+              "format": "uint",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "ids": {
+              "description": "Up to twenty affected ids in sorted order.",
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            }
+          },
+          "required": [
+            "count",
+            "ids"
+          ],
+          "type": "object"
+        },
+        "DeleteOutcome": {
+          "properties": {
+            "cascade": {
+              "additionalProperties": {
+                "$ref": "#/$defs/CascadeCount"
+              },
+              "description": "Counts of cascaded or detached rows by kind.",
+              "type": "object"
+            },
+            "deleted": {
+              "description": "Always true after successful deletion.",
+              "type": "boolean"
+            },
+            "target": {
+              "$ref": "#/$defs/NamedRef",
+              "description": "Deleted entity identity."
+            }
+          },
+          "required": [
+            "deleted",
+            "target",
+            "cascade"
+          ],
+          "type": "object"
+        },
+        "DeletePreview": {
+          "properties": {
+            "cascade": {
+              "additionalProperties": {
+                "$ref": "#/$defs/CascadePreview"
+              },
+              "description": "Cascaded or detached rows by kind, with bounded example ids.",
+              "type": "object"
+            },
+            "dry_run": {
+              "description": "Always true; this result made no domain changes.",
+              "type": "boolean"
+            },
+            "requires_confirmation": {
+              "description": "Always true; execute only after explicit user approval.",
+              "type": "boolean"
+            },
+            "target": {
+              "$ref": "#/$defs/NamedRef",
+              "description": "Entity that would be deleted."
+            }
+          },
+          "required": [
+            "dry_run",
+            "target",
+            "cascade",
+            "requires_confirmation"
+          ],
+          "type": "object"
+        },
+        "NamedRef": {
+          "properties": {
+            "id": {
+              "description": "Reference entity id.",
+              "type": "string"
+            },
+            "name": {
+              "description": "Reference entity display name.",
+              "type": "string"
+            }
+          },
+          "required": [
+            "id",
+            "name"
+          ],
+          "type": "object"
+        }
+      },
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "oneOf": [
+        {
+          "$ref": "#/$defs/DeletePreview"
+        },
+        {
+          "$ref": "#/$defs/DeleteOutcome"
+        }
+      ],
+      "type": "object"
+    }
+  },
+  {
+    "annotations": {
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": true
+    },
+    "description": "Read the payment ledger (recorded paid/skipped/pending rows). Rows carry `subscription_name` and `currency`. Use `calendar_month` for upcoming charges; this tool is history. Filter by subscription, month, status or due-date range.",
+    "inputSchema": {
+      "$defs": {
+        "PaymentStatus": {
+          "enum": [
+            "paid",
+            "skipped",
+            "pending"
+          ],
+          "type": "string"
+        }
+      },
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "cursor": {
+          "default": null,
+          "description": "Continuation token from the same filters.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "due_from": {
+          "default": null,
+          "description": "Inclusive earliest due date, YYYY-MM-DD.",
+          "format": "date",
+          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "due_to": {
+          "default": null,
+          "description": "Inclusive latest due date, YYYY-MM-DD.",
+          "format": "date",
+          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "limit": {
+          "default": 50,
+          "description": "Page size; default 50, maximum 200.",
+          "format": "uint",
+          "maximum": 200,
+          "minimum": 1,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "month": {
+          "default": null,
+          "description": "Due-date month, YYYY-MM, from 1900-01 through 9998-12.",
+          "pattern": "^[0-9]{4}-[0-9]{2}$",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "status": {
+          "default": [],
+          "description": "Include any of these statuses; an empty array means all.",
+          "items": {
+            "$ref": "#/$defs/PaymentStatus"
+          },
+          "type": "array"
+        },
+        "subscription_id": {
+          "default": null,
+          "description": "Subscription id, or all subscriptions when omitted.",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "name": "payments_list",
+    "outputSchema": {
+      "$defs": {
+        "PaymentItem": {
+          "properties": {
+            "amount": {
+              "description": "Recorded amount in decimal major units.",
+              "format": "double",
+              "type": "number"
+            },
+            "currency": {
+              "description": "Current subscription currency; ledger amounts are not converted.",
+              "type": "string"
+            },
+            "due_date": {
+              "description": "Due date, YYYY-MM-DD.",
+              "type": "string"
+            },
+            "id": {
+              "description": "Ledger row id.",
+              "type": "string"
+            },
+            "notes": {
+              "description": "Notes or null.",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "paid_at": {
+              "description": "Paid timestamp, RFC 3339.",
+              "type": "string"
+            },
+            "status": {
+              "$ref": "#/$defs/PaymentStatus",
+              "description": "Recorded ledger status."
+            },
+            "subscription_id": {
+              "description": "Owning subscription id.",
+              "type": "string"
+            },
+            "subscription_name": {
+              "description": "Current subscription display name.",
+              "type": "string"
+            }
+          },
+          "required": [
+            "id",
+            "subscription_id",
+            "subscription_name",
+            "currency",
+            "amount",
+            "status",
+            "due_date",
+            "paid_at"
+          ],
+          "type": "object"
+        },
+        "PaymentStatus": {
+          "enum": [
+            "paid",
+            "skipped",
+            "pending"
+          ],
+          "type": "string"
+        }
+      },
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "items": {
+          "description": "Rows on this page, in deterministic order.",
+          "items": {
+            "$ref": "#/$defs/PaymentItem"
+          },
+          "type": "array"
+        },
+        "next_cursor": {
+          "description": "Opaque continuation token, or null when the list is complete.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "total": {
+          "description": "Matching rows before pagination.",
+          "format": "uint",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "warnings": {
+          "description": "Non-fatal qualifications affecting this result.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "items",
+        "total",
+        "warnings"
+      ],
+      "type": "object"
+    }
+  },
+  {
+    "annotations": {
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": false
+    },
+    "description": "Record that a scheduled charge was paid or skipped. Defaults make the common case one call: `due_date` defaults to the subscription's current `next_payment_date`, `amount` to its current price. Recording the current due date advances `next_payment_date` to the next unsettled period (`schedule_advanced=true`). Safe to repeat: the same subscription+due_date returns the existing row (`replayed=true`); a different status or amount for that date is a `conflict` — use `payments_update` to change it. Use `payments_create` only for backfilling arbitrary rows.",
+    "inputSchema": {
+      "$defs": {
+        "RecordedStatus": {
+          "enum": [
+            "paid",
+            "skipped"
+          ],
+          "type": "string"
+        }
+      },
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "amount": {
+          "description": "Nonnegative decimal major units; defaults to the subscription's current amount.",
+          "format": "double",
+          "minimum": 0,
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "due_date": {
+          "description": "Due date, YYYY-MM-DD; defaults to the subscription's next_payment_date.",
+          "format": "date",
+          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "status": {
+          "$ref": "#/$defs/RecordedStatus",
+          "description": "Scheduled charge outcome: paid or skipped; pending requires payments_create."
+        },
+        "subscription_id": {
+          "description": "Opaque subscription id from subscriptions_list.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "subscription_id",
+        "status"
+      ],
+      "type": "object"
+    },
+    "name": "payments_record",
+    "outputSchema": {
+      "$defs": {
+        "PaymentItem": {
+          "properties": {
+            "amount": {
+              "description": "Recorded amount in decimal major units.",
+              "format": "double",
+              "type": "number"
+            },
+            "currency": {
+              "description": "Current subscription currency; ledger amounts are not converted.",
+              "type": "string"
+            },
+            "due_date": {
+              "description": "Due date, YYYY-MM-DD.",
+              "type": "string"
+            },
+            "id": {
+              "description": "Ledger row id.",
+              "type": "string"
+            },
+            "notes": {
+              "description": "Notes or null.",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "paid_at": {
+              "description": "Paid timestamp, RFC 3339.",
+              "type": "string"
+            },
+            "status": {
+              "$ref": "#/$defs/PaymentStatus",
+              "description": "Recorded ledger status."
+            },
+            "subscription_id": {
+              "description": "Owning subscription id.",
+              "type": "string"
+            },
+            "subscription_name": {
+              "description": "Current subscription display name.",
+              "type": "string"
+            }
+          },
+          "required": [
+            "id",
+            "subscription_id",
+            "subscription_name",
+            "currency",
+            "amount",
+            "status",
+            "due_date",
+            "paid_at"
+          ],
+          "type": "object"
+        },
+        "PaymentStatus": {
+          "enum": [
+            "paid",
+            "skipped",
+            "pending"
+          ],
+          "type": "string"
+        },
+        "ScheduleSummary": {
+          "properties": {
+            "id": {
+              "description": "Subscription id.",
+              "type": "string"
+            },
+            "name": {
+              "description": "Subscription display name.",
+              "type": "string"
+            },
+            "next_payment_date": {
+              "description": "Next unsettled due date, YYYY-MM-DD, or null.",
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "id",
+            "name"
+          ],
+          "type": "object"
+        }
+      },
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "payment": {
+          "$ref": "#/$defs/PaymentItem",
+          "description": "Created or previously recorded ledger row."
+        },
+        "replayed": {
+          "description": "Whether an existing outcome was returned for the specified due date.",
+          "type": "boolean"
+        },
+        "schedule_advanced": {
+          "description": "Whether next_payment_date changed in this call.",
+          "type": "boolean"
+        },
+        "subscription": {
+          "$ref": "#/$defs/ScheduleSummary",
+          "description": "Subscription schedule after recording the outcome."
+        }
+      },
+      "required": [
+        "payment",
+        "replayed",
+        "schedule_advanced",
+        "subscription"
+      ],
+      "type": "object"
+    }
+  },
+  {
+    "annotations": {
+      "destructiveHint": true,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": false
+    },
+    "description": "Correct an existing payment's amount, status, paid time or notes. Does not move the subscription schedule.",
+    "inputSchema": {
+      "$defs": {
+        "PaymentClearField": {
+          "enum": [
+            "notes"
+          ],
+          "type": "string"
+        },
+        "PaymentStatus": {
+          "enum": [
+            "paid",
+            "skipped",
+            "pending"
+          ],
+          "type": "string"
+        }
+      },
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "amount": {
+          "default": null,
+          "description": "Replacement nonnegative amount in decimal major units.",
+          "format": "double",
+          "minimum": 0,
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "clear_fields": {
+          "default": [],
+          "description": "Nullable fields to blank; cannot also be set.",
+          "items": {
+            "$ref": "#/$defs/PaymentClearField"
+          },
+          "type": "array"
+        },
+        "id": {
+          "description": "Opaque ledger row id from payments_list.",
+          "type": "string"
+        },
+        "notes": {
+          "default": null,
+          "description": "Replacement notes, at most 500 characters.",
+          "maxLength": 500,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "paid_at": {
+          "default": null,
+          "description": "Replacement RFC 3339 paid timestamp.",
+          "format": "date-time",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "status": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PaymentStatus"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Replacement ledger status; never changes the subscription schedule."
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "type": "object"
+    },
+    "name": "payments_update",
+    "outputSchema": {
+      "$defs": {
+        "PaymentStatus": {
+          "enum": [
+            "paid",
+            "skipped",
+            "pending"
+          ],
+          "type": "string"
+        }
+      },
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "amount": {
+          "description": "Recorded amount in decimal major units.",
+          "format": "double",
+          "type": "number"
+        },
+        "currency": {
+          "description": "Current subscription currency; ledger amounts are not converted.",
+          "type": "string"
+        },
+        "due_date": {
+          "description": "Due date, YYYY-MM-DD.",
+          "type": "string"
+        },
+        "id": {
+          "description": "Ledger row id.",
+          "type": "string"
+        },
+        "notes": {
+          "description": "Notes or null.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "paid_at": {
+          "description": "Paid timestamp, RFC 3339.",
+          "type": "string"
+        },
+        "status": {
+          "$ref": "#/$defs/PaymentStatus",
+          "description": "Recorded ledger status."
+        },
+        "subscription_id": {
+          "description": "Owning subscription id.",
+          "type": "string"
+        },
+        "subscription_name": {
+          "description": "Current subscription display name.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "subscription_id",
+        "subscription_name",
+        "currency",
+        "amount",
+        "status",
+        "due_date",
+        "paid_at"
+      ],
+      "type": "object"
+    }
+  },
+  {
+    "annotations": {
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": true
+    },
+    "description": "Recorded price/currency changes (appended automatically when a subscription's amount or currency changes). Rows include `subscription_name`. Filter by subscription or recency.",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "cursor": {
+          "description": "Opaque next_cursor from the same filters; omit for the first page.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "limit": {
+          "default": 50,
+          "description": "Page size, 1–200; default 50; sorted by changed_at descending, then id.",
+          "format": "uint",
+          "maximum": 200,
+          "minimum": 1,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "since_days": {
+          "description": "Only changes in the past 1–3650 days; omitted includes all history.",
+          "format": "int64",
+          "maximum": 3650,
+          "minimum": 1,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "subscription_id": {
+          "description": "Opaque subscription id from subscriptions_list; omitted includes all subscriptions.",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "name": "price_history_list",
+    "outputSchema": {
+      "$defs": {
+        "PriceChangeItem": {
+          "properties": {
+            "changed_at": {
+              "description": "RFC 3339 timestamp of the change.",
+              "type": "string"
+            },
+            "id": {
+              "description": "Price change id.",
+              "type": "string"
+            },
+            "new_amount": {
+              "description": "New price in new_currency decimal major units.",
+              "format": "double",
+              "type": "number"
+            },
+            "new_currency": {
+              "description": "New uppercase three-letter currency.",
+              "type": "string"
+            },
+            "old_amount": {
+              "description": "Previous price in old_currency decimal major units.",
+              "format": "double",
+              "type": "number"
+            },
+            "old_currency": {
+              "description": "Previous uppercase three-letter currency.",
+              "type": "string"
+            },
+            "subscription_id": {
+              "description": "Owning subscription id.",
+              "type": "string"
+            },
+            "subscription_name": {
+              "description": "Current subscription display name.",
+              "type": "string"
+            }
+          },
+          "required": [
+            "id",
+            "subscription_id",
+            "subscription_name",
+            "old_amount",
+            "new_amount",
+            "old_currency",
+            "new_currency",
+            "changed_at"
+          ],
+          "type": "object"
+        }
+      },
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "items": {
+          "description": "Rows on this page, in deterministic order.",
+          "items": {
+            "$ref": "#/$defs/PriceChangeItem"
+          },
+          "type": "array"
+        },
+        "next_cursor": {
+          "description": "Opaque continuation token, or null when the list is complete.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "total": {
+          "description": "Matching rows before pagination.",
+          "format": "uint",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "warnings": {
+          "description": "Non-fatal qualifications affecting this result.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "items",
+        "total",
+        "warnings"
+      ],
+      "type": "object"
+    }
+  },
+  {
+    "annotations": {
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": true
+    },
+    "description": "Read app settings: display `currency` (used by `analytics_dashboard`), theme, notification and budget preferences.",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {},
+      "type": "object"
+    },
+    "name": "settings_get",
+    "outputSchema": {
+      "$defs": {
+        "AnimationSpeed": {
+          "enum": [
+            "slow",
+            "normal",
+            "fast"
+          ],
+          "type": "string"
+        },
+        "Theme": {
+          "enum": [
+            "dark",
+            "light",
+            "system"
+          ],
+          "type": "string"
+        }
+      },
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "animation_speed": {
+          "$ref": "#/$defs/AnimationSpeed",
+          "description": "Animation speed preference."
+        },
+        "currency": {
+          "description": "Display currency used by dashboard totals.",
+          "type": "string"
+        },
+        "display_exchange_rates": {
+          "additionalProperties": {
+            "format": "double",
+            "type": "number"
+          },
+          "description": "Configured display exchange rates; agent analytics never apply them.",
+          "type": "object"
+        },
+        "enable_hover_effects": {
+          "description": "Whether hover effects are enabled.",
+          "type": "boolean"
+        },
+        "enable_transitions": {
+          "description": "Whether transitions are enabled.",
+          "type": "boolean"
+        },
+        "id": {
+          "description": "Singleton settings identity, not a domain UUID.",
+          "type": "string"
+        },
+        "monthly_budget": {
+          "description": "Monthly budget in display currency or null.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "notification_advance_days": {
+          "description": "Default advance notification days.",
+          "format": "int32",
+          "type": "integer"
+        },
+        "notification_days_before": {
+          "description": "Advance notification offsets in days.",
+          "items": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "type": "array"
+        },
+        "notification_enabled": {
+          "description": "Whether notifications are enabled.",
+          "type": "boolean"
+        },
+        "notification_time": {
+          "description": "Local notification time, HH:MM.",
+          "type": "string"
+        },
+        "reduce_motion": {
+          "description": "Whether to reduce motion.",
+          "type": "boolean"
+        },
+        "theme": {
+          "$ref": "#/$defs/Theme",
+          "description": "Display theme."
+        }
+      },
+      "required": [
+        "id",
+        "theme",
+        "currency",
+        "display_exchange_rates",
+        "notification_enabled",
+        "notification_days_before",
+        "notification_advance_days",
+        "notification_time",
+        "reduce_motion",
+        "enable_transitions",
+        "enable_hover_effects",
+        "animation_speed"
+      ],
+      "type": "object"
+    }
+  },
+  {
+    "annotations": {
+      "destructiveHint": true,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": false
+    },
+    "description": "Change settings; omitted fields unchanged; `clear_fields:[\"monthly_budget\"]` removes the budget. Changing `currency` changes which subscriptions the dashboard totals include — it does not convert amounts.",
+    "inputSchema": {
+      "$defs": {
+        "AnimationSpeed": {
+          "enum": [
+            "slow",
+            "normal",
+            "fast"
+          ],
+          "type": "string"
+        },
+        "SettingsClearField": {
+          "enum": [
+            "monthly_budget"
+          ],
+          "type": "string"
+        },
+        "Theme": {
+          "enum": [
+            "dark",
+            "light",
+            "system"
+          ],
+          "type": "string"
+        }
+      },
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "animation_speed": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/AnimationSpeed"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Desired animation speed."
+        },
+        "clear_fields": {
+          "default": [],
+          "description": "Nullable settings fields to blank; cannot also be set.",
+          "items": {
+            "$ref": "#/$defs/SettingsClearField"
+          },
+          "type": "array"
+        },
+        "currency": {
+          "default": null,
+          "description": "Uppercase three-letter display currency; does not convert existing amounts.",
+          "pattern": "^[A-Z]{3}$",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "enable_hover_effects": {
+          "default": null,
+          "description": "Whether hover effects are enabled.",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "enable_transitions": {
+          "default": null,
+          "description": "Whether transitions are enabled.",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "monthly_budget": {
+          "default": null,
+          "description": "Nonnegative monthly budget in display-currency major units.",
+          "format": "double",
+          "minimum": 0,
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "notification_advance_days": {
+          "default": null,
+          "description": "Default advance notification days, 0–365.",
+          "format": "int32",
+          "maximum": 365,
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "notification_days_before": {
+          "default": null,
+          "description": "Notification offsets, each 0–365 days before a charge.",
+          "items": {
+            "maximum": 365,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "type": [
+            "array",
+            "null"
+          ]
+        },
+        "notification_enabled": {
+          "default": null,
+          "description": "Whether notifications are enabled.",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "notification_time": {
+          "default": null,
+          "description": "Local notification time, HH:MM in 24-hour form.",
+          "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "reduce_motion": {
+          "default": null,
+          "description": "Whether to reduce motion.",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "theme": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Theme"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Desired display theme."
+        }
+      },
+      "type": "object"
+    },
+    "name": "settings_update",
+    "outputSchema": {
+      "$defs": {
+        "AnimationSpeed": {
+          "enum": [
+            "slow",
+            "normal",
+            "fast"
+          ],
+          "type": "string"
+        },
+        "Theme": {
+          "enum": [
+            "dark",
+            "light",
+            "system"
+          ],
+          "type": "string"
+        }
+      },
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "animation_speed": {
+          "$ref": "#/$defs/AnimationSpeed",
+          "description": "Animation speed preference."
+        },
+        "currency": {
+          "description": "Display currency used by dashboard totals.",
+          "type": "string"
+        },
+        "display_exchange_rates": {
+          "additionalProperties": {
+            "format": "double",
+            "type": "number"
+          },
+          "description": "Configured display exchange rates; agent analytics never apply them.",
+          "type": "object"
+        },
+        "enable_hover_effects": {
+          "description": "Whether hover effects are enabled.",
+          "type": "boolean"
+        },
+        "enable_transitions": {
+          "description": "Whether transitions are enabled.",
+          "type": "boolean"
+        },
+        "id": {
+          "description": "Singleton settings identity, not a domain UUID.",
+          "type": "string"
+        },
+        "monthly_budget": {
+          "description": "Monthly budget in display currency or null.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "notification_advance_days": {
+          "description": "Default advance notification days.",
+          "format": "int32",
+          "type": "integer"
+        },
+        "notification_days_before": {
+          "description": "Advance notification offsets in days.",
+          "items": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "type": "array"
+        },
+        "notification_enabled": {
+          "description": "Whether notifications are enabled.",
+          "type": "boolean"
+        },
+        "notification_time": {
+          "description": "Local notification time, HH:MM.",
+          "type": "string"
+        },
+        "reduce_motion": {
+          "description": "Whether to reduce motion.",
+          "type": "boolean"
+        },
+        "theme": {
+          "$ref": "#/$defs/Theme",
+          "description": "Display theme."
+        }
+      },
+      "required": [
+        "id",
+        "theme",
+        "currency",
+        "display_exchange_rates",
+        "notification_enabled",
+        "notification_days_before",
+        "notification_advance_days",
+        "notification_time",
+        "reduce_motion",
+        "enable_transitions",
+        "enable_hover_effects",
+        "animation_speed"
+      ],
+      "type": "object"
+    }
+  },
+  {
+    "annotations": {
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "openWorldHint": false,
+      "readOnlyHint": false
+    },
+    "description": "Add a subscription record. `amount` is in major units of `currency` (9.99 = nine and ninety-nine); `currency` defaults to the user's display currency from settings. Omit `next_payment_date` only if unknown — the record then never appears in upcoming/calendar views. Calling twice creates two records; check `subscriptions_list(query=…)` first if unsure.",
+    "inputSchema": {
+      "$defs": {
+        "BillingCycle": {
+          "enum": [
+            "weekly",
+            "monthly",
+            "quarterly",
+            "yearly",
+            "custom"
+          ],
+          "type": "string"
+        },
+        "SubscriptionStatus": {
+          "enum": [
+            "trial",
+            "active",
+            "paused",
+            "pending_cancellation",
+            "grace_period",
+            "cancelled"
+          ],
+          "type": "string"
+        }
+      },
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "amount": {
+          "description": "Nonnegative finite price in decimal major currency units.",
+          "format": "double",
+          "minimum": 0,
+          "type": "number"
+        },
+        "billing_cycle": {
+          "$ref": "#/$defs/BillingCycle",
+          "description": "Renewal cadence; custom currently follows the core monthly cadence."
+        },
+        "billing_day": {
+          "description": "Recurrence day, 1–31.",
+          "format": "int32",
+          "maximum": 31,
+          "minimum": 1,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "card_id": {
+          "description": "Card id from cards_list.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "category_id": {
+          "description": "Category id from categories_list.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "color": {
+          "description": "Optional #RRGGBB display color.",
+          "pattern": "^#[0-9a-fA-F]{6}$",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "currency": {
+          "description": "Three uppercase currency letters; defaults to settings.currency.",
+          "pattern": "^[A-Z]{3}$",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "is_pinned": {
+          "default": false,
+          "description": "Desired pinned state; defaults to false.",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "name": {
+          "description": "Nonempty name, at most 100 Unicode characters (the durable core limit).",
+          "maxLength": 100,
+          "minLength": 1,
+          "type": "string"
+        },
+        "next_payment_date": {
+          "description": "Next charge date, YYYY-MM-DD; omitted means unknown.",
+          "format": "date",
+          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "notes": {
+          "description": "Notes, at most 500 characters (the durable core limit).",
+          "maxLength": 500,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "shared_count": {
+          "default": 1,
+          "description": "Number of people sharing the full price, at least one; defaults to one.",
+          "format": "int32",
+          "minimum": 1,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "status": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SubscriptionStatus"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": "active",
+          "description": "Local lifecycle status; defaults to active."
+        },
+        "tag_ids": {
+          "default": [],
+          "description": "Tag ids to attach after creating the subscription.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "trial_end_date": {
+          "description": "Trial end date, YYYY-MM-DD.",
+          "format": "date",
+          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "name",
+        "amount",
+        "billing_cycle"
+      ],
+      "type": "object"
+    },
+    "name": "subscriptions_create",
+    "outputSchema": {
+      "$defs": {
+        "BillingCycle": {
+          "enum": [
+            "weekly",
+            "monthly",
+            "quarterly",
+            "yearly",
+            "custom"
+          ],
+          "type": "string"
+        },
+        "CardRef": {
+          "properties": {
+            "id": {
+              "description": "Card id.",
+              "type": "string"
+            },
+            "last_four": {
+              "description": "Last four digits or null; never a full card number.",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "name": {
+              "description": "Card display name.",
+              "type": "string"
+            }
+          },
+          "required": [
+            "id",
+            "name"
+          ],
+          "type": "object"
+        },
+        "NamedRef": {
+          "properties": {
+            "id": {
+              "description": "Reference entity id.",
+              "type": "string"
+            },
+            "name": {
+              "description": "Reference entity display name.",
+              "type": "string"
+            }
+          },
+          "required": [
+            "id",
+            "name"
+          ],
+          "type": "object"
+        },
+        "SubscriptionStatus": {
+          "enum": [
+            "trial",
+            "active",
+            "paused",
+            "pending_cancellation",
+            "grace_period",
+            "cancelled"
+          ],
+          "type": "string"
+        },
+        "TagRef": {
+          "properties": {
+            "color": {
+              "description": "Tag #RRGGBB color.",
+              "type": "string"
+            },
+            "id": {
+              "description": "Tag id.",
+              "type": "string"
+            },
+            "name": {
+              "description": "Tag display name.",
+              "type": "string"
+            }
+          },
+          "required": [
+            "id",
+            "name",
+            "color"
+          ],
+          "type": "object"
+        }
+      },
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "amount": {
+          "description": "Full price in decimal major currency units.",
+          "format": "double",
+          "type": "number"
+        },
+        "billing_cycle": {
+          "$ref": "#/$defs/BillingCycle",
+          "description": "Renewal cadence."
+        },
+        "billing_day": {
+          "description": "Recurrence day, 1–31, or null.",
+          "format": "int32",
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "cancellation_reason": {
+          "description": "Local cancellation notes or null.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "cancelled_at": {
+          "description": "Cancellation RFC 3339 timestamp or null.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "card": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CardRef"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Linked card summary or null."
+        },
+        "card_id": {
+          "description": "Card id or null.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "category": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/NamedRef"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Linked category summary or null."
+        },
+        "category_id": {
+          "description": "Category id or null.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "color": {
+          "description": "Display color in #RRGGBB form or null.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "created_at": {
+          "description": "Creation RFC 3339 timestamp.",
+          "type": "string"
+        },
+        "currency": {
+          "description": "Currency of amount; no conversion is performed.",
+          "type": "string"
+        },
+        "id": {
+          "description": "Subscription id.",
+          "type": "string"
+        },
+        "is_active": {
+          "description": "Whether this subscription is currently active.",
+          "type": "boolean"
+        },
+        "is_pinned": {
+          "description": "Whether pinned in the UI.",
+          "type": "boolean"
+        },
+        "last_reviewed_at": {
+          "description": "Last review RFC 3339 timestamp or null.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "logo_url": {
+          "description": "Logo URL or null.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "name": {
+          "description": "Display name.",
+          "type": "string"
+        },
+        "next_payment_date": {
+          "description": "Next payment YYYY-MM-DD or null.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "notes": {
+          "description": "Notes or null.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "shared_count": {
+          "description": "Number of people sharing the full price.",
+          "format": "int32",
+          "type": "integer"
+        },
+        "status": {
+          "$ref": "#/$defs/SubscriptionStatus",
+          "description": "Current local lifecycle status."
+        },
+        "status_changed_at": {
+          "description": "Last status change RFC 3339 timestamp or null.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "tags": {
+          "description": "Attached tags, including names and colors.",
+          "items": {
+            "$ref": "#/$defs/TagRef"
+          },
+          "type": "array"
+        },
+        "trial_end_date": {
+          "description": "Trial end YYYY-MM-DD or null.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "updated_at": {
+          "description": "Last update RFC 3339 timestamp.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "amount",
+        "currency",
+        "billing_cycle",
+        "is_active",
+        "status",
+        "shared_count",
+        "is_pinned",
+        "created_at",
+        "updated_at",
+        "tags"
+      ],
+      "type": "object"
+    }
+  },
+  {
+    "annotations": {
+      "destructiveHint": true,
+      "idempotentHint": false,
+      "openWorldHint": false,
+      "readOnlyHint": false
+    },
+    "description": "Permanently delete a subscription and, by cascade, its payment history, price history and tag links. Two-step: call with `dry_run=true` to get the exact cascade counts, show them to the user, then call with `confirm=true` only after explicit approval. Neither flag → `confirmation_required`. To stop tracking without losing history, use `subscriptions_update(status=\"cancelled\")` instead.",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "confirm": {
+          "default": false,
+          "description": "Apply deletion only after the user approves the preview; default false.",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "dry_run": {
+          "default": false,
+          "description": "Preview the target and cascade without changing any records; default false.",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "id": {
+          "description": "Opaque record id returned by the corresponding list tool.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "type": "object"
+    },
+    "name": "subscriptions_delete",
+    "outputSchema": {
+      "$defs": {
+        "CascadeCount": {
+          "properties": {
+            "count": {
+              "description": "Total affected rows.",
+              "format": "uint",
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          "required": [
+            "count"
+          ],
+          "type": "object"
+        },
+        "CascadePreview": {
+          "properties": {
+            "count": {
+              "description": "Total affected rows, which may exceed the number of preview ids.",
+              "format": "uint",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "ids": {
+              "description": "Up to twenty affected ids in sorted order.",
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            }
+          },
+          "required": [
+            "count",
+            "ids"
+          ],
+          "type": "object"
+        },
+        "DeleteOutcome": {
+          "properties": {
+            "cascade": {
+              "additionalProperties": {
+                "$ref": "#/$defs/CascadeCount"
+              },
+              "description": "Counts of cascaded or detached rows by kind.",
+              "type": "object"
+            },
+            "deleted": {
+              "description": "Always true after successful deletion.",
+              "type": "boolean"
+            },
+            "target": {
+              "$ref": "#/$defs/NamedRef",
+              "description": "Deleted entity identity."
+            }
+          },
+          "required": [
+            "deleted",
+            "target",
+            "cascade"
+          ],
+          "type": "object"
+        },
+        "DeletePreview": {
+          "properties": {
+            "cascade": {
+              "additionalProperties": {
+                "$ref": "#/$defs/CascadePreview"
+              },
+              "description": "Cascaded or detached rows by kind, with bounded example ids.",
+              "type": "object"
+            },
+            "dry_run": {
+              "description": "Always true; this result made no domain changes.",
+              "type": "boolean"
+            },
+            "requires_confirmation": {
+              "description": "Always true; execute only after explicit user approval.",
+              "type": "boolean"
+            },
+            "target": {
+              "$ref": "#/$defs/NamedRef",
+              "description": "Entity that would be deleted."
+            }
+          },
+          "required": [
+            "dry_run",
+            "target",
+            "cascade",
+            "requires_confirmation"
+          ],
+          "type": "object"
+        },
+        "NamedRef": {
+          "properties": {
+            "id": {
+              "description": "Reference entity id.",
+              "type": "string"
+            },
+            "name": {
+              "description": "Reference entity display name.",
+              "type": "string"
+            }
+          },
+          "required": [
+            "id",
+            "name"
+          ],
+          "type": "object"
+        }
+      },
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "oneOf": [
+        {
+          "$ref": "#/$defs/DeletePreview"
+        },
+        {
+          "$ref": "#/$defs/DeleteOutcome"
+        }
+      ],
+      "type": "object"
+    }
+  },
+  {
+    "annotations": {
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": true
+    },
+    "description": "Read one subscription in full, including notes, timestamps, tags, and the names of its category and card. Requires an `id` from `subscriptions_list`.",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "description": "Opaque record id returned by the corresponding list tool.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "type": "object"
+    },
+    "name": "subscriptions_get",
+    "outputSchema": {
+      "$defs": {
+        "BillingCycle": {
+          "enum": [
+            "weekly",
+            "monthly",
+            "quarterly",
+            "yearly",
+            "custom"
+          ],
+          "type": "string"
+        },
+        "CardRef": {
+          "properties": {
+            "id": {
+              "description": "Card id.",
+              "type": "string"
+            },
+            "last_four": {
+              "description": "Last four digits or null; never a full card number.",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "name": {
+              "description": "Card display name.",
+              "type": "string"
+            }
+          },
+          "required": [
+            "id",
+            "name"
+          ],
+          "type": "object"
+        },
+        "NamedRef": {
+          "properties": {
+            "id": {
+              "description": "Reference entity id.",
+              "type": "string"
+            },
+            "name": {
+              "description": "Reference entity display name.",
+              "type": "string"
+            }
+          },
+          "required": [
+            "id",
+            "name"
+          ],
+          "type": "object"
+        },
+        "SubscriptionStatus": {
+          "enum": [
+            "trial",
+            "active",
+            "paused",
+            "pending_cancellation",
+            "grace_period",
+            "cancelled"
+          ],
+          "type": "string"
+        },
+        "TagRef": {
+          "properties": {
+            "color": {
+              "description": "Tag #RRGGBB color.",
+              "type": "string"
+            },
+            "id": {
+              "description": "Tag id.",
+              "type": "string"
+            },
+            "name": {
+              "description": "Tag display name.",
+              "type": "string"
+            }
+          },
+          "required": [
+            "id",
+            "name",
+            "color"
+          ],
+          "type": "object"
+        }
+      },
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "amount": {
+          "description": "Full price in decimal major currency units.",
+          "format": "double",
+          "type": "number"
+        },
+        "billing_cycle": {
+          "$ref": "#/$defs/BillingCycle",
+          "description": "Renewal cadence."
+        },
+        "billing_day": {
+          "description": "Recurrence day, 1–31, or null.",
+          "format": "int32",
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "cancellation_reason": {
+          "description": "Local cancellation notes or null.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "cancelled_at": {
+          "description": "Cancellation RFC 3339 timestamp or null.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "card": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CardRef"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Linked card summary or null."
+        },
+        "card_id": {
+          "description": "Card id or null.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "category": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/NamedRef"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Linked category summary or null."
+        },
+        "category_id": {
+          "description": "Category id or null.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "color": {
+          "description": "Display color in #RRGGBB form or null.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "created_at": {
+          "description": "Creation RFC 3339 timestamp.",
+          "type": "string"
+        },
+        "currency": {
+          "description": "Currency of amount; no conversion is performed.",
+          "type": "string"
+        },
+        "id": {
+          "description": "Subscription id.",
+          "type": "string"
+        },
+        "is_active": {
+          "description": "Whether this subscription is currently active.",
+          "type": "boolean"
+        },
+        "is_pinned": {
+          "description": "Whether pinned in the UI.",
+          "type": "boolean"
+        },
+        "last_reviewed_at": {
+          "description": "Last review RFC 3339 timestamp or null.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "logo_url": {
+          "description": "Logo URL or null.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "name": {
+          "description": "Display name.",
+          "type": "string"
+        },
+        "next_payment_date": {
+          "description": "Next payment YYYY-MM-DD or null.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "notes": {
+          "description": "Notes or null.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "shared_count": {
+          "description": "Number of people sharing the full price.",
+          "format": "int32",
+          "type": "integer"
+        },
+        "status": {
+          "$ref": "#/$defs/SubscriptionStatus",
+          "description": "Current local lifecycle status."
+        },
+        "status_changed_at": {
+          "description": "Last status change RFC 3339 timestamp or null.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "tags": {
+          "description": "Attached tags, including names and colors.",
+          "items": {
+            "$ref": "#/$defs/TagRef"
+          },
+          "type": "array"
+        },
+        "trial_end_date": {
+          "description": "Trial end YYYY-MM-DD or null.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "updated_at": {
+          "description": "Last update RFC 3339 timestamp.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "amount",
+        "currency",
+        "billing_cycle",
+        "is_active",
+        "status",
+        "shared_count",
+        "is_pinned",
+        "created_at",
+        "updated_at",
+        "tags"
+      ],
+      "type": "object"
+    }
+  },
+  {
+    "annotations": {
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": true
+    },
+    "description": "Find subscriptions in the local Kessai database and get their `id`s for follow-up calls. Filters combine with AND. Returns compact rows (no notes/timestamps — use `subscriptions_get` for those), `total` matching rows and `next_cursor`; keep calling with `cursor` until it is null before stating a list is complete. Does not contact any provider.",
+    "inputSchema": {
+      "$defs": {
+        "SubscriptionSort": {
+          "enum": [
+            "next_payment_date",
+            "name",
+            "amount_desc",
+            "last_reviewed_at",
+            "created_at_desc"
+          ],
+          "type": "string"
+        },
+        "SubscriptionStatus": {
+          "enum": [
+            "trial",
+            "active",
+            "paused",
+            "pending_cancellation",
+            "grace_period",
+            "cancelled"
+          ],
+          "type": "string"
+        }
+      },
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "card_id": {
+          "default": null,
+          "description": "Card id from cards_list.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "category_id": {
+          "default": null,
+          "description": "Category id from categories_list.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "cursor": {
+          "default": null,
+          "description": "Continuation token from the same filters.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "due_from": {
+          "default": null,
+          "description": "Inclusive earliest next payment date, YYYY-MM-DD.",
+          "format": "date",
+          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "due_to": {
+          "default": null,
+          "description": "Inclusive latest next payment date, YYYY-MM-DD.",
+          "format": "date",
+          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "limit": {
+          "default": 50,
+          "description": "Page size; default 50, maximum 200.",
+          "format": "uint",
+          "maximum": 200,
+          "minimum": 1,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "query": {
+          "default": null,
+          "description": "Case-insensitive substring of the subscription name.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "review_overdue_days": {
+          "default": null,
+          "description": "Billable subscriptions never reviewed or reviewed over 1–3650 days ago.",
+          "format": "int64",
+          "maximum": 3650,
+          "minimum": 1,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "sort": {
+          "$ref": "#/$defs/SubscriptionSort",
+          "default": "next_payment_date",
+          "description": "Ordering, with id as the final tiebreaker; defaults to next_payment_date."
+        },
+        "status": {
+          "default": [],
+          "description": "Include any of these lifecycle statuses; an empty array means all.",
+          "items": {
+            "$ref": "#/$defs/SubscriptionStatus"
+          },
+          "type": "array"
+        },
+        "tag_id": {
+          "default": null,
+          "description": "Tag id from tags_list.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "trial_ending_within_days": {
+          "default": null,
+          "description": "Trials ending today through today plus 0–366 days.",
+          "format": "int64",
+          "maximum": 366,
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "upcoming_days": {
+          "default": null,
+          "description": "Billable charges due today through today plus 0–366 days.",
+          "format": "int64",
+          "maximum": 366,
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "name": "subscriptions_list",
+    "outputSchema": {
+      "$defs": {
+        "BillingCycle": {
+          "enum": [
+            "weekly",
+            "monthly",
+            "quarterly",
+            "yearly",
+            "custom"
+          ],
+          "type": "string"
+        },
+        "SubscriptionItem": {
+          "properties": {
+            "amount": {
+              "description": "Full price in decimal major units, before shared_count division.",
+              "format": "double",
+              "type": "number"
+            },
+            "billing_cycle": {
+              "$ref": "#/$defs/BillingCycle",
+              "description": "Renewal cadence."
+            },
+            "card_id": {
+              "description": "Linked card id or null.",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "category_id": {
+              "description": "Linked category id or null.",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "currency": {
+              "description": "Uppercase three-letter currency of amount.",
+              "type": "string"
+            },
+            "id": {
+              "description": "Subscription id for follow-up calls.",
+              "type": "string"
+            },
+            "is_active": {
+              "description": "Whether this subscription is currently active.",
+              "type": "boolean"
+            },
+            "is_pinned": {
+              "description": "Desired pinned state.",
+              "type": "boolean"
+            },
+            "last_reviewed_at": {
+              "description": "RFC 3339 time of the last review, or null if never reviewed (sort=last_reviewed_at puts never-reviewed first).",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "name": {
+              "description": "Display name.",
+              "type": "string"
+            },
+            "next_payment_date": {
+              "description": "Next charge date, YYYY-MM-DD, or null when unknown.",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "shared_count": {
+              "description": "Number of people sharing the full price.",
+              "format": "int32",
+              "type": "integer"
+            },
+            "status": {
+              "$ref": "#/$defs/SubscriptionStatus",
+              "description": "Current local lifecycle status."
+            },
+            "tag_ids": {
+              "description": "Attached tag ids, sorted by id.",
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "trial_end_date": {
+              "description": "Trial end date (YYYY-MM-DD) or null.",
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "id",
+            "name",
+            "amount",
+            "currency",
+            "billing_cycle",
+            "status",
+            "is_active",
+            "tag_ids",
+            "is_pinned",
+            "shared_count"
+          ],
+          "type": "object"
+        },
+        "SubscriptionStatus": {
+          "enum": [
+            "trial",
+            "active",
+            "paused",
+            "pending_cancellation",
+            "grace_period",
+            "cancelled"
+          ],
+          "type": "string"
+        }
+      },
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "items": {
+          "description": "Rows on this page, in deterministic order.",
+          "items": {
+            "$ref": "#/$defs/SubscriptionItem"
+          },
+          "type": "array"
+        },
+        "next_cursor": {
+          "description": "Opaque continuation token, or null when the list is complete.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "total": {
+          "description": "Matching rows before pagination.",
+          "format": "uint",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "warnings": {
+          "description": "Non-fatal qualifications affecting this result.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "items",
+        "total",
+        "warnings"
+      ],
+      "type": "object"
+    }
+  },
+  {
+    "annotations": {
+      "destructiveHint": true,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": false
+    },
+    "description": "Change fields of one subscription; omitted fields stay unchanged. Lifecycle is just fields: set `status` (e.g. `paused`, `active`, `cancelled`) — `cancelled` marks the local record only, Kessai never contacts the provider; add `cancellation_reason` with it. `mark_reviewed=true` stamps the review time. Use `clear_fields` to blank nullable fields; a field cannot be both set and cleared. Tags are edited with `add_tag_ids`/`remove_tag_ids` (idempotent). A valid amount or currency change is appended to price history.",
+    "inputSchema": {
+      "$defs": {
+        "BillingCycle": {
+          "enum": [
+            "weekly",
+            "monthly",
+            "quarterly",
+            "yearly",
+            "custom"
+          ],
+          "type": "string"
+        },
+        "ClearField": {
+          "enum": [
+            "billing_day",
+            "category_id",
+            "card_id",
+            "color",
+            "notes",
+            "next_payment_date",
+            "trial_end_date"
+          ],
+          "type": "string"
+        },
+        "SubscriptionStatus": {
+          "enum": [
+            "trial",
+            "active",
+            "paused",
+            "pending_cancellation",
+            "grace_period",
+            "cancelled"
+          ],
+          "type": "string"
+        }
+      },
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "add_tag_ids": {
+          "default": [],
+          "description": "Tag ids to add; already-present links are unchanged.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "amount": {
+          "default": null,
+          "description": "Replacement nonnegative price in decimal major units.",
+          "format": "double",
+          "minimum": 0,
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "billing_cycle": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BillingCycle"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Desired renewal cadence."
+        },
+        "billing_day": {
+          "default": null,
+          "description": "Recurrence day, 1–31; clear through clear_fields.",
+          "format": "int32",
+          "maximum": 31,
+          "minimum": 1,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "cancellation_reason": {
+          "default": null,
+          "description": "Cancellation notes, only alongside status=cancelled; at most 500 characters.",
+          "maxLength": 500,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "card_id": {
+          "default": null,
+          "description": "Card id; clear through clear_fields.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "category_id": {
+          "default": null,
+          "description": "Category id; clear through clear_fields.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "clear_fields": {
+          "default": [],
+          "description": "Nullable fields to blank; a field cannot also be set.",
+          "items": {
+            "$ref": "#/$defs/ClearField"
+          },
+          "type": "array"
+        },
+        "color": {
+          "default": null,
+          "description": "Display color in #RRGGBB form; clear through clear_fields.",
+          "pattern": "^#[0-9a-fA-F]{6}$",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "currency": {
+          "default": null,
+          "description": "Replacement uppercase three-letter currency.",
+          "pattern": "^[A-Z]{3}$",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "id": {
+          "description": "Opaque subscription id from subscriptions_list.",
+          "type": "string"
+        },
+        "is_pinned": {
+          "default": null,
+          "description": "Desired pinned state.",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "mark_reviewed": {
+          "default": null,
+          "description": "When true, stamp the current review time.",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "name": {
+          "default": null,
+          "description": "Replacement name, at most 100 characters.",
+          "maxLength": 100,
+          "minLength": 1,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "next_payment_date": {
+          "default": null,
+          "description": "YYYY-MM-DD next charge date; clear through clear_fields.",
+          "format": "date",
+          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "notes": {
+          "default": null,
+          "description": "Notes, at most 500 characters; clear through clear_fields.",
+          "maxLength": 500,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "remove_tag_ids": {
+          "default": [],
+          "description": "Tag ids to remove; already-absent links are unchanged.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "shared_count": {
+          "default": null,
+          "description": "Number sharing the full charge, at least one.",
+          "format": "int32",
+          "minimum": 1,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "status": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SubscriptionStatus"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Desired local status; cancelled never contacts the provider."
+        },
+        "trial_end_date": {
+          "default": null,
+          "description": "YYYY-MM-DD trial end date; clear through clear_fields.",
+          "format": "date",
+          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "type": "object"
+    },
+    "name": "subscriptions_update",
+    "outputSchema": {
+      "$defs": {
+        "BillingCycle": {
+          "enum": [
+            "weekly",
+            "monthly",
+            "quarterly",
+            "yearly",
+            "custom"
+          ],
+          "type": "string"
+        },
+        "CardRef": {
+          "properties": {
+            "id": {
+              "description": "Card id.",
+              "type": "string"
+            },
+            "last_four": {
+              "description": "Last four digits or null; never a full card number.",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "name": {
+              "description": "Card display name.",
+              "type": "string"
+            }
+          },
+          "required": [
+            "id",
+            "name"
+          ],
+          "type": "object"
+        },
+        "NamedRef": {
+          "properties": {
+            "id": {
+              "description": "Reference entity id.",
+              "type": "string"
+            },
+            "name": {
+              "description": "Reference entity display name.",
+              "type": "string"
+            }
+          },
+          "required": [
+            "id",
+            "name"
+          ],
+          "type": "object"
+        },
+        "SubscriptionStatus": {
+          "enum": [
+            "trial",
+            "active",
+            "paused",
+            "pending_cancellation",
+            "grace_period",
+            "cancelled"
+          ],
+          "type": "string"
+        },
+        "TagRef": {
+          "properties": {
+            "color": {
+              "description": "Tag #RRGGBB color.",
+              "type": "string"
+            },
+            "id": {
+              "description": "Tag id.",
+              "type": "string"
+            },
+            "name": {
+              "description": "Tag display name.",
+              "type": "string"
+            }
+          },
+          "required": [
+            "id",
+            "name",
+            "color"
+          ],
+          "type": "object"
+        }
+      },
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "amount": {
+          "description": "Full price in decimal major currency units.",
+          "format": "double",
+          "type": "number"
+        },
+        "billing_cycle": {
+          "$ref": "#/$defs/BillingCycle",
+          "description": "Renewal cadence."
+        },
+        "billing_day": {
+          "description": "Recurrence day, 1–31, or null.",
+          "format": "int32",
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "cancellation_reason": {
+          "description": "Local cancellation notes or null.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "cancelled_at": {
+          "description": "Cancellation RFC 3339 timestamp or null.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "card": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CardRef"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Linked card summary or null."
+        },
+        "card_id": {
+          "description": "Card id or null.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "category": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/NamedRef"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Linked category summary or null."
+        },
+        "category_id": {
+          "description": "Category id or null.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "color": {
+          "description": "Display color in #RRGGBB form or null.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "created_at": {
+          "description": "Creation RFC 3339 timestamp.",
+          "type": "string"
+        },
+        "currency": {
+          "description": "Currency of amount; no conversion is performed.",
+          "type": "string"
+        },
+        "id": {
+          "description": "Subscription id.",
+          "type": "string"
+        },
+        "is_active": {
+          "description": "Whether this subscription is currently active.",
+          "type": "boolean"
+        },
+        "is_pinned": {
+          "description": "Whether pinned in the UI.",
+          "type": "boolean"
+        },
+        "last_reviewed_at": {
+          "description": "Last review RFC 3339 timestamp or null.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "logo_url": {
+          "description": "Logo URL or null.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "name": {
+          "description": "Display name.",
+          "type": "string"
+        },
+        "next_payment_date": {
+          "description": "Next payment YYYY-MM-DD or null.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "notes": {
+          "description": "Notes or null.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "shared_count": {
+          "description": "Number of people sharing the full price.",
+          "format": "int32",
+          "type": "integer"
+        },
+        "status": {
+          "$ref": "#/$defs/SubscriptionStatus",
+          "description": "Current local lifecycle status."
+        },
+        "status_changed_at": {
+          "description": "Last status change RFC 3339 timestamp or null.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "tags": {
+          "description": "Attached tags, including names and colors.",
+          "items": {
+            "$ref": "#/$defs/TagRef"
+          },
+          "type": "array"
+        },
+        "trial_end_date": {
+          "description": "Trial end YYYY-MM-DD or null.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "updated_at": {
+          "description": "Last update RFC 3339 timestamp.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "amount",
+        "currency",
+        "billing_cycle",
+        "is_active",
+        "status",
+        "shared_count",
+        "is_pinned",
+        "created_at",
+        "updated_at",
+        "tags"
+      ],
+      "type": "object"
+    }
+  },
+  {
+    "annotations": {
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "openWorldHint": false,
+      "readOnlyHint": false
+    },
+    "description": "Create a tag. To attach it, use `subscriptions_update(add_tag_ids=[…])`.",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "color": {
+          "description": "Optional display color, #RRGGBB; omitted uses the application default.",
+          "pattern": "^#[0-9a-fA-F]{6}$",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "name": {
+          "description": "Nonempty tag display name; at most 100 characters.",
+          "maxLength": 100,
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "type": "object"
+    },
+    "name": "tags_create",
+    "outputSchema": {
+      "$defs": {
+        "CardType": {
+          "enum": [
+            "credit",
+            "debit"
+          ],
+          "type": "string"
+        }
+      },
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "card_type": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CardType"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Card type; null for categories and tags."
+        },
+        "color": {
+          "description": "Display color in #RRGGBB form.",
+          "type": "string"
+        },
+        "credit_limit": {
+          "description": "Credit limit in decimal major units or null.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "icon": {
+          "description": "Category icon; null for tags and cards.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "id": {
+          "description": "Reference entity id.",
+          "type": "string"
+        },
+        "is_default": {
+          "description": "Whether this is a protected default category; null for tags and cards.",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "last_four": {
+          "description": "Last four card digits or null.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "name": {
+          "description": "Display name.",
+          "type": "string"
+        },
+        "subscription_count": {
+          "description": "Number of subscriptions referencing this entity.",
+          "format": "uint",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "color",
+        "subscription_count"
+      ],
+      "type": "object"
+    }
+  },
+  {
+    "annotations": {
+      "destructiveHint": true,
+      "idempotentHint": false,
+      "openWorldHint": false,
+      "readOnlyHint": false
+    },
+    "description": "Delete a tag and its links (subscriptions untouched). Two-step.",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "confirm": {
+          "default": false,
+          "description": "Apply deletion only after the user approves the preview; default false.",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "dry_run": {
+          "default": false,
+          "description": "Preview the target and cascade without changing any records; default false.",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "id": {
+          "description": "Opaque record id returned by the corresponding list tool.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "type": "object"
+    },
+    "name": "tags_delete",
+    "outputSchema": {
+      "$defs": {
+        "CascadeCount": {
+          "properties": {
+            "count": {
+              "description": "Total affected rows.",
+              "format": "uint",
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          "required": [
+            "count"
+          ],
+          "type": "object"
+        },
+        "CascadePreview": {
+          "properties": {
+            "count": {
+              "description": "Total affected rows, which may exceed the number of preview ids.",
+              "format": "uint",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "ids": {
+              "description": "Up to twenty affected ids in sorted order.",
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            }
+          },
+          "required": [
+            "count",
+            "ids"
+          ],
+          "type": "object"
+        },
+        "DeleteOutcome": {
+          "properties": {
+            "cascade": {
+              "additionalProperties": {
+                "$ref": "#/$defs/CascadeCount"
+              },
+              "description": "Counts of cascaded or detached rows by kind.",
+              "type": "object"
+            },
+            "deleted": {
+              "description": "Always true after successful deletion.",
+              "type": "boolean"
+            },
+            "target": {
+              "$ref": "#/$defs/NamedRef",
+              "description": "Deleted entity identity."
+            }
+          },
+          "required": [
+            "deleted",
+            "target",
+            "cascade"
+          ],
+          "type": "object"
+        },
+        "DeletePreview": {
+          "properties": {
+            "cascade": {
+              "additionalProperties": {
+                "$ref": "#/$defs/CascadePreview"
+              },
+              "description": "Cascaded or detached rows by kind, with bounded example ids.",
+              "type": "object"
+            },
+            "dry_run": {
+              "description": "Always true; this result made no domain changes.",
+              "type": "boolean"
+            },
+            "requires_confirmation": {
+              "description": "Always true; execute only after explicit user approval.",
+              "type": "boolean"
+            },
+            "target": {
+              "$ref": "#/$defs/NamedRef",
+              "description": "Entity that would be deleted."
+            }
+          },
+          "required": [
+            "dry_run",
+            "target",
+            "cascade",
+            "requires_confirmation"
+          ],
+          "type": "object"
+        },
+        "NamedRef": {
+          "properties": {
+            "id": {
+              "description": "Reference entity id.",
+              "type": "string"
+            },
+            "name": {
+              "description": "Reference entity display name.",
+              "type": "string"
+            }
+          },
+          "required": [
+            "id",
+            "name"
+          ],
+          "type": "object"
+        }
+      },
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "oneOf": [
+        {
+          "$ref": "#/$defs/DeletePreview"
+        },
+        {
+          "$ref": "#/$defs/DeleteOutcome"
+        }
+      ],
+      "type": "object"
+    }
+  },
+  {
+    "annotations": {
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": true
+    },
+    "description": "List tags with `subscription_count`.",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "cursor": {
+          "description": "Opaque next_cursor from this same collection; omit for the first page.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "limit": {
+          "default": 100,
+          "description": "Page size, 1–200; default 100.",
+          "format": "uint",
+          "maximum": 200,
+          "minimum": 1,
+          "type": [
+            "integer",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "name": "tags_list",
+    "outputSchema": {
+      "$defs": {
+        "CardType": {
+          "enum": [
+            "credit",
+            "debit"
+          ],
+          "type": "string"
+        },
+        "RefItem": {
+          "properties": {
+            "card_type": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/CardType"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Card type; null for categories and tags."
+            },
+            "color": {
+              "description": "Display color in #RRGGBB form.",
+              "type": "string"
+            },
+            "credit_limit": {
+              "description": "Credit limit in decimal major units or null.",
+              "format": "double",
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "icon": {
+              "description": "Category icon; null for tags and cards.",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "id": {
+              "description": "Reference entity id.",
+              "type": "string"
+            },
+            "is_default": {
+              "description": "Whether this is a protected default category; null for tags and cards.",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "last_four": {
+              "description": "Last four card digits or null.",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "name": {
+              "description": "Display name.",
+              "type": "string"
+            },
+            "subscription_count": {
+              "description": "Number of subscriptions referencing this entity.",
+              "format": "uint",
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          "required": [
+            "id",
+            "name",
+            "color",
+            "subscription_count"
+          ],
+          "type": "object"
+        }
+      },
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "items": {
+          "description": "Rows on this page, in deterministic order.",
+          "items": {
+            "$ref": "#/$defs/RefItem"
+          },
+          "type": "array"
+        },
+        "next_cursor": {
+          "description": "Opaque continuation token, or null when the list is complete.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "total": {
+          "description": "Matching rows before pagination.",
+          "format": "uint",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "warnings": {
+          "description": "Non-fatal qualifications affecting this result.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "items",
+        "total",
+        "warnings"
+      ],
+      "type": "object"
+    }
+  },
+  {
+    "annotations": {
+      "destructiveHint": true,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": false
+    },
+    "description": "Rename/recolor a tag.",
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "color": {
+          "description": "Replacement display color, #RRGGBB.",
+          "pattern": "^#[0-9a-fA-F]{6}$",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "id": {
+          "description": "Opaque tag id from tags_list.",
+          "type": "string"
+        },
+        "name": {
+          "description": "Replacement nonempty display name; at most 100 characters.",
+          "maxLength": 100,
+          "minLength": 1,
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "type": "object"
+    },
+    "name": "tags_update",
+    "outputSchema": {
+      "$defs": {
+        "CardType": {
+          "enum": [
+            "credit",
+            "debit"
+          ],
+          "type": "string"
+        }
+      },
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "card_type": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CardType"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Card type; null for categories and tags."
+        },
+        "color": {
+          "description": "Display color in #RRGGBB form.",
+          "type": "string"
+        },
+        "credit_limit": {
+          "description": "Credit limit in decimal major units or null.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "icon": {
+          "description": "Category icon; null for tags and cards.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "id": {
+          "description": "Reference entity id.",
+          "type": "string"
+        },
+        "is_default": {
+          "description": "Whether this is a protected default category; null for tags and cards.",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "last_four": {
+          "description": "Last four card digits or null.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "name": {
+          "description": "Display name.",
+          "type": "string"
+        },
+        "subscription_count": {
+          "description": "Number of subscriptions referencing this entity.",
+          "format": "uint",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "color",
+        "subscription_count"
+      ],
+      "type": "object"
+    }
+  }
+]

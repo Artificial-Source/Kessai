@@ -1,0 +1,3 @@
+[workspace]
+members = ["crates/kessai-core", "crates/kessai-mcp", "crates/kessai-web", "src-tauri"]
+resolver = "2"

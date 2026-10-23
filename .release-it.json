@@ -1,0 +1,51 @@
+{
+  "git": {
+    "commitMessage": "chore: release v${version}",
+    "tagName": "v${version}",
+    "tagAnnotation": "Release v${version}",
+    "requireBranch": "main",
+    "requireCleanWorkingDir": true
+  },
+  "github": {
+    "release": false
+  },
+  "npm": {
+    "publish": false
+  },
+  "hooks": {
+    "before:init": [
+      "pnpm check",
+      "pnpm check:tauri-versions",
+      "pnpm test:run",
+      "cargo fmt --all --check",
+      "cargo clippy --locked --workspace --all-targets -- -D warnings",
+      "cargo audit",
+      "cargo test --locked --workspace",
+      "pnpm test:installer",
+      "pnpm audit --prod --audit-level=high",
+      "node scripts/release-dry-run.js --self-test",
+      "pnpm build",
+      "pnpm verify:web-resource",
+      "pnpm test:e2e:web-smoke"
+    ],
+    "after:bump": "pnpm run sync-versions"
+  },
+  "plugins": {
+    "@release-it/conventional-changelog": {
+      "preset": {
+        "name": "conventionalcommits",
+        "types": [
+          { "type": "feat", "section": "Features" },
+          { "type": "fix", "section": "Bug Fixes" },
+          { "type": "perf", "section": "Performance" },
+          { "type": "refactor", "section": "Refactoring" },
+          { "type": "docs", "section": "Documentation" },
+          { "type": "test", "section": "Tests" },
+          { "type": "chore", "hidden": true }
+        ]
+      },
+      "infile": "CHANGELOG.md",
+      "header": "# Changelog\n\nAll notable changes to Kessai will be documented in this file.\n"
+    }
+  }
+}

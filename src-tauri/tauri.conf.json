@@ -1,0 +1,57 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Kessai",
+  "version": "1.0.0",
+  "identifier": "com.asf.kessai",
+  "build": {
+    "beforeDevCommand": "pnpm dev",
+    "devUrl": "http://localhost:1420",
+    "beforeBuildCommand": "pnpm build && pnpm verify:web-resource",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "label": "main",
+        "title": "Kessai",
+        "width": 1200,
+        "height": 800,
+        "minWidth": 900,
+        "minHeight": 600,
+        "center": true,
+        "decorations": false,
+        "transparent": false,
+        "visible": false
+      }
+    ],
+    "security": {
+      "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self' https://github.com https://api.github.com https://objects.githubusercontent.com https://release-assets.githubusercontent.com"
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "createUpdaterArtifacts": true,
+    "resources": {
+      "../dist/": "dist/"
+    },
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "category": "Finance",
+    "shortDescription": "Know where your money flows",
+    "longDescription": "A beautiful, local-first desktop subscription tracker that gives you complete clarity over your recurring subscriptions and spending."
+  },
+  "plugins": {
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDg1RDU1RTJGNTg3MTlBNkIKUldScm1uRllMMTdWaFNoUU5xMkdiWDUwZDJxUlBCQmU4UUdqV2xZckdONlFORHpQenhLUkJxeUcK",
+      "endpoints": [
+        "https://github.com/Artificial-Source/Kessai/releases/latest/download/latest.json"
+      ]
+    }
+  }
+}

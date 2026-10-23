@@ -1,0 +1,48 @@
+# All targets are audited, including the Windows-only updater ZIP dependency.
+# Re-check every exception by 2026-11-21 and remove it when its upstream chain
+# supports a patched release. Do not add severity thresholds or target filters.
+[advisories]
+informational_warnings = ["unmaintained", "unsound", "notice"]
+ignore = [
+    # zip 4.6.1: tauri-plugin-updater 2.14.0 (latest stable Tauri 2 plugin)
+    # requires zip ^4 on Windows; the fixes require zip >=9.0.0. The updater
+    # verifies the package's Minisign signature before extraction. Kessai does
+    # not extract user-provided ZIP files. A trusted signing-key compromise or
+    # malicious signed release remains a risk; this is not a claim of no impact.
+    # Re-check: 2026-11-21; upgrade the Tauri 2 plugin when it adopts zip >=9.
+    "RUSTSEC-2026-0367", # SUID/SGID permission preservation in ZIP extraction.
+    "RUSTSEC-2026-0368", # ZIP extraction permits escaping symlink targets.
+    "RUSTSEC-2026-0369", # ZIP extraction changes permissions through symlinks.
+
+    # glib 0.18.5: Tauri 2's GTK3/WebKitGTK stack requires glib ^0.18; the
+    # VariantStrIter fix is in >=0.20.0, incompatible with that GTK3 stack.
+    # Kessai does not use VariantStrIter directly; upstream callers still need
+    # review. Re-check: 2026-11-21 against Tauri's Linux dependency migration.
+    "RUSTSEC-2024-0429",
+
+    # paste 1.0.15: build-time macros pulled by image -> exr/pulp and rav1e;
+    # latest compatible image still requires them. No vulnerability is listed.
+    # Re-check: 2026-11-21 for an upstream migration to maintained macros.
+    "RUSTSEC-2024-0436",
+
+    # proc-macro-error 1.0.4: build-time GTK3/glib macros required by Tauri 2;
+    # replacing GTK3 is not a compatible dependency bump. No vulnerability is
+    # listed. Re-check: 2026-11-21 with the Tauri/GTK3 dependency chain.
+    "RUSTSEC-2024-0370",
+
+    # zbus_names/zvariant/zvariant_derive were merged into zbus 6. Tauri 2's
+    # latest notification/opener/single-instance plugins use zbus 5. These are
+    # maintenance notices, not vulnerabilities. Re-check: 2026-11-21 for those
+    # plugins' adoption of zbus 6; do not override incompatible transitive APIs.
+    "RUSTSEC-2026-0371", # zbus_names 4.3.5.
+    "RUSTSEC-2026-0370", # zvariant 5.15.1.
+    "RUSTSEC-2026-0372", # zvariant_derive 5.15.1.
+]
+
+[output]
+# Fail closed on newly introduced unsound or unmaintained dependencies as well
+# as vulnerabilities; only the reviewed advisory IDs above are exempted.
+deny = ["unmaintained", "unsound"]
+quiet = false
+format = "terminal"
+show_tree = true

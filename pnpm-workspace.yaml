@@ -1,0 +1,10 @@
+packages:
+  - packages/*
+
+onlyBuiltDependencies:
+  - esbuild
+
+auditConfig:
+  ignoreGhsas:
+    # Kessai uses declarative SPA routing, not React Router's unstable RSC APIs.
+    - GHSA-qwww-vcr4-c8h2
